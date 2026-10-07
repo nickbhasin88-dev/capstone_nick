@@ -15,7 +15,8 @@ Writes ./model_data/:
     ihme_trend.csv       IHME's own 2025 (preliminary) / 2021-23 ratio by source group x channel x disease bucket
     country_inputs.csv   epidemiology, coverage, fiscal-space and MOU data, one row per country
     panel.csv            country-year panel used for the regressions
-    regressions.json     fixed-effects estimates (fiscal replacement + coverage dose-response)
+    regressions.json     fixed-effects estimates (fiscal replacement, coverage dose-response, and Poisson
+                         death regressions for TB, under-5 and child malaria deaths)
     all_countries_<preset>.csv   health_model.run_all for every preset except Custom, with the default government
                                  response (no backfill, pro-rata, 75th-percentile ceiling) and default parameters;
                                  the app loads these instantly when its settings match
@@ -117,6 +118,10 @@ SG = ["people_living_with_hiv_number_all_ages", "all_forms_of_tb_incidence_estim
 WDI_URL = "https://raw.githubusercontent.com/open-numbers/ddf--open_numbers--world_development_indicators/master/datapoints/ddf--datapoints--{}--by--geo--time.csv"
 SG_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--systema_globalis/master/countries-etc-datapoints/ddf--datapoints--{}--by--geo--time.csv"
 ENT_URL = "https://raw.githubusercontent.com/open-numbers/ddf--open_numbers--world_development_indicators/master/ddf--entities--geo--country.csv"
+HIV_SHARE_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--fasttrack/master/countries_etc_datapoints/ddf--datapoints--ihme_hiv_death--by--country--time.csv"
+HIV_SHARE_FILE = EXT / "gm" / "ddf--datapoints--ihme_hiv_death--by--country--time.csv"   # IHME HIV share of all deaths, %
+TREND_YEARS = (2010, 2019)          # pre-COVID window for baseline mortality trends
+TREND_CLIP = (-0.08, 0.02)          # annual % change, clipped
 
 
 def download_ext():
@@ -128,6 +133,8 @@ def download_ext():
     for i in SG:
         urllib.request.urlretrieve(SG_URL.format(i), EXT / "sg" / f"ddf--datapoints--{i}--by--geo--time.csv")
     urllib.request.urlretrieve(ENT_URL, EXT / "wb_country_entities.csv")
+    HIV_SHARE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    urllib.request.urlretrieve(HIV_SHARE_URL, HIV_SHARE_FILE)
 
 
 def read_ext(name: str) -> pd.DataFrame:
@@ -146,6 +153,49 @@ def latest(name: str, max_year: int = 2024, min_year: int = 2010) -> pd.DataFram
     d = read_ext(name)
     d = d[(d.year <= max_year) & (d.year >= min_year)].sort_values("year").groupby("iso3").tail(1)
     return d.set_index("iso3").rename(columns={"value": name, "year": f"{name}_year"})
+
+
+def series(name: str) -> pd.DataFrame:
+    """Full country-year series (iso3, year, value) from ext_data."""
+    return read_ext(name)
+
+
+def tb_deaths_series() -> pd.DataFrame:
+    """All TB deaths = HIV-negative + HIV-positive TB deaths, by country-year."""
+    a = series("all_forms_of_tb_number_of_deaths_estimated").set_index(["iso3", "year"])["value"]
+    b = series("tb_hivplus_number_of_deaths_estimated").set_index(["iso3", "year"])["value"]
+    return pd.concat([a, b], axis=1).sum(axis=1, min_count=1).rename("value").reset_index()
+
+
+def annual_trend(d: pd.DataFrame, index) -> pd.Series:
+    """Average annual % change over TREND_YEARS from a log-linear fit (at least 5 positive years), clipped to
+    TREND_CLIP; countries with no usable data get the median across countries."""
+    d = d[d.year.between(*TREND_YEARS) & (d.value > 0)]
+    out = {}
+    for iso, g in d.groupby("iso3"):
+        if len(g) >= 5:
+            out[iso] = float(np.expm1(np.polyfit(g["year"], np.log(g["value"]), 1)[0]))
+    t = pd.Series(out, dtype=float).reindex(index).clip(*TREND_CLIP)
+    return t.fillna(t.median())
+
+
+# --------------------------------------------------------------------------- #
+# Poisson fixed-effects death regressions (Cavalcanti et al. 2025, Lancet, appendix section 4.1)
+# --------------------------------------------------------------------------- #
+def poisson_fe(df: pd.DataFrame, y: str, x: str, exposure: str, controls=("ln_gdp_pc", "ln_ghes_pc")) -> dict:
+    """Poisson GLM with country and year fixed effects, log(exposure) offset, SEs clustered by country."""
+    import statsmodels.api as sm
+    import statsmodels.formula.api as smf
+    cols = ["iso3", "year", y, x, exposure, *controls]
+    d = df[cols].replace([np.inf, -np.inf], np.nan).dropna()
+    d = d[(d[exposure] > 0) & (d[y] >= 0)]
+    d = d[d.groupby("iso3")[y].transform("sum") > 0].reset_index(drop=True)   # all-zero countries carry no information
+    xs = [x, *controls]
+    fit = smf.glm(f"{y} ~ {' + '.join(xs)} + C(iso3) + C(year)", data=d, family=sm.families.Poisson(),
+                  offset=np.log(d[exposure])).fit(cov_type="cluster", cov_kwds={"groups": pd.factorize(d["iso3"])[0]})
+    return {"y": y, "x": xs, "coef": {k: round(float(fit.params[k]), 6) for k in xs},
+            "se": {k: round(float(fit.bse[k]), 6) for k in xs}, "n_obs": int(len(d)), "n_countries": int(d["iso3"].nunique()),
+            "years": [int(d["year"].min()), int(d["year"].max())], "offset": f"log({exposure})", "family": "poisson"}
 
 
 # --------------------------------------------------------------------------- #
@@ -190,7 +240,7 @@ def main(a):
 
     # ---------------- DAH ---------------- #
     print("reading DAH ...")
-    need = ["year", "source", "channel", "recipient_isocode", "dah_23"] + list(BUCKET_TOTAL_COL.values())
+    need = ["year", "source", "channel", "recipient_isocode", "dah_23", "nch_dah_23"] + list(BUCKET_TOTAL_COL.values())
     need += sorted({f"{c}_dah_23" for _, cs in LINES.values() for c in cs})
     dah = pd.read_csv(a.dah, usecols=lambda c: c in need, na_values=["-"], low_memory=False)
     num = [c for c in dah.columns if c.endswith("_dah_23")]
@@ -211,6 +261,9 @@ def main(a):
     lines.to_csv(OUT / "dah_lines.csv", index=False)
     # total DAH (all purposes) per country, for "share of aid that the model covers"
     tot = base.groupby("recipient_isocode")["dah_23"].sum() / (BASE_YEARS[1] - BASE_YEARS[0] + 1) * 1e3
+    nyrs = BASE_YEARS[1] - BASE_YEARS[0] + 1
+    nch_base = base.groupby("recipient_isocode")["nch_dah_23"].sum() / nyrs * 1e3        # vaccines + child health
+    us_base = base[base.source == "United_States"].groupby("recipient_isocode")["dah_23"].sum() / nyrs * 1e3
     print(f"  dah_lines: {len(lines):,} rows, {lines.iso3.nunique()} countries, ${lines.usd.sum() / 1e9:.1f}B/yr modelled")
 
     # (2) IHME's own 2025 preliminary estimate relative to the 2021-23 baseline (global totals; no recipient in 2024-25)
@@ -254,6 +307,8 @@ def main(a):
     ci["ghes_2030_expected"] = e30["ghes_total_mean"] * 1e3
     ci["gdp_pc"] = gdp[gdp.year == 2024].set_index("iso3")["gdp_pc"]
     ci["dah_all_purposes_base"] = tot
+    ci["dah_nch_base"] = nch_base.reindex(ci.index).fillna(0.0)
+    ci["us_health_aid_base"] = us_base.reindex(ci.index).fillna(0.0)            # US-source health aid, all areas
 
     # historical real GHES growth (fiscal "surge" capacity)
     gh = sp[sp.iso3.isin(ISO3)].sort_values(["iso3", "year"])[["iso3", "year", "ghes_total_mean"]].copy()
@@ -296,6 +351,20 @@ def main(a):
     ci["vpd_child_deaths"] = (ci["measles_deaths_in_children_1_59_months_total_deaths"].fillna(0)
                               + ci["pneumonia_deaths_in_children_1_59_months_total_deaths"].fillna(0))
 
+    # baseline mortality trends, 2010-2019 (annual % change; log-linear fit; clipped; median where missing)
+    ci["trend_u5mr"] = annual_trend(series("sh_dyn_mort"), ci.index)
+    ci["trend_malaria_deaths"] = annual_trend(series("malaria_deaths_in_children_1_59_months_total_deaths"), ci.index)
+    ci["trend_tb_deaths"] = annual_trend(tb_deaths_series(), ci.index)
+
+    # baselines for the Lancet rate-ratio benchmark: HIV deaths = IHME HIV share of deaths (2019) x all deaths
+    ci = ci.join(latest("sp_dyn_cdrt_in")).join(latest("sh_mmr_dths"))
+    if HIV_SHARE_FILE.exists():
+        hs = pd.read_csv(HIV_SHARE_FILE)
+        hs.columns = ["iso3", "year", "value"]
+        hs = hs.assign(iso3=hs.iso3.str.upper()).dropna().sort_values("year").groupby("iso3").tail(1).set_index("iso3")
+        ci["hiv_death_share"], ci["hiv_death_share_year"] = hs["value"] / 100, hs["year"]
+        ci["hiv_deaths_est"] = ci["hiv_death_share"] * ci["sp_dyn_cdrt_in"] / 1000 * ci["sp_pop_totl"]
+
     # ---------------- MOU / co-financing sheet (team-collected) ---------------- #
     if a.mou and Path(a.mou).exists():
         m = pd.read_excel(a.mou, header=None)
@@ -314,25 +383,33 @@ def main(a):
     print("regressions ...")
     yrs = range(2000, 2024)
     rec = dah[dah.recipient_isocode.isin(ISO3) & dah.year.between(1999, 2023)]
-    byb = rec.groupby(["recipient_isocode", "year"])[list(BUCKET_TOTAL_COL.values())].sum() * 1e3
+    byb = rec.groupby(["recipient_isocode", "year"])[list(BUCKET_TOTAL_COL.values()) + ["nch_dah_23"]].sum() * 1e3
     byb.index.names = ["iso3", "year"]
-    pan = byb.rename(columns={v: f"dah_{k.lower()}" for k, v in BUCKET_TOTAL_COL.items()}).reset_index()
+    pan = byb.rename(columns={**{v: f"dah_{k.lower()}" for k, v in BUCKET_TOTAL_COL.items()},
+                              "nch_dah_23": "dah_nch"}).reset_index()
     spp = sp[sp.iso3.isin(ISO3)][["iso3", "year", "ghes_per_cap_mean", "dah_per_cap_mean", "the_per_cap_mean"]]
     pan = pan.merge(spp, on=["iso3", "year"], how="outer").merge(gdp, on=["iso3", "year"], how="left")
     for n in ["sp_pop_totl", "sp_pop_1564_to", "sh_dyn_aids_zs", "sh_hiv_0014", "sh_hiv_artc_zs", "sh_tbs_dtec_zs",
               "sh_imm_idpt", "sp_dyn_cbrt_in", "sh_mlr_incd_p3", "sh_dyn_mort", "all_forms_of_tb_incidence_estimated"]:
         pan = pan.merge(read_ext(n).rename(columns={"value": n}), on=["iso3", "year"], how="left")
+    deaths = {"tb_deaths": tb_deaths_series(), "u5_deaths": series("sh_dth_mort"),
+              "mal_child_deaths": series("malaria_deaths_in_children_1_59_months_total_deaths")}
+    for n, d in deaths.items():
+        pan = pan.merge(d.rename(columns={"value": n}), on=["iso3", "year"], how="left")
     pan = pan[pan.year.isin(yrs)].sort_values(["iso3", "year"]).reset_index(drop=True)
     pan["plhiv"] = (pan["sh_dyn_aids_zs"] / 100 * pan["sp_pop_1564_to"] * pan["iso3"].map(ci["plhiv_calibration"])
                     + pan["sh_hiv_0014"].fillna(0))
     pan["births"] = pan["sp_dyn_cbrt_in"] / 1000 * pan["sp_pop_totl"]
     g = pan.groupby("iso3")
-    for b in ["hiv", "tb", "malaria", "immunization"]:      # 2-year moving average smooths lumpy disbursements
+    for b in ["hiv", "tb", "malaria", "immunization", "nch"]:      # 2-year moving average smooths lumpy disbursements
         pan[f"dah_{b}_ma"] = g[f"dah_{b}"].transform(lambda s: s.rolling(2, min_periods=1).mean())
     pan["x_hiv"] = np.log1p(pan["dah_hiv_ma"] / pan["plhiv"])                       # $ per PLHIV
     pan["x_tb"] = np.log1p(pan["dah_tb_ma"] / pan["all_forms_of_tb_incidence_estimated"])   # $ per incident case
     pan["x_imm"] = np.log1p(pan["dah_immunization_ma"] / pan["births"])             # $ per birth
     pan["x_mal"] = np.log1p(pan["dah_malaria_ma"] / pan["sp_pop_totl"])             # $ per person
+    pan["x_tb_pc"] = np.log1p(pan["dah_tb_ma"] / pan["sp_pop_totl"])              # Poisson death regressions:
+    pan["x_mal_pc"] = np.log1p(pan["dah_malaria_ma"] / pan["sp_pop_totl"])         # aid per person / per birth
+    pan["x_child_pb"] = np.log1p(pan["dah_nch_ma"] / pan["births"])
     pan["ln_ghes_pc"] = np.log(pan["ghes_per_cap_mean"])
     pan["ln_gdp_pc"] = np.log(pan["gdp_pc"])
     pan["ln_mal_inc"] = np.log(pan["sh_mlr_incd_p3"].where(pan["sh_mlr_incd_p3"] > 0))
@@ -355,10 +432,20 @@ def main(a):
     reg["dtp3"] = twoway_fe(pan[pan.year >= 2005], "sh_imm_idpt", ["x_imm", "ln_ghes_pc", "ln_gdp_pc"])
     reg["malaria_incidence"] = twoway_fe(pan[(pan.year >= 2005) & pan.iso3.isin(SSA)], "ln_mal_inc",
                                          ["x_mal", "ln_ghes_pc", "ln_gdp_pc"])
+    # (c) deaths on aid: Poisson GLMs with country + year FE, population (or births) offset, clustered SEs
+    p05 = pan[pan.year.between(2005, 2023)]
+    reg["poisson_tb"] = poisson_fe(p05, "tb_deaths", "x_tb_pc", "sp_pop_totl")
+    reg["poisson_u5"] = poisson_fe(p05, "u5_deaths", "x_child_pb", "births")
+    reg["poisson_malaria"] = poisson_fe(pan[pan.year.between(2005, 2021) & pan.iso3.isin(SSA)], "mal_child_deaths",
+                                        "x_mal_pc", "sp_pop_totl")
     reg["_notes"] = {
         "fiscal_replacement": "d(GHES per capita) on falls/rises in DAH per capita; theta = -(b_fall + b_fall_l1)",
         "coverage": "coverage (percentage points) on log(1 + aid per person in need), 2-yr moving average of aid; "
                     "country and year fixed effects; SEs clustered by country. Within-country associations, not causal.",
+        "poisson": "deaths on log(1 + aid per person, 2-yr moving average; per birth for under-5 deaths, using all "
+                   "vaccine + child health aid), log GDP per capita and log government health spending per capita; "
+                   "country and year fixed effects; log(population) or log(births) offset; SEs clustered by country "
+                   "(method of Cavalcanti et al. 2025, Lancet, appendix 4.1). Associations, not causal.",
         "baseline_years": list(BASE_YEARS),
     }
     (OUT / "regressions.json").write_text(json.dumps(reg, indent=2, default=float))
@@ -377,11 +464,12 @@ def precompute_all():
     import health_model as hm
     import scenarios as scn
 
-    print("precomputing all-country results ...")
+    print("precomputing all-country results (with the mortality trend switched on) ...")
     inputs, ptab = hm.load_inputs(OUT), hm.load_params()
     for preset in scn.PRECOMPUTED_PRESETS:
         sc = scn.build_scenario(preset, scn.default_opts(preset, inputs["ci"]), inputs["ci"])
-        res = hm.run_all(sc, hm.Fiscal(*scn.DEFAULT_FISCAL), inputs, ptab, n_draws=scn.ALL_COUNTRY_DRAWS)
+        res = hm.run_all(sc, hm.Fiscal(*scn.DEFAULT_FISCAL), inputs, ptab, n_draws=scn.ALL_COUNTRY_DRAWS,
+                         mortality_trend=scn.DEFAULT_MORTALITY_TREND)
         path = scn.precomputed_path(OUT, preset)
         res.to_csv(path, index=False)
         print(f"  {path.name}: {len(res)} countries, {res['deaths_5y'].sum():,.0f} extra deaths over 5 years")

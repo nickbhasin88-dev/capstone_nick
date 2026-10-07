@@ -127,9 +127,88 @@
     ],
     "r2_within": 0.0531
   },
+  "poisson_tb": {
+    "y": "tb_deaths",
+    "x": [
+      "x_tb_pc",
+      "ln_gdp_pc",
+      "ln_ghes_pc"
+    ],
+    "coef": {
+      "x_tb_pc": -0.554931,
+      "ln_gdp_pc": -0.156654,
+      "ln_ghes_pc": 0.034144
+    },
+    "se": {
+      "x_tb_pc": 0.14724,
+      "ln_gdp_pc": 0.331901,
+      "ln_ghes_pc": 0.145433
+    },
+    "n_obs": 1799,
+    "n_countries": 97,
+    "years": [
+      2005,
+      2023
+    ],
+    "offset": "log(sp_pop_totl)",
+    "family": "poisson"
+  },
+  "poisson_u5": {
+    "y": "u5_deaths",
+    "x": [
+      "x_child_pb",
+      "ln_gdp_pc",
+      "ln_ghes_pc"
+    ],
+    "coef": {
+      "x_child_pb": 0.079049,
+      "ln_gdp_pc": -0.369862,
+      "ln_ghes_pc": -0.025195
+    },
+    "se": {
+      "x_child_pb": 0.024808,
+      "ln_gdp_pc": 0.129889,
+      "ln_ghes_pc": 0.074421
+    },
+    "n_obs": 1805,
+    "n_countries": 97,
+    "years": [
+      2005,
+      2023
+    ],
+    "offset": "log(births)",
+    "family": "poisson"
+  },
+  "poisson_malaria": {
+    "y": "mal_child_deaths",
+    "x": [
+      "x_mal_pc",
+      "ln_gdp_pc",
+      "ln_ghes_pc"
+    ],
+    "coef": {
+      "x_mal_pc": -0.093,
+      "ln_gdp_pc": -0.583927,
+      "ln_ghes_pc": -0.162868
+    },
+    "se": {
+      "x_mal_pc": 0.120129,
+      "ln_gdp_pc": 0.206486,
+      "ln_ghes_pc": 0.062458
+    },
+    "n_obs": 600,
+    "n_countries": 36,
+    "years": [
+      2005,
+      2021
+    ],
+    "offset": "log(sp_pop_totl)",
+    "family": "poisson"
+  },
   "_notes": {
     "fiscal_replacement": "d(GHES per capita) on falls/rises in DAH per capita; theta = -(b_fall + b_fall_l1)",
     "coverage": "coverage (percentage points) on log(1 + aid per person in need), 2-yr moving average of aid; country and year fixed effects; SEs clustered by country. Within-country associations, not causal.",
+    "poisson": "deaths on log(1 + aid per person, 2-yr moving average; per birth for under-5 deaths, using all vaccine + child health aid), log GDP per capita and log government health spending per capita; country and year fixed effects; log(population) or log(births) offset; SEs clustered by country (method of Cavalcanti et al. 2025, Lancet, appendix 4.1). Associations, not causal.",
     "baseline_years": [
       2021,
       2023

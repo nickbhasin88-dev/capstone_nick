@@ -25,7 +25,7 @@ PRESETS = {
     "America First MOUs": (
         "US bilateral aid follows the 2026-2030 MOU schedules your team collected (US funding in that year vs. the "
         "2021-25 pre-cut reference). Countries without a schedule get the average MOU-country cut for that year unless "
-        "you override it. US multilateral exits as in 'Full US exit'."),
+        "you override it. US multilateral exits as in 'Full US Exit'."),
     "IHME 2025 preliminary estimates": (
         "Data-driven: applies IHME's own 2025 preliminary DAH estimates relative to 2021-23, separately for every "
         "source x channel x disease cell (IHME has no recipient-level split after 2023, so the global change is applied "
@@ -36,7 +36,7 @@ PRESETS = {
     "Global Fund & Gavi shortfalls": (
         "Channel shock for all donors: Global Fund -28% (8th replenishment US$11.34B vs US$15.7B for the 7th) and "
         "Gavi -24% (about US$9B raised vs a US$11.9B 2026-30 target)."),
-    "Combined retreat": "'Full US exit' for the US plus the OECD-reported 2025 cuts for all other donors.",
+    "Combined retreat": "'Full US Exit' for the US plus the OECD-reported 2025 cuts for all other donors.",
     "Custom": "Set cuts yourself by donor and by channel (cuts combine multiplicatively: 1 - (1-donor cut)(1-channel cut)).",
 }
 PRECOMPUTED_PRESETS = [p for p in PRESETS if p != "Custom"]
@@ -44,6 +44,7 @@ PRECOMPUTED_PRESETS = [p for p in PRESETS if p != "Custom"]
 # Fiscal settings the precomputed all-country files use:
 # (mode, theta, cap to fiscal space, allocation, ceiling) = No backfill, pro-rata, 75th-percentile ceiling
 DEFAULT_FISCAL = ("none", 0.0, True, "pro_rata", "p75")
+DEFAULT_MORTALITY_TREND = True     # "Account for Already-Falling Death Rates" on
 DEFAULT_MOU_YEAR = 2028
 ALL_COUNTRY_DRAWS = 400       # same as the single-country view, so a country's row matches its own page
 

@@ -11,7 +11,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from model_section import how_to_read, render_model_section, stat, what_this_shows
+from country_lists import ALLOWED_COUNTRIES, HIDDEN_FROM_DROPDOWN
+from model_section import chart, how_to_read, render_model_section, stat, title_case, what_this_shows
 
 # Full-width kwarg differs by Streamlit version (older: use_container_width, 1.50+: width="stretch")
 _ver = tuple(int(x) for x in st.__version__.split(".")[:2] if x.isdigit())
@@ -26,113 +27,6 @@ YEAR_MIN, YEAR_MAX = 2015, 2030          # chart 1 x-axis window, fixed (future 
 SPEND_YEAR_MIN, SPEND_YEAR_MAX = 2015, 2030   # chart 2 x-axis window, fixed
 TOP_N_FUNDERS = 10                       # chart 1 shows this many funders individually, fixed
 DEFAULT_COUNTRY = "Kenya"
-# Only these countries appear in the dropdown (ISO3 code -> name shown)
-ALLOWED_COUNTRIES = {
-    "AFG": "Afghanistan",
-    "ALB": "Albania",
-    "AGO": "Angola",
-    "ARM": "Armenia",
-    "AZE": "Azerbaijan",
-    "BGD": "Bangladesh",
-    "BLR": "Belarus",
-    "BLZ": "Belize",
-    "BEN": "Benin",
-    "BOL": "Bolivia",
-    "BWA": "Botswana",
-    "BRA": "Brazil",
-    "BFA": "Burkina Faso",
-    "BDI": "Burundi",
-    "KHM": "Cambodia",
-    "CMR": "Cameroon",
-    "CAF": "Central African Republic",
-    "CHN": "China",
-    "COL": "Colombia",
-    "CRI": "Costa Rica",
-    "CIV": "Cote d'Ivoire",
-    "COD": "Democratic Republic of the Congo",
-    "DJI": "Djibouti",
-    "DOM": "Dominican Republic",
-    "ECU": "Ecuador",
-    "EGY": "Egypt",
-    "SLV": "El Salvador",
-    "SWZ": "Eswatini",
-    "ETH": "Ethiopia",
-    "FJI": "Fiji",
-    "GMB": "Gambia",
-    "GEO": "Georgia",
-    "GHA": "Ghana",
-    "GTM": "Guatemala",
-    "GIN": "Guinea",
-    "GUY": "Guyana",
-    "HTI": "Haiti",
-    "HND": "Honduras",
-    "IND": "India",
-    "IDN": "Indonesia",
-    "IRQ": "Iraq",
-    "JAM": "Jamaica",
-    "JOR": "Jordan",
-    "KAZ": "Kazakhstan",
-    "KEN": "Kenya",
-    "KSV": "Kosovo",
-    "KGZ": "Kyrgyzstan",
-    "LAO": "Laos",
-    "LSO": "Lesotho",
-    "LBR": "Liberia",
-    "LBY": "Libya",
-    "MDG": "Madagascar",
-    "MWI": "Malawi",
-    "MLI": "Mali",
-    "MUS": "Mauritius",
-    "MEX": "Mexico",
-    "MDA": "Moldova",
-    "MNG": "Mongolia",
-    "MAR": "Morocco",
-    "MOZ": "Mozambique",
-    "MMR": "Burma (Myanmar)",
-    "NAM": "Namibia",
-    "NPL": "Nepal",
-    "NIC": "Nicaragua",
-    "NER": "Niger",
-    "NGA": "Nigeria",
-    "PAK": "Pakistan",
-    "PAN": "Panama",
-    "PNG": "Papua New Guinea",
-    "PRY": "Paraguay",
-    "PER": "Peru",
-    "PHL": "Philippines",
-    "ROU": "Romania",
-    "RUS": "Russia",
-    "RWA": "Rwanda",
-    "STP": "Sao Tome and Principe",
-    "SEN": "Senegal",
-    "SLE": "Sierra Leone",
-    "SOM": "Somalia",
-    "ZAF": "South Africa",
-    "SSD": "South Sudan",
-    "SDN": "Sudan",
-    "TJK": "Tajikistan",
-    "TZA": "Tanzania",
-    "THA": "Thailand",
-    "TLS": "Timor-Leste",
-    "TGO": "Togo",
-    "TTO": "Trinidad and Tobago",
-    "TKM": "Turkmenistan",
-    "UGA": "Uganda",
-    "UKR": "Ukraine",
-    "UZB": "Uzbekistan",
-    "VEN": "Venezuela",
-    "VNM": "Vietnam",
-    "PSE": "West Bank and Gaza",
-    "YEM": "Yemen",
-    "ZMB": "Zambia",
-    "ZWE": "Zimbabwe",
-}
-# Not offered in the dropdown. Their data stays, and they still count in the all-country model results.
-HIDDEN_FROM_DROPDOWN = {
-    "AFG", "ALB", "ARM", "BLR", "BRA", "CHN", "COL", "CRI", "ECU", "GEO", "KAZ", "KSV", "MEX", "MAR", "MMR", "PRY",
-    "PER", "ROU", "RUS", "SDN", "THA", "TTO", "TKM", "UKR", "UZB", "PSE", "YEM",
-}
-
 HATCH_SHAPE = "+"                        # plotly pattern: "+" grid, "x" crosshatch, "/" diagonal
 
 # Channels treated as "NGO / foundation" money. IHME does NOT record whether a
@@ -318,7 +212,7 @@ def hex_to_rgba(hex_color: str, alpha: float) -> str:
 # --------------------------------------------------------------------------- #
 # Page
 # --------------------------------------------------------------------------- #
-st.set_page_config(page_title="Health financing", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Health Financing", page_icon="📊", layout="wide")
 st.title("Health Financing by Country")
 st.caption("IHME Development Assistance for Health (1990-2025) and Global Health Spending (1995-2023, "
            "expected 2024-2050). Constant 2023 US$.")
@@ -346,9 +240,16 @@ if _missing:
 countries = load_countries()
 
 # ---- country picker (sidebar) with GDP / population pills at the top of the page ------ #
+_ctx = st.session_state.get("model_ctx", {})
+_start = ALLOWED_COUNTRIES.get(_ctx.get("iso3"), DEFAULT_COUNTRY)          # keep the country chosen on another page
 with st.sidebar:
-    default_i = int(countries.index[countries["name"] == DEFAULT_COUNTRY][0]) if (countries["name"] == DEFAULT_COUNTRY).any() else 0
-    country_label = st.selectbox("Country", countries["label"], index=default_i)
+    st.page_link("app.py", label="Dashboard", icon=":material/dashboard:")
+    st.page_link("pages/2_Validation.py", label="Validation & Benchmarks", icon=":material/fact_check:")
+    st.divider()
+    # seed the box once (stable key, so later picks always register); after a page switch it is seeded again
+    if st.session_state.get("country_sel") not in set(countries["label"]):
+        st.session_state["country_sel"] = _start if (countries["label"] == _start).any() else countries["label"].iloc[0]
+    country_label = st.selectbox("Country", countries["label"], key="country_sel")
 pill1, pill2, _ = st.columns([2, 2, 3])
 crow = countries[countries["label"] == country_label].iloc[0]
 country_name = crow["name"]
@@ -403,7 +304,7 @@ if not crow["has_spend"] or not (SPEND_DIR / f"{crow['iso3']}.csv").exists():
 else:
     sp = load_spending(crow["iso3"])
     if True:
-        view = st.radio("Show as", ["US$ total", "US$ per person", "Share of total (%)"],
+        view = st.radio("Show As", ["US$ total", "US$ per person", "Share of total (%)"], format_func=title_case,
                         horizontal=True, key="c2_view")
         y0, y1 = SPEND_YEAR_MIN, SPEND_YEAR_MAX
 
@@ -455,7 +356,7 @@ else:
             legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="left", x=0),
             bargap=0.15, hovermode="closest",
         )
-        st.plotly_chart(fig2, **WIDE)
+        chart(fig2)
 
         last_obs = sp[sp["year"] == SPEND_LAST_OBSERVED].iloc[0]
         end = sp[sp["year"] == min(y1, int(sp["year"].max()))].iloc[0]
@@ -487,22 +388,22 @@ else:
     df = load_country(crow["dah_file"])
     c1, c2 = st.columns(2)
     with c1:
-        hfa = st.selectbox("Health category", list(HFA_LABELS), format_func=HFA_LABELS.get, key="c1_hfa")
+        hfa = st.selectbox("Health Category", list(HFA_LABELS), format_func=lambda k: title_case(HFA_LABELS[k]), key="c1_hfa")
     value_col, metric_label = "dah_23", HFA_LABELS["total"]
     if hfa != "total":
         value_col, metric_label = f"{hfa}_dah_23", HFA_LABELS[hfa]
         pas = program_area_options(df, hfa) if hfa in HFAS_WITH_PROGRAM_AREAS else {}
         if pas:
             with c2:
-                pa = st.selectbox("Program area", ["All program areas"] + list(pas),
-                                  format_func=lambda k: k if k == "All program areas" else pas[k],
+                pa = st.selectbox("Program Area", ["All program areas"] + list(pas),
+                                  format_func=lambda k: title_case(k if k == "All program areas" else pas[k]),
                                   key=f"c1_pa_{hfa}")
             if pa != "All program areas":
                 value_col, metric_label = pa, f"{HFA_LABELS[hfa]}: {pas[pa]}"
     nongov = st.multiselect(
-        "Channels drawn as NGO / foundation (checkered)",
+        "Channels Drawn as NGO / Foundation (Checkered)",
         options=list(CHANNEL_LABELS), default=DEFAULT_NONGOV_CHANNELS, key="c1_ngo",
-        format_func=lambda c: f"{CHANNEL_LABELS[c]} ({c})",
+        format_func=lambda c: title_case(f"{CHANNEL_LABELS[c]} ({c})"),
         help="IHME doesn't record whether a government knew about a flow. "
              "The channel that delivered the money is used as a proxy.",
     )
@@ -582,14 +483,14 @@ else:
                       annotation_text="no data yet (forecast to come)", annotation_position="top left",
                       annotation_font=dict(size=12, color="gray"))
     fig.update_layout(
-        title=dict(text=f"Health Aid Received, by Funder: {metric_label}", font=dict(size=16), x=0, xanchor="left"),
+        title=dict(text=f"Health Aid Received, by Funder: {title_case(metric_label)}", font=dict(size=16), x=0, xanchor="left"),
         barmode="stack", height=560, margin=dict(l=10, r=10, t=50, b=10),
         xaxis=dict(range=[YEAR_MIN - 0.5, YEAR_MAX + 0.5], dtick=1, tickangle=-45, title=""),
         yaxis=dict(title=f"US$ {unit_name} (constant 2023)", rangemode="tozero"),
         legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=1.01),
         bargap=0.15, hovermode="closest",
     )
-    st.plotly_chart(fig, **WIDE)
+    chart(fig)
 
     how_to_read(
         "Colour = who the money originally came from (source). Checkered = delivered through NGO/foundation channels, a "
@@ -616,9 +517,10 @@ else:
     df3 = load_country(crow["dah_file"])
     e1, e2, e3 = st.columns([2, 2, 2])
     with e1:
-        view3 = st.radio("Show as", ["US$ total", "Share of total (%)"], horizontal=True, key="c3b_view")
+        view3 = st.radio("Show As", ["US$ total", "Share of total (%)"], horizontal=True, key="c3b_view",
+                         format_func=title_case)
     with e2:
-        brk = st.selectbox("Break down", ["Health focus areas (HIV, TB, malaria, ...)"] +
+        brk = st.selectbox("Break Down", format_func=title_case, options=["Health focus areas (HIV, TB, malaria, ...)"] +
                            [f"Inside: {HFA_LABELS[h]}" for h in HFAS_WITH_PROGRAM_AREAS], key="c3b_break")
 
     parts = []                      # (column, label, color)
@@ -668,7 +570,7 @@ else:
         if data_end < YEAR_MAX:
             fig4.add_vrect(x0=data_end + 0.5, x1=YEAR_MAX + 0.5, fillcolor="rgba(128,128,128,0.08)", line_width=0,
                            annotation_text="No data yet", annotation_position="top left", annotation_font=dict(size=12, color="gray"))
-        st.plotly_chart(fig4, **WIDE)
+        chart(fig4)
         how_to_read(
             f"{country_name}: development assistance for health received, split by what it pays for ({sub_title}). "
             "Source: IHME DAH database, constant 2023 US$. This is aid only: IHME's total-spending files (government, "
@@ -764,7 +666,7 @@ def _budget_section():
         ids, labels, parents, values, colors_, texts, hov = [], [], [], [], [], [], []
 
         def node(id_, label, parent, value, color, hover="", side_total=None):
-            ids.append(id_); labels.append(label); parents.append(parent); values.append(float(value)); colors_.append(color)
+            ids.append(id_); labels.append(title_case(label)); parents.append(parent); values.append(float(value)); colors_.append(color)
             amt = _amt(value)
             share = (100 * value / side_total) if side_total else None
             texts.append(" - ".join(x for x in (amt, f"{share:.0f}%" if share is not None else "") if x))
@@ -776,7 +678,7 @@ def _budget_section():
         # ----- revenue side (+ borrowing when spending exceeds revenue) -----
         if has_rev:
             rev_side = (R + max(gap, 0.0)) if can_compare else R
-            node("rev", "Money in: revenue + borrowing" if (can_compare and gap > 0.05) else "Money in: revenue", "root", rev_side, "#d6eaf8",
+            node("rev", "Money In: revenue + borrowing" if (can_compare and gap > 0.05) else "Money In: revenue", "root", rev_side, "#d6eaf8",
                  f"Revenue alone: {_amt(R) + ' = ' if gdp_m else ''}{R:.1f}% of GDP", rev_side)
             tx = rg[rg["group"] == "Taxes"]
             if not tx.empty:
@@ -821,7 +723,7 @@ def _budget_section():
         ))
         fig4.update_layout(title=dict(text=f"Government Revenue and Spending, {int(yr4)}", font=dict(size=16), x=0,
                                       xanchor="left"), height=720, margin=dict(l=0, r=0, t=50, b=0))
-        st.plotly_chart(fig4, **WIDE)
+        chart(fig4)
 
         covs = []
         if has_rev:

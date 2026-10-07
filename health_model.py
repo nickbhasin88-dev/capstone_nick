@@ -274,28 +274,44 @@ def unit_costs(row: pd.Series, P: dict) -> dict:
     }
 
 
-def per_unit_deaths(row: pd.Series, P: dict, art_cov: float) -> dict:
-    """Deaths per unit of service lost, by year 1..5 (arrays n x 5). Malaria handled separately (LiST)."""
+FALLBACK_MORTALITY_TREND = -0.009    # %/yr decline in baseline mortality (Cavalcanti et al. 2025, Lancet, appendix 10.2)
+TREND_COLUMNS = {"u5": "trend_u5mr", "malaria": "trend_malaria_deaths", "tb": "trend_tb_deaths"}
+
+
+def mortality_trend_factors(row: pd.Series, kind: str, use: bool = True) -> np.ndarray:
+    """(1 + annual trend)^(year - 1) for years 1..5: baseline deaths keep falling (or rising) as they did in 2010-2019.
+    kind: 'u5' (under-5 mortality rate) or 'malaria' (child malaria deaths). Ones when switched off."""
+    if not use:
+        return np.ones(N_YEARS)
+    t = _v(row, TREND_COLUMNS[kind])
+    t = FALLBACK_MORTALITY_TREND if np.isnan(t) else t
+    return (1.0 + t) ** np.arange(N_YEARS)
+
+
+def per_unit_deaths(row: pd.Series, P: dict, art_cov: float, trend: bool = True) -> dict:
+    """Deaths per unit of service lost, by year 1..5 (arrays n x 5). Malaria handled separately (LiST).
+    trend: scale vaccine deaths by the country's falling under-5 mortality (TB and ART are per patient: unchanged)."""
     n = len(P["uc_imm"])
     h = _v(row, "tb_hiv_share", 0.0)
     a = 0.0 if np.isnan(art_cov) else art_cov
     cfr_up = P["tb_cfr_untreated_pos"] * (1 - 0.3 * a)     # untreated HIV+ TB: lower when on ART (0.78 -> 0.49)
     cfr_tp = P["tb_cfr_treated_pos"] * (1 - 0.3 * a)
     dcfr = (1 - h) * (P["tb_cfr_untreated_neg"] - P["tb_cfr_treated_neg"]) + h * (cfr_up - cfr_tp)
-    u5 = _v(row, "sh_dyn_mort", 50.0)
-    imm = P["imm_deaths_per_child_ref"] * P["imm_u5_share"] * float(np.clip(u5 / 50.0, 0.3, 2.5))
+    u5 = _v(row, "sh_dyn_mort", 50.0) * mortality_trend_factors(row, "u5", trend)       # per year 1..5
+    imm_scale = np.clip(u5 / 50.0, 0.3, 2.5) * LAG["imm"]
     return {
         "hiv_art": np.outer(P["art_hazard_mult"], ART_HAZARD),
         "hiv_pmtct": np.outer(P["pmtct_vt_reduction"] * P["pmtct_infant_mort"], LAG["hiv_pmtct"]),
         "hiv_prev": np.zeros((n, N_YEARS)), "hiv_ovc": np.zeros((n, N_YEARS)),
         "tb_ds": np.outer(dcfr, LAG["tb_ds"]),
         "tb_dr": np.outer(P["tb_dr_dcfr"], LAG["tb_dr"]),
-        "imm": np.outer(imm, LAG["imm"]),
+        "imm": np.outer(P["imm_deaths_per_child_ref"] * P["imm_u5_share"], imm_scale),
     }
 
 
-def malaria_deaths(row, P, units, need_cov) -> dict:
-    """Lives Saved Tool structure: D1 = D0 * prod_i (1 - E_i C_i1) / (1 - E_i C_i0). Returns per-line yearly deaths."""
+def malaria_deaths(row, P, units, need_cov, trend: bool = True) -> dict:
+    """Lives Saved Tool structure: D1 = D0 * prod_i (1 - E_i C_i1) / (1 - E_i C_i0). Returns per-line yearly deaths.
+    trend: baseline malaria deaths D0 follow the country's 2010-2019 trend in years 1..5."""
     D0 = _v(row, "malaria_deaths")
     n = len(P["mal_vc_eff"])
     zero = {k: np.zeros((n, N_YEARS)) for k in ("mal_itn", "mal_irs", "mal_cm")}
@@ -316,16 +332,17 @@ def malaria_deaths(row, P, units, need_cov) -> dict:
     denom = np.where(np.abs(dv) + np.abs(dc) > 0, np.abs(dv) + np.abs(dc), 1)
     dv_s, dc_s = total * np.abs(dv) / denom, total * np.abs(dc) / denom
     sh_itn = np.where(np.abs(u_vc) > 0, units["mal_itn"] / np.where(u_vc == 0, 1, u_vc), 0.5)
-    return {"mal_itn": np.outer(dv_s * sh_itn, LAG["mal_itn"]),
-            "mal_irs": np.outer(dv_s * (1 - sh_itn), LAG["mal_irs"]),
-            "mal_cm": np.outer(dc_s, LAG["mal_cm"])}
+    f = mortality_trend_factors(row, "malaria", trend)          # D0 x (1 + trend)^(year - 1)
+    return {"mal_itn": np.outer(dv_s * sh_itn, LAG["mal_itn"] * f),
+            "mal_irs": np.outer(dv_s * (1 - sh_itn), LAG["mal_irs"] * f),
+            "mal_cm": np.outer(dc_s, LAG["mal_cm"] * f)}
 
 
 # --------------------------------------------------------------------------- #
 # Core
 # --------------------------------------------------------------------------- #
 def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, ptab: pd.DataFrame,
-                n_draws: int = 400, seed: int = 7, keep_draws: bool = False) -> dict:
+                n_draws: int = 400, seed: int = 7, keep_draws: bool = False, mortality_trend: bool = True) -> dict:
     ci, lines = inputs["ci"], inputs["lines"]
     row = ci.loc[iso3] if iso3 in ci.index else pd.Series(dtype=float)
     cells = lines[lines.iso3 == iso3].copy()
@@ -367,7 +384,7 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
 
     ep = epi(row, Pc)
     ucc = unit_costs(row, Pc)
-    pudc = per_unit_deaths(row, Pc, ep["art_cov"])
+    pudc = per_unit_deaths(row, Pc, ep["art_cov"], mortality_trend)
 
     # deaths per $ (central) for "lives first" ranking; malaria via a small marginal LiST calculation
     def deaths_per_dollar(l):
@@ -376,7 +393,7 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
         if l.startswith("mal_"):
             u = {k: np.zeros(1) for k in ("mal_itn", "mal_irs", "mal_cm")}
             u[l] = np.array([1e6 / ucc[l][0]])
-            return float(malaria_deaths(row, Pc, u, ep["need_cov"])[l].sum() / 1e6)
+            return float(malaria_deaths(row, Pc, u, ep["need_cov"], mortality_trend)[l].sum() / 1e6)
         return 0.0
 
     dpd = {l: deaths_per_dollar(l) for l in ALL_DIRECT}
@@ -434,12 +451,12 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
             U["mal_itn"], U["mal_irs"] = U["mal_itn"] * scale, U["mal_irs"] * scale
 
     # ---- 4. lives ----
-    pud = per_unit_deaths(row, P, ep["art_cov"])
+    pud = per_unit_deaths(row, P, ep["art_cov"], mortality_trend)
     deaths = {}
     for l in ALL_DIRECT:
         if l in pud:
             deaths[l] = pud[l] * np.asarray(units[l])[:, None]
-    deaths.update(malaria_deaths(row, P, units, ep["need_cov"]))
+    deaths.update(malaria_deaths(row, P, units, ep["need_cov"], mortality_trend))
     infections = {
         "hiv_art": np.outer(units["hiv_art"] * P["art_transmission"], ART_INFECT_LAG),
         "hiv_pmtct": np.outer(units["hiv_pmtct"] * P["pmtct_vt_reduction"], np.ones(N_YEARS)),
@@ -447,7 +464,7 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
     }
     # central run (all parameters at central values)
     deathsc = {l: pudc[l] * np.asarray(unitsc[l])[:, None] for l in ALL_DIRECT if l in pudc}
-    deathsc.update(malaria_deaths(row, Pc, unitsc, ep["need_cov"]))
+    deathsc.update(malaria_deaths(row, Pc, unitsc, ep["need_cov"], mortality_trend))
 
     # ---- assemble ----
     def q(a, p):
@@ -573,11 +590,12 @@ def statistical_crosscheck(res: dict, inputs: dict, ptab: pd.DataFrame) -> pd.Da
 # --------------------------------------------------------------------------- #
 # Batch helpers
 # --------------------------------------------------------------------------- #
-def dose_response(iso3, bucket, fiscal, inputs, ptab, grid=None, n_draws=120):
+def dose_response(iso3, bucket, fiscal, inputs, ptab, grid=None, n_draws=120, mortality_trend=True):
     grid = np.linspace(0, 1, 11) if grid is None else grid
     rows = []
     for g in grid:
-        r = run_country(iso3, uniform_scenario(bucket, float(g)), fiscal, inputs, ptab, n_draws=n_draws)
+        r = run_country(iso3, uniform_scenario(bucket, float(g)), fiscal, inputs, ptab, n_draws=n_draws,
+                        mortality_trend=mortality_trend)
         bb = r["buckets"].set_index("bucket").loc[bucket]
         main_line = {"HIV": "hiv_art", "TB": "tb_ds", "Malaria": "mal_itn", "Immunization": "imm"}[bucket]
         ln = r["lines"].set_index("line").loc[main_line]
@@ -587,11 +605,11 @@ def dose_response(iso3, bucket, fiscal, inputs, ptab, grid=None, n_draws=120):
     return pd.DataFrame(rows)
 
 
-def run_all(scenario, fiscal, inputs, ptab, n_draws=80, countries=None):
+def run_all(scenario, fiscal, inputs, ptab, n_draws=80, countries=None, mortality_trend=True):
     countries = countries or [c for c in inputs["ci"].index if c in set(inputs["lines"].iso3)]
     recs = []
     for c in countries:
-        r = run_country(c, scenario, fiscal, inputs, ptab, n_draws=n_draws)
+        r = run_country(c, scenario, fiscal, inputs, ptab, n_draws=n_draws, mortality_trend=mortality_trend)
         row = inputs["ci"].loc[c]
         t = r["totals"]
         rec = {"iso3": c, "pop": _v(row, "sp_pop_totl"), "base_usd": t["base"], "gross_loss_usd": t["gross"],
@@ -605,3 +623,83 @@ def run_all(scenario, fiscal, inputs, ptab, n_draws=80, countries=None):
         rec["hiv_infections_5y"] = float(r["buckets"].set_index("bucket").loc["HIV", "infections_5y"])
         recs.append(rec)
     return pd.DataFrame(recs)
+
+
+# --------------------------------------------------------------------------- #
+# Alternative estimates of the same cut (Validation & Benchmarks page)
+# --------------------------------------------------------------------------- #
+# Our own Poisson fixed-effects regressions (prepare_model.py, Cavalcanti et al. 2025 appendix 4.1 method):
+# bucket -> (regression key, baseline-deaths column, aid-before column or None, denominator column)
+POISSON_SPECS = {
+    "TB": ("poisson_tb", "tb_deaths_total", None, "sp_pop_totl"),
+    "Malaria": ("poisson_malaria", "malaria_deaths", None, "sp_pop_totl"),
+    "Immunization": ("poisson_u5", "sh_dth_mort", "dah_nch_base", "births"),
+}
+
+
+def poisson_projection(res: dict, inputs: dict) -> pd.DataFrame:
+    """deaths_after = deaths_now x exp(beta x (x_after - x_before)), x = log(1 + aid per person), using the net cut
+    (after government backfill). Extra deaths over 5 years = 5 x the yearly change; range from beta +/- 1.96 SE.
+    TB and malaria use the bucket's own aid; under-5 deaths use all vaccine + child health aid per birth, cut by the
+    net immunization loss. Malaria is estimated on child deaths and applied proportionally to all-age deaths."""
+    row = inputs["ci"].loc[res["iso3"]]
+    B = res["buckets"].set_index("bucket")
+    out = []
+    for b, (key, death_col, before_col, denom_col) in POISSON_SPECS.items():
+        r = inputs["reg"].get(key)
+        deaths, denom = _v(row, death_col), _v(row, denom_col)
+        if r is None or np.isnan(deaths) or np.isnan(denom) or denom <= 0:
+            continue
+        before = _v(row, before_col) if before_col else B.loc[b, "base_usd"]
+        if np.isnan(before):
+            continue
+        after = max(before - B.loc[b, "net_loss_usd"], 0.0)
+        dx = np.log1p(after / denom) - np.log1p(before / denom)
+        beta, se = r["coef"][r["x"][0]], r["se"][r["x"][0]]
+        est = {tag: 5 * deaths * (np.exp(bt * dx) - 1) for tag, bt in (("", beta), ("_a", beta - 1.96 * se), ("_b", beta + 1.96 * se))}
+        out.append({"bucket": b, "deaths_5y": est[""], "deaths_5y_lo": min(est["_a"], est["_b"]),
+                    "deaths_5y_hi": max(est["_a"], est["_b"]), "beta": beta, "se": se, "baseline_deaths": deaths,
+                    "aid_pc_before": before / denom, "aid_pc_after": after / denom})
+    return pd.DataFrame(out)
+
+
+# Cavalcanti et al. 2025 (Lancet), appendix Web Table 19: rate ratios for USAID health funding per capita vs ~$0
+LANCET_FUNDING = np.array([0.71, 1.37, 5.76])
+LANCET_RR = {"HIV": np.array([0.83, 0.81, 0.50]), "Malaria": np.array([0.94, 0.78, 0.58]),
+             "Maternal": np.array([0.91, 0.83, 0.67])}
+LANCET_BASELINE = {"HIV": "hiv_deaths_est", "Malaria": "malaria_deaths", "Maternal": "sh_mmr_dths"}
+
+
+def lancet_log_rr(bucket: str, funding_pc: float) -> float:
+    """Log rate ratio at a given US health aid per capita: interpolated in log funding between the published points,
+    linear in funding from 0 up to the first point, and held flat above the last one."""
+    lr = np.log(LANCET_RR[bucket])
+    if funding_pc <= 0:
+        return 0.0
+    if funding_pc < LANCET_FUNDING[0]:
+        return float(lr[0] * funding_pc / LANCET_FUNDING[0])
+    return float(np.interp(np.log(funding_pc), np.log(LANCET_FUNDING), lr))
+
+
+def lancet_projection(res: dict, inputs: dict) -> pd.DataFrame:
+    """Apply the published rate ratios to the country's US-source health aid per capita before and after the cut.
+    The US cut is the share of US money lost in the modelled cells, net of government backfill in proportion."""
+    row = inputs["ci"].loc[res["iso3"]]
+    pop, us_base = _v(row, "sp_pop_totl"), _v(row, "us_health_aid_base")
+    cells, T = res["cells"], res["totals"]
+    us = cells[cells["src_grp"] == "United States"]
+    us_cut = float(np.clip(us["loss"].sum() / us["usd"].sum(), 0, 1)) if us["usd"].sum() > 0 else 0.0
+    us_cut *= (T["net"] / T["gross"]) if T["gross"] > 0 else 0.0
+    if np.isnan(pop) or pop <= 0 or np.isnan(us_base):
+        return pd.DataFrame()
+    f0 = us_base / pop
+    f1 = f0 * (1 - us_cut)
+    out = []
+    for b, col in LANCET_BASELINE.items():
+        deaths = _v(row, col)
+        if np.isnan(deaths):
+            continue
+        ratio = np.exp(lancet_log_rr(b, f1) - lancet_log_rr(b, f0))
+        out.append({"bucket": b, "deaths_5y": 5 * deaths * (ratio - 1), "baseline_deaths": deaths,
+                    "us_aid_pc_before": f0, "us_aid_pc_after": f1, "us_cut_share": us_cut})
+    return pd.DataFrame(out)

@@ -9,6 +9,9 @@ coverage falls and how many more people die?* Buckets: HIV, TB, malaria, immuniz
 |---|---|
 | `app.py` | Your dashboard, unchanged except: section 3 is wrapped in a function (so a country with no IMF data no longer stops the page) and section 4 is added at the end. |
 | `model_section.py` | Section 4 UI: scenario controls, charts, tables. |
+| `pages/2_Validation.py` | Validation & Benchmarks page (sidebar link): model totals vs published estimates, and the unit-cost model vs our Poisson regression vs the Lancet rate ratios for one country. |
+| `country_lists.py` | Countries the app knows about and which ones the dropdowns offer (`HIDDEN_FROM_DROPDOWN`). |
+| `.streamlit/config.toml` | Hides Streamlit's automatic page list; the sidebar shows named page links instead. |
 | `scenarios.py` | The donor-scenario presets (`build_scenario`), shared by the app and `prepare_model.py`. |
 | `health_model.py` | The model itself (no Streamlit). Import it in a notebook to run anything in batch. |
 | `model_params.csv` | Every unit cost and effect size, with low/central/high, a `status` column (sourced / assumption) and the citation. Edit here, or live in the app. |
@@ -65,8 +68,15 @@ python prepare_model.py --precompute-only
 
    Still assumptions (flagged `assumption` in model_params.csv): malaria case-management cost, PMTCT cost, HIV prevention cost
    per infection averted, DR-TB deaths averted, default coverage where surveys are missing, continuity (15%), systems share (50%).
+   Already-falling death rates (sidebar switch, on by default): baseline malaria deaths and the under-5 mortality
+   scaling for vaccines follow each country's 2010-19 trend in years 1-5 (log-linear fit, clipped to -8%..+2% a year;
+   -0.9%/yr fallback from Cavalcanti et al. 2025). TB and ART effects are per patient and unchanged.
 5. **Uncertainty.** 400 Monte Carlo draws from triangular(low, central, high) for every parameter.
-6. **Cross-check.** Two-way fixed-effects regressions of ART coverage, TB treatment coverage and DTP3 on aid per person
+6. **Poisson death regressions** (method of Cavalcanti et al. 2025, appendix 4.1): TB, under-5 and child malaria
+   deaths on log(1 + aid per person or per birth) with country and year fixed effects, population offset and
+   country-clustered SEs (statsmodels). `health_model.poisson_projection` applies them to a scenario; the TB and
+   malaria coefficients are negative, the under-5 one is positive (aid targeted where child deaths are high).
+7. **Cross-check.** Two-way fixed-effects regressions of ART coverage, TB treatment coverage and DTP3 on aid per person
    in need (2005-23). These give a lower bound; the unit-cost model gives the abrupt-cut case.
 
 ## Scenario presets

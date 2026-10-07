@@ -1,0 +1,3 @@
+[client]
+# The sidebar shows named links (Dashboard / Validation & Benchmarks) instead of the automatic page list
+showSidebarNavigation = false
