@@ -509,7 +509,7 @@ else:
     # which organizations the checkered money went through, per bar (for hover text)
     ngo_detail = (window[window["route"] == "ngo"].groupby(["year", "source", "channel"])["val"].sum().reset_index())
     ngo_detail = ngo_detail[ngo_detail["val"] > 0]
-    ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd).astype(str)
+    ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd)
     ngo_hover = ngo_detail.groupby(["year", "source"])["txt"].apply("<br>".join).to_dict()
     # axis unit adapts to size (millions / billions / trillions)
     unit_div, unit_name, unit_sfx = pick_unit(agg.groupby("year")["val"].sum().max() if len(agg) else 0)
@@ -671,172 +671,197 @@ st.divider()
 # =========================================================================== #
 st.header(f"3. The government's role in {country_name}: revenue (money in) and spending (money out)")
 
-rev = load_revenue(crow["iso3"]) if REVENUE_DIR.exists() else None
-spd = load_cofog_all(crow["iso3"]) if COFOG_ALL_DIR.exists() else None
-rev_years = set(rev["year"].unique()) if rev is not None and not rev.empty else set()
-spd_years = set(spd["year"].unique()) if spd is not None and not spd.empty else set()
+def _budget_section():
+    rev = load_revenue(crow["iso3"]) if REVENUE_DIR.exists() else None
+    spd = load_cofog_all(crow["iso3"]) if COFOG_ALL_DIR.exists() else None
+    rev_years = set(rev["year"].unique()) if rev is not None and not rev.empty else set()
+    spd_years = set(spd["year"].unique()) if spd is not None and not spd.empty else set()
 
-if not rev_years and not spd_years:
-    st.info(f"The IMF files have no government revenue or spending-by-function data for {country_name}.")
-else:
-    both = sorted(rev_years & spd_years, reverse=True)
-    years_all = sorted(rev_years | spd_years, reverse=True)
-    default_y = both[0] if both else years_all[0]
-    _, ymid, _ = st.columns([1, 1, 1])
-    with ymid:
-        yr4 = st.selectbox("Year", years_all, index=years_all.index(default_y), key=f"c4_year_{crow['iso3']}")
+    if not rev_years and not spd_years:
+        st.info(f"The IMF files have no government revenue or spending-by-function data for {country_name}.")
+    else:
+        both = sorted(rev_years & spd_years, reverse=True)
+        years_all = sorted(rev_years | spd_years, reverse=True)
+        default_y = both[0] if both else years_all[0]
+        _, ymid, _ = st.columns([1, 1, 1])
+        with ymid:
+            yr4 = st.selectbox("Year", years_all, index=years_all.index(default_y), key=f"c4_year_{crow['iso3']}")
 
-    # GDP used to turn IMF "% of GDP" into dollars: IMF WEO GDP in current US$ for that year (actual figures);
-    # falls back to GDP backed out of IHME's health-spending ratios (constant 2023 US$, approximate)
-    gdp_m, gdp_basis, debt_pct = None, "", None
-    _mac = load_macro(crow["iso3"]) if any(MACRO_DIR.glob("*.csv")) else None
-    if _mac is not None:
-        _r = _mac[_mac["year"] == yr4]
-        if len(_r):
-            if pd.notna(_r["gdp_usd_bn"].iloc[0]):
-                gdp_m, gdp_basis = float(_r["gdp_usd_bn"].iloc[0]) * 1e3, "current US$ (IMF World Economic Outlook)"
-            if "gov_gross_debt_pct_gdp" in _r.columns and pd.notna(_r["gov_gross_debt_pct_gdp"].iloc[0]):
-                debt_pct = float(_r["gov_gross_debt_pct_gdp"].iloc[0])
-    if gdp_m is None and crow["has_spend"] and (SPEND_DIR / f"{crow['iso3']}.csv").exists():
-        _sp = load_spending(crow["iso3"])
-        if "gdp_usd_k" in _sp.columns:
-            _gdp_k = _sp["gdp_usd_k"]
-        elif {"the_total_mean", "the_per_gdp_mean"} <= set(_sp.columns):
-            _gdp_k = _sp["the_total_mean"] / _sp["the_per_gdp_mean"].where(_sp["the_per_gdp_mean"] > 0)
-        else:
-            _gdp_k = None
-        if _gdp_k is not None:
-            _g = _gdp_k[_sp["year"] == yr4]
-            if len(_g) and pd.notna(_g.iloc[0]) and _g.iloc[0] > 0:
-                gdp_m, gdp_basis = float(_g.iloc[0]) / 1e3, "constant 2023 US$ (backed out of IHME ratios, approximate)"
+        # GDP used to turn IMF "% of GDP" into dollars: IMF WEO GDP in current US$ for that year (actual figures);
+        # falls back to GDP backed out of IHME's health-spending ratios (constant 2023 US$, approximate)
+        gdp_m, gdp_basis, debt_pct = None, "", None
+        _mac = load_macro(crow["iso3"]) if any(MACRO_DIR.glob("*.csv")) else None
+        if _mac is not None:
+            _r = _mac[_mac["year"] == yr4]
+            if len(_r):
+                if pd.notna(_r["gdp_usd_bn"].iloc[0]):
+                    gdp_m, gdp_basis = float(_r["gdp_usd_bn"].iloc[0]) * 1e3, "current US$ (IMF World Economic Outlook)"
+                if "gov_gross_debt_pct_gdp" in _r.columns and pd.notna(_r["gov_gross_debt_pct_gdp"].iloc[0]):
+                    debt_pct = float(_r["gov_gross_debt_pct_gdp"].iloc[0])
+        if gdp_m is None and crow["has_spend"] and (SPEND_DIR / f"{crow['iso3']}.csv").exists():
+            _sp = load_spending(crow["iso3"])
+            if "gdp_usd_k" in _sp.columns:
+                _gdp_k = _sp["gdp_usd_k"]
+            elif {"the_total_mean", "the_per_gdp_mean"} <= set(_sp.columns):
+                _gdp_k = _sp["the_total_mean"] / _sp["the_per_gdp_mean"].where(_sp["the_per_gdp_mean"] > 0)
+            else:
+                _gdp_k = None
+            if _gdp_k is not None:
+                _g = _gdp_k[_sp["year"] == yr4]
+                if len(_g) and pd.notna(_g.iloc[0]) and _g.iloc[0] > 0:
+                    gdp_m, gdp_basis = float(_g.iloc[0]) / 1e3, "constant 2023 US$ (backed out of IHME ratios, approximate)"
 
-    def _amt(pct_gdp):
-        """US$ (as text) for an item given as % of GDP; empty when GDP isn't available."""
-        return fmt_usd(pct_gdp / 100 * gdp_m) if (gdp_m and pd.notna(pct_gdp)) else ""
+        def _amt(pct_gdp):
+            """US$ (as text) for an item given as % of GDP; empty when GDP isn't available."""
+            return fmt_usd(pct_gdp / 100 * gdp_m) if (gdp_m and pd.notna(pct_gdp)) else ""
 
-    rg = rev[rev["year"] == yr4] if rev is not None else None
-    g = spd[spd["year"] == yr4] if spd is not None else None
-    has_rev = rg is not None and not rg.empty
-    has_spd = g is not None and not g.empty
-    if not has_rev:
-        if rev_years:
-            st.info(f"No IMF revenue data for {country_name} in {int(yr4)}; revenue is available for "
-                    f"{int(min(rev_years))}-{int(max(rev_years))} - pick another year.")
-        elif not any(REVENUE_DIR.glob("*.csv")):
-            st.info("Revenue isn't showing because the `revenue_data/` folder wasn't found next to this script.")
-        else:
-            st.info(f"The IMF revenue file has no data for {country_name}.")
+        rg = rev[rev["year"] == yr4] if rev is not None else None
+        g = spd[spd["year"] == yr4] if spd is not None else None
+        has_rev = rg is not None and not rg.empty
+        has_spd = g is not None and not g.empty
+        if not has_rev:
+            if rev_years:
+                st.info(f"No IMF revenue data for {country_name} in {int(yr4)}; revenue is available for "
+                        f"{int(min(rev_years))}-{int(max(rev_years))} - pick another year.")
+            elif not any(REVENUE_DIR.glob("*.csv")):
+                st.info("Revenue isn't showing because the `revenue_data/` folder wasn't found next to this script.")
+            else:
+                st.info(f"The IMF revenue file has no data for {country_name}.")
 
-    # ---- sizes in % of GDP, so the revenue side and the spending side are directly comparable ----
-    R = float(rg["pct_gdp"].sum()) if has_rev else None
-    T = None
-    if has_spd:
-        if "total_pct_gdp" in g.columns and g["total_pct_gdp"].notna().any():
-            T = float(g["total_pct_gdp"].dropna().iloc[0])
-        else:
-            _both = g[g["pct_gdp"].notna() & (g["pct_outlays"] > 0)]
-            T = float((100 * _both["pct_gdp"] / _both["pct_outlays"]).median()) if len(_both) else None
-    can_compare = has_rev and has_spd and T is not None
-    if has_spd and T is None:
-        st.info("The IMF spending data for this year has no size information (% of GDP), so spending can't be drawn to scale"
-                + ("; showing revenue only." if has_rev else "."))
-        has_spd = False
-    if not (has_rev or has_spd):
-        st.info(f"No IMF revenue or spending data for {country_name} in {int(yr4)}.")
-        st.stop()
+        # ---- sizes in % of GDP, so the revenue side and the spending side are directly comparable ----
+        R = float(rg["pct_gdp"].sum()) if has_rev else None
+        T = None
+        if has_spd:
+            if "total_pct_gdp" in g.columns and g["total_pct_gdp"].notna().any():
+                T = float(g["total_pct_gdp"].dropna().iloc[0])
+            else:
+                _both = g[g["pct_gdp"].notna() & (g["pct_outlays"] > 0)]
+                T = float((100 * _both["pct_gdp"] / _both["pct_outlays"]).median()) if len(_both) else None
+        can_compare = has_rev and has_spd and T is not None
+        if has_spd and T is None:
+            st.info("The IMF spending data for this year has no size information (% of GDP), so spending can't be drawn to scale"
+                    + ("; showing revenue only." if has_rev else "."))
+            has_spd = False
+        if not (has_rev or has_spd):
+            st.info(f"No IMF revenue or spending data for {country_name} in {int(yr4)}.")
+            return
 
-    gap = (T - R) if can_compare else 0.0
-    ids, labels, parents, values, colors_, texts, hov = [], [], [], [], [], [], []
+        gap = (T - R) if can_compare else 0.0
+        ids, labels, parents, values, colors_, texts, hov = [], [], [], [], [], [], []
 
-    def node(id_, label, parent, value, color, hover="", side_total=None):
-        ids.append(id_); labels.append(label); parents.append(parent); values.append(float(value)); colors_.append(color)
-        amt = _amt(value)
-        share = (100 * value / side_total) if side_total else None
-        texts.append(" - ".join(x for x in (amt, f"{share:.0f}%" if share is not None else "") if x))
-        hov.append(" | ".join(x for x in (amt, f"{value:.1f}% of GDP", f"{share:.1f}% of this side" if share is not None else "", hover) if x))
+        def node(id_, label, parent, value, color, hover="", side_total=None):
+            ids.append(id_); labels.append(label); parents.append(parent); values.append(float(value)); colors_.append(color)
+            amt = _amt(value)
+            share = (100 * value / side_total) if side_total else None
+            texts.append(" - ".join(x for x in (amt, f"{share:.0f}%" if share is not None else "") if x))
+            hov.append(" | ".join(x for x in (amt, f"{value:.1f}% of GDP", f"{share:.1f}% of this side" if share is not None else "", hover) if x))
 
-    side = max(R or 0.0, T or 0.0) if can_compare else None       # both sides are drawn to this same total
-    node("root", "Government budget", "", 0.0, "#d5d8dc")
+        side = max(R or 0.0, T or 0.0) if can_compare else None       # both sides are drawn to this same total
+        node("root", "Government budget", "", 0.0, "#d5d8dc")
 
-    # ----- revenue side (+ borrowing when spending exceeds revenue) -----
-    if has_rev:
-        rev_side = (R + max(gap, 0.0)) if can_compare else R
-        node("rev", "Money in: revenue + borrowing" if (can_compare and gap > 0.05) else "Money in: revenue", "root", rev_side, "#d6eaf8",
-             f"Revenue alone: {_amt(R) + ' = ' if gdp_m else ''}{R:.1f}% of GDP", rev_side)
-        tx = rg[rg["group"] == "Taxes"]
-        if not tx.empty:
-            node("rev:Taxes", "Taxes", "rev", tx["pct_gdp"].sum(), REV_GROUP_COLORS["Taxes"], side_total=rev_side)
-        for _, r in rg.iterrows():
-            node(f"rev:{r['label']}", r["label"], "rev:Taxes" if r["group"] == "Taxes" else "rev", r["pct_gdp"],
-                 REV_TAX_COLORS.get(r["label"], "#5499c7") if r["group"] == "Taxes" else REV_GROUP_COLORS.get(r["group"], "#7f8c8d"),
-                 "not broken out by the IMF" if r["group"] == "Unclassified" else "", rev_side)
-        if can_compare and gap > 0.05:
-            node("rev:debt", "Borrowing / debt (spending beyond revenue)", "rev", gap, "#4a235a",
-                 "Spending exceeded revenue by this much; the gap is financed by new borrowing or drawing down reserves", rev_side)
+        # ----- revenue side (+ borrowing when spending exceeds revenue) -----
+        if has_rev:
+            rev_side = (R + max(gap, 0.0)) if can_compare else R
+            node("rev", "Money in: revenue + borrowing" if (can_compare and gap > 0.05) else "Money in: revenue", "root", rev_side, "#d6eaf8",
+                 f"Revenue alone: {_amt(R) + ' = ' if gdp_m else ''}{R:.1f}% of GDP", rev_side)
+            tx = rg[rg["group"] == "Taxes"]
+            if not tx.empty:
+                node("rev:Taxes", "Taxes", "rev", tx["pct_gdp"].sum(), REV_GROUP_COLORS["Taxes"], side_total=rev_side)
+            for _, r in rg.iterrows():
+                node(f"rev:{r['label']}", r["label"], "rev:Taxes" if r["group"] == "Taxes" else "rev", r["pct_gdp"],
+                     REV_TAX_COLORS.get(r["label"], "#5499c7") if r["group"] == "Taxes" else REV_GROUP_COLORS.get(r["group"], "#7f8c8d"),
+                     "not broken out by the IMF" if r["group"] == "Unclassified" else "", rev_side)
+            if can_compare and gap > 0.05:
+                node("rev:debt", "Borrowing / debt (spending beyond revenue)", "rev", gap, "#4a235a",
+                     "Spending exceeded revenue by this much; the gap is financed by new borrowing or drawing down reserves", rev_side)
 
-    # ----- spending side (+ surplus when revenue exceeds spending) -----
-    if has_spd:
-        spd_side = (T + max(-gap, 0.0)) if can_compare else T
-        node("spd", "Money out: spending + surplus" if (can_compare and gap < -0.05) else "Money out: spending", "root", spd_side, "#fadbd8",
-             f"Spending alone: {_amt(T) + ' = ' if gdp_m else ''}{T:.1f}% of GDP", spd_side)
-        hg = g[g["group"] == "Health"]
-        if not hg.empty:
-            node("spd:Health", "Health", "spd", hg["pct_outlays"].sum() / 100 * T, "#cb4335", side_total=spd_side)
-        for _, r in g.iterrows():
-            is_h = r["group"] == "Health"
-            node(f"spd:{r['label']}", r["label"], "spd:Health" if is_h else "spd", r["pct_outlays"] / 100 * T,
-                 "#bdc3c7" if r["group"] == "Unclassified" else (HEALTH_REDS.get(r["label"], "#cb4335") if is_h else OTHER_FUNCS.get(r["label"], "#7f8c8d")),
-                 "not reported by the IMF for this country-year" if r["group"] == "Unclassified" else
-                 ("debt interest, split out of general public services" if r["label"] == "Interest on public debt" else ""), spd_side)
-        if can_compare and gap < -0.05:
-            node("spd:surplus", "Surplus (revenue not spent)", "spd", -gap, "#a9dfbf",
-                 "Revenue exceeded spending by this much (saved or used to pay down debt)", spd_side)
+        # ----- spending side (+ surplus when revenue exceeds spending) -----
+        if has_spd:
+            spd_side = (T + max(-gap, 0.0)) if can_compare else T
+            node("spd", "Money out: spending + surplus" if (can_compare and gap < -0.05) else "Money out: spending", "root", spd_side, "#fadbd8",
+                 f"Spending alone: {_amt(T) + ' = ' if gdp_m else ''}{T:.1f}% of GDP", spd_side)
+            hg = g[g["group"] == "Health"]
+            if not hg.empty:
+                node("spd:Health", "Health", "spd", hg["pct_outlays"].sum() / 100 * T, "#cb4335", side_total=spd_side)
+            for _, r in g.iterrows():
+                is_h = r["group"] == "Health"
+                node(f"spd:{r['label']}", r["label"], "spd:Health" if is_h else "spd", r["pct_outlays"] / 100 * T,
+                     "#bdc3c7" if r["group"] == "Unclassified" else (HEALTH_REDS.get(r["label"], "#cb4335") if is_h else OTHER_FUNCS.get(r["label"], "#7f8c8d")),
+                     "not reported by the IMF for this country-year" if r["group"] == "Unclassified" else
+                     ("debt interest, split out of general public services" if r["label"] == "Interest on public debt" else ""), spd_side)
+            if can_compare and gap < -0.05:
+                node("spd:surplus", "Surplus (revenue not spent)", "spd", -gap, "#a9dfbf",
+                     "Revenue exceeded spending by this much (saved or used to pay down debt)", spd_side)
 
-    # parents hold (slightly more than) the sum of their children, computed bottom-up so branchvalues="total" always validates
-    acc = {}
-    for idx in range(len(ids) - 1, -1, -1):
-        if ids[idx] in acc:
-            values[idx] = acc[ids[idx]] * 1.000001
-        acc[parents[idx]] = acc.get(parents[idx], 0.0) + values[idx]
-    texts[0], hov[0] = "", ""
-    fig4 = go.Figure(go.Treemap(
-        ids=ids, labels=labels, parents=parents, values=values, branchvalues="total", text=texts,
-        marker=dict(colors=colors_, line=dict(width=1.5, color="white")), customdata=hov, textinfo="label+text",
-        hovertemplate="<b>%{label}</b><br>%{customdata}<extra></extra>", sort=False,
-    ))
-    fig4.update_layout(height=720, margin=dict(l=0, r=0, t=10, b=0))
-    st.plotly_chart(fig4, **WIDE)
+        # parents hold (slightly more than) the sum of their children, computed bottom-up so branchvalues="total" always validates
+        acc = {}
+        for idx in range(len(ids) - 1, -1, -1):
+            if ids[idx] in acc:
+                values[idx] = acc[ids[idx]] * 1.000001
+            acc[parents[idx]] = acc.get(parents[idx], 0.0) + values[idx]
+        texts[0], hov[0] = "", ""
+        fig4 = go.Figure(go.Treemap(
+            ids=ids, labels=labels, parents=parents, values=values, branchvalues="total", text=texts,
+            marker=dict(colors=colors_, line=dict(width=1.5, color="white")), customdata=hov, textinfo="label+text",
+            hovertemplate="<b>%{label}</b><br>%{customdata}<extra></extra>", sort=False,
+        ))
+        fig4.update_layout(height=720, margin=dict(l=0, r=0, t=10, b=0))
+        st.plotly_chart(fig4, **WIDE)
 
-    covs = []
-    if has_rev:
-        covs.append(f"revenue: {rg['coverage'].iloc[0].lower()}")
-    if has_spd:
-        covs.append(f"spending: {g['coverage'].iloc[0].lower()}")
-    st.caption(
-        f"{int(yr4)}. The revenue box (left) and spending box (right) are drawn to the same scale. When spending is larger, the "
-        "difference is shown as dark-purple 'Borrowing / debt' on the revenue side; when revenue is larger, a green 'Surplus' "
-        "box appears on the spending side. Debt interest is split out of general public services. "
-        f"Level of government ({'; '.join(covs)}). Grey = amounts the IMF doesn't break out.")
+        covs = []
+        if has_rev:
+            covs.append(f"revenue: {rg['coverage'].iloc[0].lower()}")
+        if has_spd:
+            covs.append(f"spending: {g['coverage'].iloc[0].lower()}")
+        st.caption(
+            f"{int(yr4)}. The revenue box (left) and spending box (right) are drawn to the same scale. When spending is larger, the "
+            "difference is shown as dark-purple 'Borrowing / debt' on the revenue side; when revenue is larger, a green 'Surplus' "
+            "box appears on the spending side. Debt interest is split out of general public services. "
+            f"Level of government ({'; '.join(covs)}). Grey = amounts the IMF doesn't break out.")
 
-    # ---------------- headline numbers ----------------
-    mcols = st.columns(4)
-    def _m(col, label, pct, signed=False):
-        if gdp_m:
-            col.metric(label, (("-" if pct < 0 else "+") if signed else "") + _amt(abs(pct)))
-        else:
-            col.metric(label, f"{pct:+.1f}% of GDP" if signed else f"{pct:.1f}% of GDP")
-    if R is not None:
-        _m(mcols[0], f"Revenue, {int(yr4)}", R)
-    if T is not None and has_spd:
-        _m(mcols[1], f"Spending, {int(yr4)}", T)
-    if can_compare:
-        _m(mcols[2], "Revenue minus spending", -gap, signed=True)
-    if debt_pct is not None:
-        mcols[3].metric(f"Gross government debt, {int(yr4)}", _amt(debt_pct) if gdp_m else f"{debt_pct:.0f}% of GDP")
-    st.caption(
-        "Both IMF datasets report each item as a share of GDP, so dollar amounts = that share x GDP"
-        + (f" (GDP in {gdp_basis})" if gdp_m else "") + ". After the IMF's latest actual year, GDP is the IMF's projection. "
-        "Revenue and spending come from two different IMF datasets and a country can be reported at a different level of "
-        "government in each, in which case the 'borrowing' or 'surplus' box is only a rough indication. Neither file has loan "
-        "principal or financing detail, so the borrowing box is simply spending minus revenue; gross debt (WEO) is the stock of "
-        "debt outstanding, not the yearly borrowing.")
+        # ---------------- headline numbers ----------------
+        mcols = st.columns(4)
+        def _m(col, label, pct, signed=False):
+            if gdp_m:
+                col.metric(label, (("-" if pct < 0 else "+") if signed else "") + _amt(abs(pct)))
+            else:
+                col.metric(label, f"{pct:+.1f}% of GDP" if signed else f"{pct:.1f}% of GDP")
+        if R is not None:
+            _m(mcols[0], f"Revenue, {int(yr4)}", R)
+        if T is not None and has_spd:
+            _m(mcols[1], f"Spending, {int(yr4)}", T)
+        if can_compare:
+            _m(mcols[2], "Revenue minus spending", -gap, signed=True)
+        if debt_pct is not None:
+            mcols[3].metric(f"Gross government debt, {int(yr4)}", _amt(debt_pct) if gdp_m else f"{debt_pct:.0f}% of GDP")
+        st.caption(
+            "Both IMF datasets report each item as a share of GDP, so dollar amounts = that share x GDP"
+            + (f" (GDP in {gdp_basis})" if gdp_m else "") + ". After the IMF's latest actual year, GDP is the IMF's projection. "
+            "Revenue and spending come from two different IMF datasets and a country can be reported at a different level of "
+            "government in each, in which case the 'borrowing' or 'surplus' box is only a rough indication. Neither file has loan "
+            "principal or financing detail, so the borrowing box is simply spending minus revenue; gross debt (WEO) is the stock of "
+            "debt outstanding, not the yearly borrowing.")
+
+
+_budget_section()
+
+
+st.divider()
+
+# =========================================================================== #
+# SECTION 4 - the model: funding cut -> fiscal response -> coverage -> lives
+# =========================================================================== #
+from model_section import render_model_section  # noqa: E402
+
+_imf = {}
+_mac4 = load_macro(crow["iso3"]) if any(MACRO_DIR.glob("*.csv")) else None
+if _mac4 is not None and "gov_gross_debt_pct_gdp" in _mac4.columns:
+    _d = _mac4[_mac4["gov_gross_debt_pct_gdp"].notna() & (_mac4["year"] <= 2024)]
+    if len(_d):
+        _imf["debt_pct_gdp"] = float(_d["gov_gross_debt_pct_gdp"].iloc[-1])
+_rev4 = load_revenue(crow["iso3"]) if REVENUE_DIR.exists() else None
+if _rev4 is not None and not _rev4.empty:
+    _ry = _rev4[_rev4["year"] <= 2024]["year"].max()
+    if pd.notna(_ry):
+        _imf["revenue_pct_gdp"] = float(_rev4.loc[_rev4["year"] == _ry, "pct_gdp"].sum())
+render_model_section(crow["iso3"], country_name, _imf)
