@@ -1,0 +1,138 @@
+{
+  "fiscal_replacement": {
+    "y": "d_ghes_pc",
+    "x": [
+      "d_dah_pc_fall",
+      "d_dah_pc_fall_l1",
+      "d_dah_pc_rise",
+      "d_gdp_pc"
+    ],
+    "coef": {
+      "d_dah_pc_fall": 0.073489,
+      "d_dah_pc_fall_l1": 0.115533,
+      "d_dah_pc_rise": -0.003046,
+      "d_gdp_pc": 0.008296
+    },
+    "se": {
+      "d_dah_pc_fall": 0.102629,
+      "d_dah_pc_fall_l1": 0.085123,
+      "d_dah_pc_rise": 0.07531,
+      "d_gdp_pc": 0.001974
+    },
+    "n_obs": 2134,
+    "n_countries": 97,
+    "years": [
+      2002,
+      2023
+    ],
+    "r2_within": 0.033
+  },
+  "hiv_art": {
+    "y": "sh_hiv_artc_zs",
+    "x": [
+      "x_hiv",
+      "ln_ghes_pc",
+      "ln_gdp_pc"
+    ],
+    "coef": {
+      "x_hiv": 6.976883,
+      "ln_ghes_pc": 1.669556,
+      "ln_gdp_pc": 12.738165
+    },
+    "se": {
+      "x_hiv": 2.124464,
+      "ln_ghes_pc": 2.488516,
+      "ln_gdp_pc": 5.156547
+    },
+    "n_obs": 1593,
+    "n_countries": 85,
+    "years": [
+      2005,
+      2023
+    ],
+    "r2_within": 0.1642
+  },
+  "tb_treatment": {
+    "y": "sh_tbs_dtec_zs",
+    "x": [
+      "x_tb",
+      "ln_ghes_pc",
+      "ln_gdp_pc"
+    ],
+    "coef": {
+      "x_tb": 1.513009,
+      "ln_ghes_pc": 2.630709,
+      "ln_gdp_pc": 0.971482
+    },
+    "se": {
+      "x_tb": 0.600564,
+      "ln_ghes_pc": 1.915491,
+      "ln_gdp_pc": 3.920433
+    },
+    "n_obs": 1793,
+    "n_countries": 97,
+    "years": [
+      2005,
+      2023
+    ],
+    "r2_within": 0.0347
+  },
+  "dtp3": {
+    "y": "sh_imm_idpt",
+    "x": [
+      "x_imm",
+      "ln_ghes_pc",
+      "ln_gdp_pc"
+    ],
+    "coef": {
+      "x_imm": 1.06389,
+      "ln_ghes_pc": 0.141575,
+      "ln_gdp_pc": 13.275142
+    },
+    "se": {
+      "x_imm": 0.732518,
+      "ln_ghes_pc": 1.699524,
+      "ln_gdp_pc": 3.108012
+    },
+    "n_obs": 1799,
+    "n_countries": 97,
+    "years": [
+      2005,
+      2023
+    ],
+    "r2_within": 0.0781
+  },
+  "malaria_incidence": {
+    "y": "ln_mal_inc",
+    "x": [
+      "x_mal",
+      "ln_ghes_pc",
+      "ln_gdp_pc"
+    ],
+    "coef": {
+      "x_mal": 0.060603,
+      "ln_ghes_pc": -0.366044,
+      "ln_gdp_pc": 0.273617
+    },
+    "se": {
+      "x_mal": 0.110979,
+      "ln_ghes_pc": 0.214253,
+      "ln_gdp_pc": 0.590117
+    },
+    "n_obs": 691,
+    "n_countries": 37,
+    "years": [
+      2005,
+      2023
+    ],
+    "r2_within": 0.0531
+  },
+  "_notes": {
+    "fiscal_replacement": "d(GHES per capita) on falls/rises in DAH per capita; theta = -(b_fall + b_fall_l1)",
+    "coverage": "coverage (percentage points) on log(1 + aid per person in need), 2-yr moving average of aid; country and year fixed effects; SEs clustered by country. Within-country associations, not causal.",
+    "baseline_years": [
+      2021,
+      2023
+    ]
+  }
+}
