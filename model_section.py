@@ -237,7 +237,7 @@ def _controls(iso3, country_name, I) -> dict:
             st.caption("Each parameter is drawn from a triangular distribution (low, central, high). "
                        "Edit any cell to see how sensitive the answer is.")
             ptab = st.data_editor(_default_params().reset_index(), hide_index=True, key="m_params",
-                                  disabled=["param", "label", "unit", "source"], column_config={"param": None}, **WIDE)
+                                  disabled=["param", "label", "unit", "status", "source"], column_config={"param": None}, **WIDE)
             ptab = ptab.set_index("param")
 
         st.divider()
@@ -839,7 +839,8 @@ def _published_estimates(A: pd.DataFrame, I, ptab):
             continue
         per_child.append(float(hm.per_unit_deaths(row, Pc, np.nan)["imm"][0, -1]))
         births.append(float(b))
-    model_per_child = float(np.average(per_child, weights=births)) if births else np.nan
+    model_per_child = float(np.average(per_child, weights=births)) if births else np.nan     # deaths before age 5
+    u5_share = float(Pc["imm_u5_share"][0])
     n = len(A)
     tbl = pd.DataFrame([
         {"Study": "Cavalcanti et al., Lancet 2025",
@@ -855,7 +856,7 @@ def _published_estimates(A: pd.DataFrame, I, ptab):
         {"Study": "Gavi (2000-2024)",
          "What it covers": "Future deaths averted per child immunised",
          "Published": "About 0.017 (20.6M deaths averted / 1.2B children)",
-         "This model (current scenario)": f"{model_per_child:.3f} per child (births-weighted across countries)"},
+         "This model (current scenario)": f"{model_per_child / u5_share:.3f} per child over a lifetime, of which {model_per_child:.3f} before age 5 (births-weighted across countries)"},
     ])
     st.dataframe(tbl, hide_index=True, **WIDE)
     st.markdown("The published studies cover more causes, programs, countries or years than this model, which counts "
@@ -936,19 +937,25 @@ per person across 97 countries; the estimate is slightly negative and not signif
 Replacement money is allocated pro-rata or "lives first" (lines with the most deaths averted per dollar first).
 
 **3. Coverage.** People losing a service = net loss ÷ cost per person x (1 - continuity), capped at the number currently
-covered. Costs = commodity cost + delivery cost x (GDP per capita / $2,000)^0.4. Coverage drop (percentage points) = people
-losing service ÷ population in need: people living with HIV (prevalence x population 15-64, calibrated to UNAIDS 2011
+covered. Costs per person come from published studies (see `unit_cost_reference.csv`): HIV treatment site costs from
+Rosen et al. 2021 for Malawi, Zambia, Lesotho, Uganda and Zimbabwe (median drug cost + GDP-scaled staff cost elsewhere);
+TB cost per patient by World Bank income group (Laurence et al. 2015); both grossed up for the 45% of donor spending that
+sits above service delivery (PEPFAR expenditure analysis). Bednets (GiveWell), spraying (PMI) and vaccines (Gavi spend per
+child) are already full program costs. Coverage drop (percentage points) = people losing service ÷ population in need: people living with HIV (prevalence x population 15-64, calibrated to UNAIDS 2011
 counts, + children), HIV+ pregnancies, TB incidence, population at malaria risk, malaria cases, births.
 
 **4. Lives.**
 - *HIV treatment:* excess deaths among people off treatment rise 1.2%, 2.8%, 3.8%, 4.5%, 5% in years 1-5 (x an uncertain
-  multiplier); they also transmit HIV (0.04 infections per person-year).
-- *Mother-to-child transmission:* infections averted per mother (0.22) x death by age 2 if infected (0.45).
+  multiplier); they also transmit HIV (0.04 infections per person-year). Calibrated to sit between the Optima and UNAIDS
+  estimates for losing PEPFAR.
+- *Mother-to-child transmission:* infections averted per mother (0.25; WHO: 15-45% transmission without prevention vs
+  under 5% with it) x death by age 2 if infected (0.45; Newell et al. 2004).
 - *TB:* deaths per patient untreated = case-fatality untreated minus treated (WHO: 0.43 vs 0.03 HIV-negative; higher for
   HIV-positive, weighted by the country's TB/HIV share and HIV treatment coverage).
-- *Malaria:* Lives Saved Tool form, D₁ = D₀ x Π (1 - E·C₁)/(1 - E·C₀) with E = 0.45 for vector control and 0.60 for case
+- *Malaria:* Lives Saved Tool form, D₁ = D₀ x Π (1 - E·C₁)/(1 - E·C₀) with E = 0.55 for vector control (Eisele et al. 2010) and 0.82 for case
   management, D₀ = malaria deaths (WHO/MCEE child malaria deaths ÷ under-5 share: 0.76 in Africa, 0.40 elsewhere).
-- *Vaccines:* future deaths averted per child immunised (Gavi: 0.017-0.024) x country under-5 mortality ÷ 50.
+- *Vaccines:* future deaths averted per child immunised (Gavi: 0.017-0.024) x the 65% that occur before age 5 (Li et al.
+  2021: hepatitis B and HPV deaths come in adulthood) x country under-5 mortality ÷ 50.
 - Year-by-year lags: deaths build up over 5 years (see the yearly deaths chart).
 
 **Uncertainty.** All parameters in the table are drawn from triangular(low, central, high); 400 draws per country. Headline

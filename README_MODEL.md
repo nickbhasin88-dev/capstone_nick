@@ -11,7 +11,8 @@ coverage falls and how many more people die?* Buckets: HIV, TB, malaria, immuniz
 | `model_section.py` | Section 4 UI: scenario controls, charts, tables. |
 | `scenarios.py` | The donor-scenario presets (`build_scenario`), shared by the app and `prepare_model.py`. |
 | `health_model.py` | The model itself (no Streamlit). Import it in a notebook to run anything in batch. |
-| `model_params.csv` | Every unit cost and effect size, with low/central/high and a source note. Edit here, or live in the app. |
+| `model_params.csv` | Every unit cost and effect size, with low/central/high, a `status` column (sourced / assumption) and the citation. Edit here, or live in the app. |
+| `unit_cost_reference.csv` | Sourced country/income-group unit costs: ART site costs (Rosen et al. 2021) and TB cost per patient (Laurence et al. 2015). |
 | `prepare_model.py` | Rebuilds `model_data/` from the raw IHME files + the MOU sheet (+ `ext_data/`). |
 | `model_data/` | Prebuilt inputs: `dah_lines.csv`, `country_inputs.csv`, `ihme_trend.csv`, `panel.csv`, `regressions.json`, plus `all_countries_<preset>.csv` (all-country results at the default settings, loaded instantly by the app). |
 | `ext_data/` | WDI / WHO / UNAIDS / UN IGME series pulled from Gapminder's GitHub mirrors (so the build is reproducible offline). |
@@ -52,11 +53,18 @@ python prepare_model.py --precompute-only
    from a 97-country fixed-effects panel: about -0.19 (95% CI -0.45 to +0.07), i.e. no evidence that governments
    backfilled past aid declines. Replacement can be allocated pro-rata or "lives first".
 3. **Coverage.** People losing a service = net loss / unit cost x (1 - continuity), capped at the number now covered.
+   Unit costs: ART site cost per patient-year from Rosen et al. 2021 for MWI, ZMB, LSO, UGA, ZWE (median ARV cost +
+   GDP-scaled staff cost elsewhere); TB cost per patient by World Bank income group (Laurence et al. 2015); both grossed up
+   for above-service-delivery spending (45%, PEPFAR expenditure analysis). Bednets from GiveWell, spraying from PMI,
+   vaccines from Gavi disbursements per child (team's Gavi file + Gavi progress reports).
    Coverage drop = that / population in need (PLHIV, HIV+ pregnancies, TB incidence, population at malaria risk,
    malaria cases, births).
 4. **Lives.** ART interruption hazards (1.2% rising to 5%/yr) + onward HIV transmission; PMTCT infant infections and
    deaths; WHO TB case-fatality ratios (untreated vs treated, by HIV status); Lives Saved Tool equations for malaria;
-   Gavi/VIMC deaths averted per child immunised scaled by under-5 mortality.
+   Gavi deaths averted per child immunised x 65% occurring before age 5 (Li et al. 2021), scaled by under-5 mortality.
+
+   Still assumptions (flagged `assumption` in model_params.csv): malaria case-management cost, PMTCT cost, HIV prevention cost
+   per infection averted, DR-TB deaths averted, default coverage where surveys are missing, continuity (15%), systems share (50%).
 5. **Uncertainty.** 400 Monte Carlo draws from triangular(low, central, high) for every parameter.
 6. **Cross-check.** Two-way fixed-effects regressions of ART coverage, TB treatment coverage and DTP3 on aid per person
    in need (2005-23). These give a lower bound; the unit-cost model gives the abrupt-cut case.

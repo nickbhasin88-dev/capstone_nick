@@ -224,22 +224,53 @@ def epi(row: pd.Series, P: dict) -> dict:
     return {"need_cov": e, "hiv_incidence_per_1000": inc_hiv, "flags": flags, "art_cov": art}
 
 
+UC_REF_FILE = HERE / "unit_cost_reference.csv"
+
+
+def _uc_ref() -> dict:
+    """Sourced unit-cost reference values (country ART studies, income-group TB costs)."""
+    if not hasattr(_uc_ref, "cache"):
+        r = pd.read_csv(UC_REF_FILE)
+        _uc_ref.cache = {(k, key): float(v) for k, key, v in zip(r["kind"], r["key"], r["value"])}
+    return _uc_ref.cache
+
+
+def income_group(row: pd.Series) -> str:
+    g = row.get("income_group") if hasattr(row, "get") else None
+    if isinstance(g, str) and g:
+        return g
+    gdp = _v(row, "gdp_pc", 2000.0)                    # fallback: rough GDP-per-capita thresholds
+    return "low_income" if gdp < 1150 else "lower_middle_income" if gdp < 4500 else "upper_middle_income"
+
+
 def unit_costs(row: pd.Series, P: dict) -> dict:
-    g = _v(row, "gdp_pc", 2000.0)
-    sc = (max(g, 200.0) / 2000.0) ** P["uc_scale_elast"]
+    """Donor cost per unit of service. Site/provider costs from studies are grossed up for above-service spending."""
+    ref = _uc_ref()
+    iso = row.name if isinstance(row.name, str) else ""
+    markup = 1.0 / (1.0 - P["asd_share"])                # site cost -> full donor program cost
+    g = _v(row, "gdp_pc", 1000.0)
+    sc = (max(g, 200.0) / 1000.0) ** P["uc_scale_elast"]
+    art_site = ref.get(("art_site_cost", iso))
+    if art_site is None:
+        art_site = ref[("art_site_default", "arv")] + ref[("art_site_default", "non_arv")] * sc
+    ig = income_group(row)
+    ig_key = ig if ig in ("low_income", "lower_middle_income", "upper_middle_income") else "upper_middle_income"
+    tb_ds = ref[("tb_ds_cost", ig_key)]
+    tb_dr = ref[("tb_dr_cost", ig_key)]
     inc = _v(row, "sh_hiv_incd_tl") / _v(row, "sp_pop_totl") * 1000
     inc = 0.3 if np.isnan(inc) else float(np.clip(inc, 0.05, 10))
+    one = np.ones_like(P["uc_imm"])
     return {
-        "hiv_art": P["uc_art_commodity"] + P["uc_art_service_ref"] * sc,
-        "hiv_pmtct": P["uc_pmtct"] * np.ones_like(sc),
+        "hiv_art": art_site * P["uc_art_mult"] * markup,
+        "hiv_pmtct": P["uc_pmtct"] * one,
         "hiv_prev": P["cpia_ref"] * (1.0 / inc) ** 0.5,          # $ per infection averted
-        "hiv_ovc": P["uc_ovc"] * np.ones_like(sc),
-        "tb_ds": P["uc_tb_commodity"] + P["uc_tb_service_ref"] * sc,
-        "tb_dr": P["uc_tb_dr"] * np.ones_like(sc),
-        "mal_itn": P["uc_itn"] * np.ones_like(sc),
-        "mal_irs": P["uc_irs"] * np.ones_like(sc),
-        "mal_cm": P["uc_mal_cm"] * np.ones_like(sc),
-        "imm": P["uc_imm"] * np.ones_like(sc),
+        "hiv_ovc": P["uc_ovc"] * one,
+        "tb_ds": tb_ds * P["uc_tb_mult"] * markup,
+        "tb_dr": tb_dr * P["uc_tb_mult"] * markup,
+        "mal_itn": P["uc_itn"] * one,                         # GiveWell / PMI costs are already full program costs
+        "mal_irs": P["uc_irs"] * one,
+        "mal_cm": P["uc_mal_cm"] * one,
+        "imm": P["uc_imm"] * one,                             # Gavi spend per child is already a full program cost
     }
 
 
@@ -252,7 +283,7 @@ def per_unit_deaths(row: pd.Series, P: dict, art_cov: float) -> dict:
     cfr_tp = P["tb_cfr_treated_pos"] * (1 - 0.3 * a)
     dcfr = (1 - h) * (P["tb_cfr_untreated_neg"] - P["tb_cfr_treated_neg"]) + h * (cfr_up - cfr_tp)
     u5 = _v(row, "sh_dyn_mort", 50.0)
-    imm = P["imm_deaths_per_child_ref"] * float(np.clip(u5 / 50.0, 0.3, 2.5))
+    imm = P["imm_deaths_per_child_ref"] * P["imm_u5_share"] * float(np.clip(u5 / 50.0, 0.3, 2.5))
     return {
         "hiv_art": np.outer(P["art_hazard_mult"], ART_HAZARD),
         "hiv_pmtct": np.outer(P["pmtct_vt_reduction"] * P["pmtct_infant_mort"], LAG["hiv_pmtct"]),

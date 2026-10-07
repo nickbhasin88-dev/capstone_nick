@@ -116,6 +116,7 @@ SG = ["people_living_with_hiv_number_all_ages", "all_forms_of_tb_incidence_estim
       "measles_deaths_in_children_1_59_months_total_deaths", "pneumonia_deaths_in_children_1_59_months_total_deaths"]
 WDI_URL = "https://raw.githubusercontent.com/open-numbers/ddf--open_numbers--world_development_indicators/master/datapoints/ddf--datapoints--{}--by--geo--time.csv"
 SG_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--systema_globalis/master/countries-etc-datapoints/ddf--datapoints--{}--by--geo--time.csv"
+ENT_URL = "https://raw.githubusercontent.com/open-numbers/ddf--open_numbers--world_development_indicators/master/ddf--entities--geo--country.csv"
 
 
 def download_ext():
@@ -126,6 +127,7 @@ def download_ext():
         urllib.request.urlretrieve(WDI_URL.format(i), EXT / "wdi" / f"{i}.csv")
     for i in SG:
         urllib.request.urlretrieve(SG_URL.format(i), EXT / "sg" / f"ddf--datapoints--{i}--by--geo--time.csv")
+    urllib.request.urlretrieve(ENT_URL, EXT / "wb_country_entities.csv")
 
 
 def read_ext(name: str) -> pd.DataFrame:
@@ -277,6 +279,10 @@ def main(a):
     ci["plhiv"] = (ci["sh_dyn_aids_zs"] / 100 * ci["sp_pop_1564_to"] * ci["plhiv_calibration"]
                    + ci["sh_hiv_0014"].fillna(0))
     ci["births"] = ci["sp_dyn_cbrt_in"] / 1000 * ci["sp_pop_totl"]
+    ent = EXT / "wb_country_entities.csv"                 # World Bank income groups (Gapminder WDI mirror)
+    if ent.exists():
+        e = pd.read_csv(ent).dropna(subset=["iso3166_1_alpha3"]).set_index("iso3166_1_alpha3")
+        ci["income_group"] = e["income_groups"].reindex(ci.index)
     ci["hiv_pos_pregnancies"] = ci["births"] * ci["sh_dyn_aids_zs"] / 100 * 1.15     # female prevalence ~15% above all-adult
     ci["tb_hiv_share"] = (ci["tb_hivplus_incidence_estimated"] / ci["all_forms_of_tb_incidence_estimated"]).clip(0, 0.8)
     ci["tb_deaths_total"] = ci["all_forms_of_tb_number_of_deaths_estimated"].fillna(0) + ci["tb_hivplus_number_of_deaths_estimated"].fillna(0)
