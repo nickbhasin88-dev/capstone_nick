@@ -17,6 +17,7 @@ Writes ./model_data/:
     panel.csv            country-year panel used for the regressions
     regressions.json     fixed-effects estimates (fiscal replacement, coverage dose-response, and Poisson
                          death regressions for TB, under-5 and child malaria deaths)
+    country_profile.csv  region (World Bank, from IHME DAH), income group and US MOU status, for the dashboard header
     all_countries_<preset>.csv   health_model.run_all for every preset except Custom, with the default government
                                  response (no backfill, pro-rata, 75th-percentile ceiling) and default parameters;
                                  the app loads these instantly when its settings match
@@ -120,6 +121,9 @@ SG_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--systema
 ENT_URL = "https://raw.githubusercontent.com/open-numbers/ddf--open_numbers--world_development_indicators/master/ddf--entities--geo--country.csv"
 HIV_SHARE_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--fasttrack/master/countries_etc_datapoints/ddf--datapoints--ihme_hiv_death--by--country--time.csv"
 HIV_SHARE_FILE = EXT / "gm" / "ddf--datapoints--ihme_hiv_death--by--country--time.csv"   # IHME HIV share of all deaths, %
+WB_REGIONS = {"SSA": "Sub-Saharan Africa", "SAS": "South Asia", "EAP": "East Asia & Pacific",
+              "ECA": "Europe & Central Asia", "LAC": "Latin America & Caribbean", "MNA": "Middle East & North Africa"}
+MOU_STATUS_VALUES = {"signed": "Signed", "rejected": "Rejected", "negotiating": "Negotiating"}
 TREND_YEARS = (2010, 2019)          # pre-COVID window for baseline mortality trends
 TREND_CLIP = (-0.08, 0.02)          # annual % change, clipped
 
@@ -240,7 +244,7 @@ def main(a):
 
     # ---------------- DAH ---------------- #
     print("reading DAH ...")
-    need = ["year", "source", "channel", "recipient_isocode", "dah_23", "nch_dah_23"] + list(BUCKET_TOTAL_COL.values())
+    need = ["year", "source", "channel", "recipient_isocode", "wb_regioncode", "dah_23", "nch_dah_23"] + list(BUCKET_TOTAL_COL.values())
     need += sorted({f"{c}_dah_23" for _, cs in LINES.values() for c in cs})
     dah = pd.read_csv(a.dah, usecols=lambda c: c in need, na_values=["-"], low_memory=False)
     num = [c for c in dah.columns if c.endswith("_dah_23")]
@@ -371,13 +375,37 @@ def main(a):
         names = ["country", "iso3", "us_ref", "gf_ref", "gavi_ref", "wb_ref", "oth_ref", "us_2026", "us_2027", "us_2028",
                  "us_2029", "us_2030", "gf_gc8_hiv", "gf_gc8_tb", "gf_gc8_mal", "gf_gc8_rssh", "gavi_2026_30",
                  "wb_2026_30"]
+        raw = m
         m = m.iloc[5:, :len(names)]
         m.columns = names
         m = m[m.iso3.isin(ISO3)].set_index("iso3").drop(columns="country")
         m = m.apply(pd.to_numeric, errors="coerce")
         ci = ci.join(m.add_prefix("mou_"))
+        # optional "mou_status" column (Signed / Rejected / Negotiating), found by its header anywhere in rows 0-3
+        hdr = raw.iloc[:4].astype(str).apply(lambda c: c.str.strip().str.lower().str.replace(" ", "_"))
+        hit = [j for j in raw.columns if (hdr[j] == "mou_status").any()]
+        if hit:
+            st_ = raw.iloc[5:, [1, hit[0]]].dropna(subset=[1])
+            st_.columns = ["iso3", "status"]
+            ci["mou_status"] = (st_.set_index("iso3")["status"].astype(str).str.strip().str.lower()
+                                .map(MOU_STATUS_VALUES).reindex(ci.index))
     ci.reset_index().to_csv(OUT / "country_inputs.csv", index=False)
     print(f"  country_inputs: {ci.shape}")
+
+    # ---------------- country profile for the dashboard header ---------------- #
+    reg_code = (dah[dah.recipient_isocode.isin(ISO3)].dropna(subset=["wb_regioncode"])
+                .groupby("recipient_isocode")["wb_regioncode"].agg(lambda s: s.mode().iloc[0]))
+    prof = pd.DataFrame(index=ci.index)
+    prof["region_code"] = reg_code.reindex(ci.index)
+    prof["region"] = prof["region_code"].map(WB_REGIONS)
+    prof["income_group"] = ci.get("income_group")
+    has_2026 = ci["mou_us_2026"].notna() if "mou_us_2026" in ci else pd.Series(False, index=ci.index)
+    fallback = np.where(has_2026, "Signed", "No MOU in Team Data")
+    prof["mou_status"] = ci["mou_status"].fillna(pd.Series(fallback, index=ci.index)) if "mou_status" in ci \
+        else fallback
+    prof.reset_index().to_csv(OUT / "country_profile.csv", index=False)
+    print(f"  country_profile: {len(prof)} countries, {prof['region'].notna().sum()} with a region, "
+          f"{(prof['mou_status'] == 'Signed').sum()} with a signed MOU")
 
     # ---------------- panel + regressions ---------------- #
     print("regressions ...")

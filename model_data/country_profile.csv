@@ -1,0 +1,99 @@
+iso3,region_code,region,income_group,mou_status
+AFG,SAS,South Asia,low_income,No MOU in Team Data
+ALB,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+AGO,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+ARM,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+AZE,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+BGD,SAS,South Asia,lower_middle_income,No MOU in Team Data
+BLR,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+BLZ,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+BEN,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+BOL,LAC,Latin America & Caribbean,lower_middle_income,No MOU in Team Data
+BWA,SSA,Sub-Saharan Africa,upper_middle_income,Signed
+BRA,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+BFA,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+BDI,SSA,Sub-Saharan Africa,low_income,Signed
+KHM,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+CMR,SSA,Sub-Saharan Africa,lower_middle_income,Signed
+CAF,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+CHN,EAP,East Asia & Pacific,upper_middle_income,No MOU in Team Data
+COL,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+CRI,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+CIV,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+COD,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+DJI,MNA,Middle East & North Africa,lower_middle_income,No MOU in Team Data
+DOM,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+ECU,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+EGY,MNA,Middle East & North Africa,lower_middle_income,No MOU in Team Data
+SLV,LAC,Latin America & Caribbean,lower_middle_income,No MOU in Team Data
+SWZ,SSA,Sub-Saharan Africa,lower_middle_income,Signed
+ETH,SSA,Sub-Saharan Africa,low_income,Signed
+FJI,EAP,East Asia & Pacific,upper_middle_income,No MOU in Team Data
+GMB,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+GEO,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+GHA,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+GTM,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+GIN,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+GUY,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+HTI,LAC,Latin America & Caribbean,low_income,No MOU in Team Data
+HND,LAC,Latin America & Caribbean,lower_middle_income,No MOU in Team Data
+IND,SAS,South Asia,lower_middle_income,No MOU in Team Data
+IDN,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+IRQ,MNA,Middle East & North Africa,upper_middle_income,No MOU in Team Data
+JAM,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+JOR,MNA,Middle East & North Africa,upper_middle_income,No MOU in Team Data
+KAZ,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+KEN,SSA,Sub-Saharan Africa,lower_middle_income,Signed
+KSV,ECA,Europe & Central Asia,,No MOU in Team Data
+KGZ,ECA,Europe & Central Asia,lower_middle_income,No MOU in Team Data
+LAO,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+LSO,SSA,Sub-Saharan Africa,lower_middle_income,Signed
+LBR,SSA,Sub-Saharan Africa,low_income,Signed
+LBY,MNA,Middle East & North Africa,upper_middle_income,No MOU in Team Data
+MDG,SSA,Sub-Saharan Africa,low_income,Signed
+MWI,SSA,Sub-Saharan Africa,low_income,Signed
+MLI,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+MUS,SSA,Sub-Saharan Africa,upper_middle_income,No MOU in Team Data
+MEX,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+MDA,ECA,Europe & Central Asia,lower_middle_income,No MOU in Team Data
+MNG,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+MAR,MNA,Middle East & North Africa,lower_middle_income,No MOU in Team Data
+MOZ,SSA,Sub-Saharan Africa,low_income,Signed
+MMR,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+NAM,SSA,Sub-Saharan Africa,upper_middle_income,No MOU in Team Data
+NPL,SAS,South Asia,low_income,No MOU in Team Data
+NIC,LAC,Latin America & Caribbean,lower_middle_income,No MOU in Team Data
+NER,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+NGA,SSA,Sub-Saharan Africa,lower_middle_income,Signed
+PAK,SAS,South Asia,lower_middle_income,No MOU in Team Data
+PAN,LAC,Latin America & Caribbean,high_income,No MOU in Team Data
+PNG,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+PRY,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+PER,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+PHL,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+ROU,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+RUS,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+RWA,SSA,Sub-Saharan Africa,low_income,Signed
+STP,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+SEN,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+SLE,SSA,Sub-Saharan Africa,low_income,Signed
+SOM,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+ZAF,SSA,Sub-Saharan Africa,upper_middle_income,No MOU in Team Data
+SSD,SSA,Sub-Saharan Africa,low_income,Signed
+SDN,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+TJK,ECA,Europe & Central Asia,low_income,No MOU in Team Data
+TZA,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+THA,EAP,East Asia & Pacific,upper_middle_income,No MOU in Team Data
+TLS,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+TGO,SSA,Sub-Saharan Africa,low_income,No MOU in Team Data
+TTO,LAC,Latin America & Caribbean,high_income,No MOU in Team Data
+TKM,ECA,Europe & Central Asia,upper_middle_income,No MOU in Team Data
+UGA,SSA,Sub-Saharan Africa,low_income,Signed
+UKR,ECA,Europe & Central Asia,lower_middle_income,No MOU in Team Data
+UZB,ECA,Europe & Central Asia,lower_middle_income,No MOU in Team Data
+VEN,LAC,Latin America & Caribbean,upper_middle_income,No MOU in Team Data
+VNM,EAP,East Asia & Pacific,lower_middle_income,No MOU in Team Data
+PSE,MNA,Middle East & North Africa,lower_middle_income,No MOU in Team Data
+YEM,MNA,Middle East & North Africa,low_income,No MOU in Team Data
+ZMB,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data
+ZWE,SSA,Sub-Saharan Africa,lower_middle_income,No MOU in Team Data

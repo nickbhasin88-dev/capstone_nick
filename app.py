@@ -4,6 +4,7 @@ Who funds health in each country?  (IHME Development Assistance for Health, 1990
 Run:   streamlit run app.py
 Data:  ./country_data/<Country>.csv   (created by prepare_data.py)
 """
+import html
 from pathlib import Path
 
 import numpy as np
@@ -25,9 +26,9 @@ DATA_DIR = Path(__file__).parent / "country_data"          # DAH, one file per r
 SPEND_DIR = Path(__file__).parent / "spending_data"        # total spending, one file per ISO3
 YEAR_MIN, YEAR_MAX = 2015, 2030          # chart 1 x-axis window, fixed (future years stay blank)
 SPEND_YEAR_MIN, SPEND_YEAR_MAX = 2015, 2030   # chart 2 x-axis window, fixed
-TOP_N_FUNDERS = 10                       # chart 1 shows this many funders individually, fixed
+TOP_N_FUNDERS = 6                        # chart 1 shows this many funders individually, fixed
 DEFAULT_COUNTRY = "Kenya"
-HATCH_SHAPE = "+"                        # plotly pattern: "+" grid, "x" crosshatch, "/" diagonal
+NGO_SHADE = 0.45                         # NGO/foundation channels: the funder's colour at this opacity
 
 # Channels treated as "NGO / foundation" money. IHME does NOT record whether a
 # recipient government knew about a flow -- channel is only a proxy. These are
@@ -123,6 +124,20 @@ def load_countries() -> pd.DataFrame:
     m["is_country"] = True
     m["label"] = m["name"]
     return m.sort_values(["is_country", "name"], ascending=[False, True]).reset_index(drop=True)
+
+
+INCOME_LABELS = {"low_income": "Low Income", "lower_middle_income": "Lower-Middle Income",
+                 "upper_middle_income": "Upper-Middle Income", "high_income": "High Income"}
+PROFILE_FILE = Path(__file__).parent / "model_data" / "country_profile.csv"   # built by prepare_model.py
+
+
+@st.cache_data(show_spinner=False)
+def load_profile() -> dict:
+    """iso3 -> {region, income_group, mou_status}; empty if the file is missing (pills then show n/a)."""
+    if not PROFILE_FILE.exists():
+        return {}
+    d = pd.read_csv(PROFILE_FILE).set_index("iso3")
+    return {k: {c: (v if pd.notna(v) else None) for c, v in r.items()} for k, r in d.iterrows()}
 
 
 def load_cofog_all(iso3: str):
@@ -250,7 +265,7 @@ with st.sidebar:
     if st.session_state.get("country_sel") not in set(countries["label"]):
         st.session_state["country_sel"] = _start if (countries["label"] == _start).any() else countries["label"].iloc[0]
     country_label = st.selectbox("Country", countries["label"], key="country_sel")
-pill1, pill2, _ = st.columns([2, 2, 3])
+profile_cols = st.columns(4)
 crow = countries[countries["label"] == country_label].iloc[0]
 country_name = crow["name"]
 
@@ -274,20 +289,27 @@ if crow["has_spend"] and (SPEND_DIR / f"{crow['iso3']}.csv").exists():
             _hs_cents, _hs_yr = float(_r0["the_per_gdp_mean"].iloc[0]) * 100, SPEND_LAST_OBSERVED
 
 
-def _pill(label, value, rgb, tip=""):
-    return (f"<div title='{tip}' style='min-height:38px;border-radius:20px;display:flex;align-items:center;"
-            f"justify-content:center;gap:8px;padding:0 14px;box-sizing:border-box;background:rgba({rgb},0.14);"
-            f"border:2px solid rgba({rgb},0.7);white-space:nowrap'>"
-            f"<span style='font-size:13px;opacity:0.75'>{label}</span><span style='font-size:16px;font-weight:700'>{value}</span></div>")
+def _pill(label, value, tip=""):
+    """One country-profile pill; all four share the same style."""
+    return (f"<div title='{html.escape(tip, quote=True)}' style='min-height:40px;border-radius:20px;display:flex;"
+            f"align-items:center;justify-content:center;gap:8px;padding:0 14px;box-sizing:border-box;"
+            f"background:rgba(46,134,193,0.10);border:1.5px solid rgba(46,134,193,0.55);white-space:nowrap;"
+            f"overflow:hidden;text-overflow:ellipsis'>"
+            f"<span style='font-size:13px;opacity:0.75'>{html.escape(label)}</span>"
+            f"<span style='font-size:15px;font-weight:700'>{html.escape(value)}</span></div>")
 
 
-with pill1:
-    st.markdown(_pill(f"GDP{', ' + str(_gdp_yr) if _gdp_yr else ''}", fmt_usd(_gdp_bn * 1e3) if _gdp_bn else "n/a", "46,134,193",
-                      "Current US$, IMF World Economic Outlook"), unsafe_allow_html=True)
-with pill2:
-    st.markdown(_pill(f"Population{', ' + str(_pop_yr) if _pop_yr else ''}",
-                      ((f"{_pop_m:,.1f}" if _pop_m >= 1 else f"{_pop_m:,.2f}") + "M") if _pop_m else "n/a", "39,174,96",
-                      "Millions of people, IMF World Economic Outlook"), unsafe_allow_html=True)
+_prof = load_profile().get(crow["iso3"], {})
+_items = [
+    ("Region", _prof.get("region") or "n/a", "World Bank region (IHME DAH database)"),
+    ("Income Group", INCOME_LABELS.get(_prof.get("income_group"), "n/a"), "World Bank income group"),
+    ("US MOU", _prof.get("mou_status") or "n/a", "US bilateral health MOU, from the team's MOU / co-financing sheet"),
+    (f"Population{', ' + str(_pop_yr) if _pop_yr else ''}",
+     ((f"{_pop_m:,.1f}" if _pop_m >= 1 else f"{_pop_m:,.2f}") + "M") if _pop_m else "n/a",
+     "Millions of people, IMF World Economic Outlook"),
+]
+for _col, (_lbl, _val, _tip) in zip(profile_cols, _items):
+    _col.markdown(_pill(_lbl, _val, _tip), unsafe_allow_html=True)
 
 st.divider()
 
@@ -401,7 +423,7 @@ else:
             if pa != "All program areas":
                 value_col, metric_label = pa, f"{HFA_LABELS[hfa]}: {pas[pa]}"
     nongov = st.multiselect(
-        "Channels Drawn as NGO / Foundation (Checkered)",
+        "Channels Drawn as NGO / Foundation (Lighter Shade)",
         options=list(CHANNEL_LABELS), default=DEFAULT_NONGOV_CHANNELS, key="c1_ngo",
         format_func=lambda c: title_case(f"{CHANNEL_LABELS[c]} ({c})"),
         help="IHME doesn't record whether a government knew about a flow. "
@@ -419,7 +441,7 @@ else:
     top = list(ranked.index[:TOP_N_FUNDERS])
     window = window.assign(source=window["source"].where(window["source"].isin(top), "All other sources"))
     agg = window.groupby(["year", "source", "route"], as_index=False)["val"].sum()
-    # which organizations the checkered money went through, per bar (for hover text)
+    # which organizations the lighter-shaded money went through, per bar (for hover text)
     ngo_detail = (window[window["route"] == "ngo"].groupby(["year", "source", "channel"])["val"].sum().reset_index())
     ngo_detail = ngo_detail[ngo_detail["val"] > 0]
     ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd).astype(str)
@@ -454,11 +476,8 @@ else:
             if sub.empty:
                 continue
             marker = dict(color=col, line=dict(color=col, width=0.5))
-            if route == "ngo":
-                marker = dict(
-                    color=hex_to_rgba(col, 0.25), line=dict(color=col, width=0.8),
-                    pattern=dict(shape=HATCH_SHAPE, fgcolor=col, bgcolor=hex_to_rgba(col, 0.15), size=7, solidity=0.55),
-                )
+            if route == "ngo":                  # same funder, lighter shade, thin outline in the full colour
+                marker = dict(color=hex_to_rgba(col, NGO_SHADE), line=dict(color=col, width=1))
             amts = [fmt_usd(v * unit_div) for v in sub["val"]]          # exact amount with its own unit (M / B / T)
             if route == "ngo":
                 custom = [[ngo_hover.get((y, s), ""), a] for y, a in zip(sub["year"], amts)]
@@ -471,13 +490,6 @@ else:
                 showlegend=(route == "gov" or not ((agg["source"] == s) & (agg["route"] == "gov")).any()),
                 marker=marker, customdata=custom, hovertemplate=hover,
             )
-    fig.add_bar(x=[None], y=[None], name="Solid: government-facing channels", legendgroup="_key1",
-                marker=dict(color="#555"), hoverinfo="skip")
-    for ch in nongov:
-        fig.add_bar(x=[None], y=[None], name=f"Checkered: via {CHANNEL_LABELS.get(ch, ch)}", legendgroup=f"_key_{ch}",
-                    marker=dict(color="rgba(85,85,85,0.25)", line=dict(color="#555", width=0.8),
-                                pattern=dict(shape=HATCH_SHAPE, fgcolor="#555", bgcolor="rgba(85,85,85,0.15)", size=7, solidity=0.55)),
-                    hoverinfo="skip")
     if last_data_year < YEAR_MAX:
         fig.add_vrect(x0=last_data_year + 0.5, x1=YEAR_MAX + 0.5, fillcolor="rgba(128,128,128,0.10)", line_width=0,
                       annotation_text="no data yet (forecast to come)", annotation_position="top left",
@@ -491,9 +503,11 @@ else:
         bargap=0.15, hovermode="closest",
     )
     chart(fig)
+    st.caption("Lighter Shade = Delivered Through NGOs and Foundations.")
 
     how_to_read(
-        "Colour = who the money originally came from (source). Checkered = delivered through NGO/foundation channels, a "
+        "Colour = who the money originally came from (source). The lighter shade of each colour = delivered through "
+        "NGO/foundation channels, a "
         "*proxy* for flows that may bypass the recipient government. IHME does not record government awareness directly, "
         "and some government-facing channels (e.g. bilateral agencies, the Global Fund) also fund NGOs on the ground."
         + (f"\n\nIHME's recipient-level aid data ends in {last_data_year}: 2024-2025 estimates exist only as "
