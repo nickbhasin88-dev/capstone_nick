@@ -1,39 +1,33 @@
-"""Countries the dashboard knows about, and which ones the dropdown offers (shared by app.py and pages/)."""
+"""The countries this dashboard covers (shared by app.py, prepare_model.py and pages/).
 
-# Only these countries appear in the dropdown (ISO3 code -> name shown)
+Countries were removed from the dashboard and its data on 2026-10-07 (27, including Kosovo); the historical regressions
+in prepare_model.py still use the wider REGRESSION_ISO3 panel so their estimates stay as precise as before.
+"""
+
+# ISO3 code -> name shown in the dropdown
 ALLOWED_COUNTRIES = {
-    "AFG": "Afghanistan",
-    "ALB": "Albania",
     "AGO": "Angola",
-    "ARM": "Armenia",
     "AZE": "Azerbaijan",
     "BGD": "Bangladesh",
-    "BLR": "Belarus",
     "BLZ": "Belize",
     "BEN": "Benin",
     "BOL": "Bolivia",
     "BWA": "Botswana",
-    "BRA": "Brazil",
     "BFA": "Burkina Faso",
     "BDI": "Burundi",
     "KHM": "Cambodia",
     "CMR": "Cameroon",
     "CAF": "Central African Republic",
-    "CHN": "China",
-    "COL": "Colombia",
-    "CRI": "Costa Rica",
     "CIV": "Cote d'Ivoire",
     "COD": "Democratic Republic of the Congo",
     "DJI": "Djibouti",
     "DOM": "Dominican Republic",
-    "ECU": "Ecuador",
     "EGY": "Egypt",
     "SLV": "El Salvador",
     "SWZ": "Eswatini",
     "ETH": "Ethiopia",
     "FJI": "Fiji",
     "GMB": "Gambia",
-    "GEO": "Georgia",
     "GHA": "Ghana",
     "GTM": "Guatemala",
     "GIN": "Guinea",
@@ -45,9 +39,7 @@ ALLOWED_COUNTRIES = {
     "IRQ": "Iraq",
     "JAM": "Jamaica",
     "JOR": "Jordan",
-    "KAZ": "Kazakhstan",
     "KEN": "Kenya",
-    "KSV": "Kosovo",
     "KGZ": "Kyrgyzstan",
     "LAO": "Laos",
     "LSO": "Lesotho",
@@ -57,12 +49,9 @@ ALLOWED_COUNTRIES = {
     "MWI": "Malawi",
     "MLI": "Mali",
     "MUS": "Mauritius",
-    "MEX": "Mexico",
     "MDA": "Moldova",
     "MNG": "Mongolia",
-    "MAR": "Morocco",
     "MOZ": "Mozambique",
-    "MMR": "Burma (Myanmar)",
     "NAM": "Namibia",
     "NPL": "Nepal",
     "NIC": "Nicaragua",
@@ -71,11 +60,7 @@ ALLOWED_COUNTRIES = {
     "PAK": "Pakistan",
     "PAN": "Panama",
     "PNG": "Papua New Guinea",
-    "PRY": "Paraguay",
-    "PER": "Peru",
     "PHL": "Philippines",
-    "ROU": "Romania",
-    "RUS": "Russia",
     "RWA": "Rwanda",
     "STP": "Sao Tome and Principe",
     "SEN": "Senegal",
@@ -83,32 +68,18 @@ ALLOWED_COUNTRIES = {
     "SOM": "Somalia",
     "ZAF": "South Africa",
     "SSD": "South Sudan",
-    "SDN": "Sudan",
     "TJK": "Tajikistan",
     "TZA": "Tanzania",
-    "THA": "Thailand",
     "TLS": "Timor-Leste",
     "TGO": "Togo",
-    "TTO": "Trinidad and Tobago",
-    "TKM": "Turkmenistan",
     "UGA": "Uganda",
-    "UKR": "Ukraine",
-    "UZB": "Uzbekistan",
     "VEN": "Venezuela",
     "VNM": "Vietnam",
-    "PSE": "West Bank and Gaza",
-    "YEM": "Yemen",
     "ZMB": "Zambia",
     "ZWE": "Zimbabwe",
-}
-# Not offered in the dropdown. Their data stays, and they still count in the all-country model results.
-HIDDEN_FROM_DROPDOWN = {
-    "AFG", "ALB", "ARM", "BLR", "BRA", "CHN", "COL", "CRI", "ECU", "GEO", "KAZ", "KSV", "MEX", "MAR", "MMR", "PRY",
-    "PER", "ROU", "RUS", "SDN", "THA", "TTO", "TKM", "UKR", "UZB", "PSE", "YEM",
 }
 
 
 def dropdown_countries() -> dict:
-    """ISO3 -> name for the countries offered in the dropdowns, in alphabetical order of name."""
-    return dict(sorted(((k, v) for k, v in ALLOWED_COUNTRIES.items() if k not in HIDDEN_FROM_DROPDOWN),
-                       key=lambda kv: kv[1]))
+    """ISO3 -> name for the dropdowns, in alphabetical order of name."""
+    return dict(sorted(ALLOWED_COUNTRIES.items(), key=lambda kv: kv[1]))

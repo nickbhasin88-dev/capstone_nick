@@ -39,8 +39,11 @@ EXT = HERE / "ext_data"
 BASE_YEARS = (2021, 2023)          # baseline = average of these years (smooths lumpy net campaigns / Gavi tranches)
 
 # --------------------------------------------------------------------------- #
-# Country list (same as the dashboard dropdown)
+# Country lists: ISO3 = the wider panel used to build inputs and fit the regressions (unchanged, so the estimates keep
+# their precision); the files the dashboard reads are written for DASHBOARD_ISO3 only (country_lists.py)
 # --------------------------------------------------------------------------- #
+from country_lists import ALLOWED_COUNTRIES as _DASHBOARD  # noqa: E402
+
 ISO3 = ["AFG", "ALB", "AGO", "ARM", "AZE", "BGD", "BLR", "BLZ", "BEN", "BOL", "BWA", "BRA", "BFA", "BDI", "KHM", "CMR",
         "CAF", "CHN", "COL", "CRI", "CIV", "COD", "DJI", "DOM", "ECU", "EGY", "SLV", "SWZ", "ETH", "FJI", "GMB", "GEO",
         "GHA", "GTM", "GIN", "GUY", "HTI", "HND", "IND", "IDN", "IRQ", "JAM", "JOR", "KAZ", "KEN", "KSV", "KGZ", "LAO",
@@ -48,6 +51,8 @@ ISO3 = ["AFG", "ALB", "AGO", "ARM", "AZE", "BGD", "BLR", "BLZ", "BEN", "BOL", "B
         "NER", "NGA", "PAK", "PAN", "PNG", "PRY", "PER", "PHL", "ROU", "RUS", "RWA", "STP", "SEN", "SLE", "SOM", "ZAF",
         "SSD", "SDN", "TJK", "TZA", "THA", "TLS", "TGO", "TTO", "TKM", "UGA", "UKR", "UZB", "VEN", "VNM", "PSE", "YEM",
         "ZMB", "ZWE"]
+DASHBOARD_ISO3 = [c for c in ISO3 if c in _DASHBOARD]
+assert set(_DASHBOARD) <= set(ISO3), f"dashboard countries missing from the build list: {set(_DASHBOARD) - set(ISO3)}"
 SSA = {"AGO", "BEN", "BWA", "BFA", "BDI", "CMR", "CAF", "CIV", "COD", "DJI", "SWZ", "ETH", "GMB", "GHA", "GIN", "KEN",
        "LSO", "LBR", "MDG", "MWI", "MLI", "MUS", "MOZ", "NAM", "NER", "NGA", "RWA", "STP", "SEN", "SLE", "SOM", "ZAF",
        "SSD", "SDN", "TZA", "TGO", "UGA", "ZMB", "ZWE"}
@@ -123,7 +128,6 @@ HIV_SHARE_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--
 HIV_SHARE_FILE = EXT / "gm" / "ddf--datapoints--ihme_hiv_death--by--country--time.csv"   # IHME HIV share of all deaths, %
 WB_REGIONS = {"SSA": "Sub-Saharan Africa", "SAS": "South Asia", "EAP": "East Asia & Pacific",
               "ECA": "Europe & Central Asia", "LAC": "Latin America & Caribbean", "MNA": "Middle East & North Africa"}
-INCOME_GROUP_OVERRIDES = {"KSV": "upper_middle_income"}     # World Bank FY2026 classification (not in the Gapminder list)
 MOU_STATUS_VALUES = {"signed": "Signed", "rejected": "Rejected", "negotiating": "Negotiating"}
 TREND_YEARS = (2010, 2019)          # pre-COVID window for baseline mortality trends
 TREND_CLIP = (-0.08, 0.02)          # annual % change, clipped
@@ -263,6 +267,7 @@ def main(a):
         g["line"], g["bucket"] = line, bucket
         rows.append(g)
     lines = pd.concat(rows).rename(columns={"recipient_isocode": "iso3"})
+    lines = lines[lines.iso3.isin(DASHBOARD_ISO3)]
     lines.to_csv(OUT / "dah_lines.csv", index=False)
     # total DAH (all purposes) per country, for "share of aid that the model covers"
     tot = base.groupby("recipient_isocode")["dah_23"].sum() / (BASE_YEARS[1] - BASE_YEARS[0] + 1) * 1e3
@@ -390,24 +395,24 @@ def main(a):
             st_.columns = ["iso3", "status"]
             ci["mou_status"] = (st_.set_index("iso3")["status"].astype(str).str.strip().str.lower()
                                 .map(MOU_STATUS_VALUES).reindex(ci.index))
-    ci.reset_index().to_csv(OUT / "country_inputs.csv", index=False)
-    print(f"  country_inputs: {ci.shape}")
+    ci.loc[DASHBOARD_ISO3].reset_index().to_csv(OUT / "country_inputs.csv", index=False)
+    print(f"  country_inputs: {len(DASHBOARD_ISO3)} dashboard countries ({len(ISO3)} built for the regressions)")
 
     # ---------------- country profile for the dashboard header ---------------- #
     reg_code = (dah[dah.recipient_isocode.isin(ISO3)].dropna(subset=["wb_regioncode"])
                 .groupby("recipient_isocode")["wb_regioncode"].agg(lambda s: s.mode().iloc[0]))
-    prof = pd.DataFrame(index=ci.index)
-    prof["region_code"] = reg_code.reindex(ci.index)
+    prof = pd.DataFrame(index=pd.Index(DASHBOARD_ISO3, name="iso3"))
+    prof["region_code"] = reg_code.reindex(prof.index)
     prof["region"] = prof["region_code"].map(WB_REGIONS)
-    # income group: World Bank classification from the Gapminder mirror; it has no Kosovo entry, so that one comes from
-    # the World Bank FY2026 list directly; anything else still missing falls back to the model's GDP-per-capita rule
+    # income group: World Bank classification (Gapminder mirror); anything missing falls back to the model's
+    # GDP-per-capita rule, so the dashboard never shows a blank
     import health_model as hm
-    ig = ci.get("income_group", pd.Series(index=ci.index, dtype=object)).copy()
-    ig = ig.fillna(pd.Series(INCOME_GROUP_OVERRIDES).reindex(ci.index))
-    prof["income_group"] = [g if isinstance(g, str) and g else hm.income_group(r) for g, (_, r) in zip(ig, ci.iterrows())]
-    has_2026 = ci["mou_us_2026"].notna() if "mou_us_2026" in ci else pd.Series(False, index=ci.index)
+    cd = ci.loc[DASHBOARD_ISO3]
+    ig = cd.get("income_group", pd.Series(index=cd.index, dtype=object)).copy()
+    prof["income_group"] = [g if isinstance(g, str) and g else hm.income_group(r) for g, (_, r) in zip(ig, cd.iterrows())]
+    has_2026 = cd["mou_us_2026"].notna() if "mou_us_2026" in cd else pd.Series(False, index=cd.index)
     fallback = np.where(has_2026, "Signed", "No MOU in Team Data")
-    prof["mou_status"] = ci["mou_status"].fillna(pd.Series(fallback, index=ci.index)) if "mou_status" in ci \
+    prof["mou_status"] = cd["mou_status"].fillna(pd.Series(fallback, index=cd.index)) if "mou_status" in cd \
         else fallback
     missing = prof[["region", "income_group", "mou_status"]].isna()
     assert not missing.any().any(), f"country_profile has missing values: {prof.index[missing.any(axis=1)].tolist()}"

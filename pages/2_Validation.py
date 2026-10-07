@@ -71,7 +71,7 @@ for p in scn.PRECOMPUTED_PRESETS:
     rows.append({"Scenario": title_case(p), **{b: num(A[f"deaths_5y_{b}"].sum()) for b in hm.BUCKETS},
                  "All Four": num(A["deaths_5y"].sum()),
                  "Range": rng(A["deaths_5y_lo"].sum(), A["deaths_5y_hi"].sum())})
-st.subheader("Model: Extra Deaths Over 5 Years, All 95 Countries")
+st.subheader(f"Model: Extra Deaths Over 5 Years, All {len(next(iter(all_country.values()), []))} Countries")
 st.table(pd.DataFrame(rows).set_index("Scenario"))
 st.caption("Read from the precomputed results: no government backfill, death rates already falling, default "
            "parameters. Ranges add country 2.5th and 97.5th percentiles.")

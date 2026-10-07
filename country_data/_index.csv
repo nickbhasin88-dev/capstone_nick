@@ -1,176 +1,72 @@
 recipient_country,recipient_isocode,file
-Administrative expenses,INKIND,Administrative_expenses.csv
-Afghanistan,AFG,Afghanistan.csv
-Albania,ALB,Albania.csv
-Algeria,DZA,Algeria.csv
-American Samoa,ASM,American_Samoa.csv
 Angola,AGO,Angola.csv
-Anguilla,AIA,Anguilla.csv
-Antigua and Barbuda,ATG,Antigua_and_Barbuda.csv
-Argentina,ARG,Argentina.csv
-Armenia,ARM,Armenia.csv
 Azerbaijan,AZE,Azerbaijan.csv
-Bahrain,BHR,Bahrain.csv
 Bangladesh,BGD,Bangladesh.csv
-Barbados,BRB,Barbados.csv
-Belarus,BLR,Belarus.csv
 Belize,BLZ,Belize.csv
 Benin,BEN,Benin.csv
-Bhutan,BTN,Bhutan.csv
 Bolivia,BOL,Bolivia.csv
-Bosnia and Herzegovina,BIH,Bosnia_and_Herzegovina.csv
 Botswana,BWA,Botswana.csv
-Brazil,BRA,Brazil.csv
-Bulgaria,BGR,Bulgaria.csv
 Burkina Faso,BFA,Burkina_Faso.csv
 Burundi,BDI,Burundi.csv
 Cambodia,KHM,Cambodia.csv
 Cameroon,CMR,Cameroon.csv
-Cape Verde,CPV,Cape_Verde.csv
 Central African Republic,CAF,Central_African_Republic.csv
-Chad,TCD,Chad.csv
-Chile,CHL,Chile.csv
-China,CHN,China.csv
-Christmas Island,CXR,Christmas_Island.csv
-Colombia,COL,Colombia.csv
-Comoros,COM,Comoros.csv
-Congo,COG,Congo.csv
-Costa Rica,CRI,Costa_Rica.csv
 Cote d'Ivoire,CIV,Cote_d_Ivoire.csv
-Croatia,HRV,Croatia.csv
-Cuba,CUB,Cuba.csv
-Czech Republic,CZE,Czech_Republic.csv
 Democratic Republic of the Congo,COD,Democratic_Republic_of_the_Congo.csv
 Djibouti,DJI,Djibouti.csv
-Dominica,DMA,Dominica.csv
 Dominican Republic,DOM,Dominican_Republic.csv
-Ecuador,ECU,Ecuador.csv
 Egypt,EGY,Egypt.csv
 El Salvador,SLV,El_Salvador.csv
-Equatorial Guinea,GNQ,Equatorial_Guinea.csv
-Eritrea,ERI,Eritrea.csv
-Estonia,EST,Estonia.csv
 Ethiopia,ETH,Ethiopia.csv
-Federated States of Micronesia,FSM,Federated_States_of_Micronesia.csv
 Fiji,FJI,Fiji.csv
-Gabon,GAB,Gabon.csv
-Georgia,GEO,Georgia.csv
 Ghana,GHA,Ghana.csv
-Global,WLD,Global.csv
-Grenada,GRD,Grenada.csv
 Guatemala,GTM,Guatemala.csv
 Guinea,GIN,Guinea.csv
-Guinea-Bissau,GNB,Guinea_Bissau.csv
 Guyana,GUY,Guyana.csv
 Haiti,HTI,Haiti.csv
 Honduras,HND,Honduras.csv
-Hungary,HUN,Hungary.csv
 India,IND,India.csv
 Indonesia,IDN,Indonesia.csv
-Iran,IRN,Iran.csv
 Iraq,IRQ,Iraq.csv
 Jamaica,JAM,Jamaica.csv
 Jordan,JOR,Jordan.csv
-Kazakhstan,KAZ,Kazakhstan.csv
 Kenya,KEN,Kenya.csv
-Kiribati,KIR,Kiribati.csv
-Kosovo,KSV,Kosovo.csv
 Kyrgyzstan,KGZ,Kyrgyzstan.csv
 Laos,LAO,Laos.csv
-Latvia,LVA,Latvia.csv
-Lebanon,LBN,Lebanon.csv
 Lesotho,LSO,Lesotho.csv
 Liberia,LBR,Liberia.csv
 Libya,LBY,Libya.csv
-Lithuania,LTU,Lithuania.csv
 Madagascar,MDG,Madagascar.csv
 Malawi,MWI,Malawi.csv
-Malaysia,MYS,Malaysia.csv
-Maldives,MDV,Maldives.csv
 Mali,MLI,Mali.csv
-Malta,MLT,Malta.csv
-Marshall Islands,MHL,Marshall_Islands.csv
-Mauritania,MRT,Mauritania.csv
 Mauritius,MUS,Mauritius.csv
-Mayotte,MYT,Mayotte.csv
-Mexico,MEX,Mexico.csv
 Moldova,MDA,Moldova.csv
 Mongolia,MNG,Mongolia.csv
-Montenegro,MNE,Montenegro.csv
-Montserrat,MSR,Montserrat.csv
-Morocco,MAR,Morocco.csv
 Mozambique,MOZ,Mozambique.csv
-Myanmar,MMR,Myanmar.csv
 Namibia,NAM,Namibia.csv
-Nauru,NRU,Nauru.csv
 Nepal,NPL,Nepal.csv
-Netherlands Antilles,ANT,Netherlands_Antilles.csv
 Nicaragua,NIC,Nicaragua.csv
 Niger,NER,Niger.csv
 Nigeria,NGA,Nigeria.csv
-North Korea,PRK,North_Korea.csv
-North Macedonia,MKD,North_Macedonia.csv
-Northern Mariana Islands,MNP,Northern_Mariana_Islands.csv
-Oman,OMN,Oman.csv
 Pakistan,PAK,Pakistan.csv
-Palau,PLW,Palau.csv
-Palestine,PSE,Palestine.csv
 Panama,PAN,Panama.csv
 Papua New Guinea,PNG,Papua_New_Guinea.csv
-Paraguay,PRY,Paraguay.csv
-Peru,PER,Peru.csv
 Philippines,PHL,Philippines.csv
-Poland,POL,Poland.csv
-Portugal,PRT,Portugal.csv
-Romania,ROU,Romania.csv
-Russia,RUS,Russia.csv
 Rwanda,RWA,Rwanda.csv
-Saint Helena,SHN,Saint_Helena.csv
-Saint Kitts and Nevis,KNA,Saint_Kitts_and_Nevis.csv
-Saint Lucia,LCA,Saint_Lucia.csv
-Saint Vincent and the Grenadines,VCT,Saint_Vincent_and_the_Grenadines.csv
-Samoa,WSM,Samoa.csv
 Sao Tome and Principe,STP,Sao_Tome_and_Principe.csv
-Saudi Arabia,SAU,Saudi_Arabia.csv
 Senegal,SEN,Senegal.csv
-Serbia,SRB,Serbia.csv
-Seychelles,SYC,Seychelles.csv
 Sierra Leone,SLE,Sierra_Leone.csv
-Slovakia,SVK,Slovakia.csv
-Slovenia,SVN,Slovenia.csv
-Solomon Islands,SLB,Solomon_Islands.csv
 Somalia,SOM,Somalia.csv
 South Africa,ZAF,South_Africa.csv
-South Korea,KOR,South_Korea.csv
 South Sudan,SSD,South_Sudan.csv
-Sri Lanka,LKA,Sri_Lanka.csv
-Sudan,SDN,Sudan.csv
-Suriname,SUR,Suriname.csv
 Swaziland,SWZ,Swaziland.csv
-Syria,SYR,Syria.csv
 Tajikistan,TJK,Tajikistan.csv
 Tanzania,TZA,Tanzania.csv
-Thailand,THA,Thailand.csv
 The Gambia,GMB,The_Gambia.csv
 Timor-Leste,TLS,Timor_Leste.csv
 Togo,TGO,Togo.csv
-Tokelau,TKL,Tokelau.csv
-Tonga,TON,Tonga.csv
-Trinidad and Tobago,TTO,Trinidad_and_Tobago.csv
-Tunisia,TUN,Tunisia.csv
-Turkey,TUR,Turkey.csv
-Turkmenistan,TKM,Turkmenistan.csv
-Turks and Caicos Islands,TCA,Turks_and_Caicos_Islands.csv
-Tuvalu,TUV,Tuvalu.csv
 Uganda,UGA,Uganda.csv
-Ukraine,UKR,Ukraine.csv
-Unallocated/Unspecified,QZA,Unallocated_Unspecified.csv
-Uruguay,URY,Uruguay.csv
-Uzbekistan,UZB,Uzbekistan.csv
-Vanuatu,VUT,Vanuatu.csv
 Venezuela,VEN,Venezuela.csv
 Vietnam,VNM,Vietnam.csv
-Wallis and Futuna Islands,WLF,Wallis_and_Futuna_Islands.csv
-Yemen,YEM,Yemen.csv
 Zambia,ZMB,Zambia.csv
 Zimbabwe,ZWE,Zimbabwe.csv

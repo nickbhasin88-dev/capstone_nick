@@ -12,7 +12,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from country_lists import ALLOWED_COUNTRIES, HIDDEN_FROM_DROPDOWN
+from country_lists import ALLOWED_COUNTRIES
 from model_section import chart, how_to_read, render_model_section, stat, title_case, what_this_shows
 
 # Full-width kwarg differs by Streamlit version (older: use_container_width, 1.50+: width="stretch")
@@ -119,7 +119,7 @@ def load_countries() -> pd.DataFrame:
     m["name"] = m["location_name"].fillna(m["recipient_country"])   # prefer the spending-file name
     m["is_country"] = m["is_country"].fillna(True).astype(bool)
     m["has_spend"] = m["location_name"].notna()
-    m = m[m["iso3"].isin(ALLOWED_COUNTRIES) & ~m["iso3"].isin(HIDDEN_FROM_DROPDOWN)].copy()
+    m = m[m["iso3"].isin(ALLOWED_COUNTRIES)].copy()
     m["name"] = m["iso3"].map(ALLOWED_COUNTRIES)
     m["is_country"] = True
     m["label"] = m["name"]
@@ -265,7 +265,7 @@ with st.sidebar:
     if st.session_state.get("country_sel") not in set(countries["label"]):
         st.session_state["country_sel"] = _start if (countries["label"] == _start).any() else countries["label"].iloc[0]
     country_label = st.selectbox("Country", countries["label"], key="country_sel")
-profile_cols = st.columns(4)
+profile_cols = st.columns(5)
 crow = countries[countries["label"] == country_label].iloc[0]
 country_name = crow["name"]
 
@@ -291,11 +291,12 @@ if crow["has_spend"] and (SPEND_DIR / f"{crow['iso3']}.csv").exists():
 
 def _pill(label, value, tip=""):
     """One country-profile pill; all four share the same style."""
-    return (f"<div title='{html.escape(tip, quote=True)}' style='min-height:40px;border-radius:20px;display:flex;"
-            f"align-items:center;justify-content:center;gap:8px;padding:0 14px;box-sizing:border-box;"
-            f"background:rgba(46,134,193,0.10);border:1.5px solid rgba(46,134,193,0.55);white-space:nowrap;"
-            f"overflow:hidden;text-overflow:ellipsis'>"
-            f"<span style='font-size:13px;opacity:0.75'>{html.escape(label)}</span>"
+    # label stacked over the value, so five pills fit on one row without clipping long values
+    return (f"<div title='{html.escape(tip, quote=True)}' style='min-height:54px;border-radius:20px;display:flex;"
+            f"flex-direction:column;align-items:center;justify-content:center;padding:6px 12px;box-sizing:border-box;"
+            f"background:rgba(46,134,193,0.10);border:1.5px solid rgba(46,134,193,0.55);text-align:center;"
+            f"line-height:1.25'>"
+            f"<span style='font-size:12px;opacity:0.75'>{html.escape(label)}</span>"
             f"<span style='font-size:15px;font-weight:700'>{html.escape(value)}</span></div>")
 
 
@@ -304,6 +305,8 @@ _items = [
     ("Region", _prof.get("region") or "n/a", "World Bank region (IHME DAH database)"),
     ("Income Group", INCOME_LABELS.get(_prof.get("income_group"), "n/a"), "World Bank income group"),
     ("US MOU", _prof.get("mou_status") or "n/a", "US bilateral health MOU, from the team's MOU / co-financing sheet"),
+    (f"GDP{', ' + str(_gdp_yr) if _gdp_yr else ''}", fmt_usd(_gdp_bn * 1e3) if _gdp_bn else "n/a",
+     "Current US$, IMF World Economic Outlook"),
     (f"Population{', ' + str(_pop_yr) if _pop_yr else ''}",
      ((f"{_pop_m:,.1f}" if _pop_m >= 1 else f"{_pop_m:,.2f}") + "M") if _pop_m else "n/a",
      "Millions of people, IMF World Economic Outlook"),

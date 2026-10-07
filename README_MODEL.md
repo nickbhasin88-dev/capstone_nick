@@ -10,7 +10,7 @@ coverage falls and how many more people die?* Buckets: HIV, TB, malaria, immuniz
 | `app.py` | Your dashboard, unchanged except: section 3 is wrapped in a function (so a country with no IMF data no longer stops the page) and section 4 is added at the end. |
 | `model_section.py` | Section 4 UI: scenario controls, charts, tables. |
 | `pages/2_Validation.py` | Validation & Benchmarks page (sidebar link): model totals vs published estimates, and the unit-cost model vs our Poisson regression vs the Lancet rate ratios for one country. |
-| `country_lists.py` | Countries the app knows about and which ones the dropdowns offer (`HIDDEN_FROM_DROPDOWN`). |
+| `country_lists.py` | The 71 countries the dashboard covers. The data folders and model files hold only these; the regressions in `prepare_model.py` still use the wider 97-country panel. |
 | `.streamlit/config.toml` | Hides Streamlit's automatic page list; the sidebar shows named page links instead. |
 | `scenarios.py` | The donor-scenario presets (`build_scenario`), shared by the app and `prepare_model.py`. |
 | `health_model.py` | The model itself (no Streamlit). Import it in a notebook to run anything in batch. |
