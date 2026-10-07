@@ -123,6 +123,7 @@ HIV_SHARE_URL = "https://raw.githubusercontent.com/open-numbers/ddf--gapminder--
 HIV_SHARE_FILE = EXT / "gm" / "ddf--datapoints--ihme_hiv_death--by--country--time.csv"   # IHME HIV share of all deaths, %
 WB_REGIONS = {"SSA": "Sub-Saharan Africa", "SAS": "South Asia", "EAP": "East Asia & Pacific",
               "ECA": "Europe & Central Asia", "LAC": "Latin America & Caribbean", "MNA": "Middle East & North Africa"}
+INCOME_GROUP_OVERRIDES = {"KSV": "upper_middle_income"}     # World Bank FY2026 classification (not in the Gapminder list)
 MOU_STATUS_VALUES = {"signed": "Signed", "rejected": "Rejected", "negotiating": "Negotiating"}
 TREND_YEARS = (2010, 2019)          # pre-COVID window for baseline mortality trends
 TREND_CLIP = (-0.08, 0.02)          # annual % change, clipped
@@ -398,11 +399,18 @@ def main(a):
     prof = pd.DataFrame(index=ci.index)
     prof["region_code"] = reg_code.reindex(ci.index)
     prof["region"] = prof["region_code"].map(WB_REGIONS)
-    prof["income_group"] = ci.get("income_group")
+    # income group: World Bank classification from the Gapminder mirror; it has no Kosovo entry, so that one comes from
+    # the World Bank FY2026 list directly; anything else still missing falls back to the model's GDP-per-capita rule
+    import health_model as hm
+    ig = ci.get("income_group", pd.Series(index=ci.index, dtype=object)).copy()
+    ig = ig.fillna(pd.Series(INCOME_GROUP_OVERRIDES).reindex(ci.index))
+    prof["income_group"] = [g if isinstance(g, str) and g else hm.income_group(r) for g, (_, r) in zip(ig, ci.iterrows())]
     has_2026 = ci["mou_us_2026"].notna() if "mou_us_2026" in ci else pd.Series(False, index=ci.index)
     fallback = np.where(has_2026, "Signed", "No MOU in Team Data")
     prof["mou_status"] = ci["mou_status"].fillna(pd.Series(fallback, index=ci.index)) if "mou_status" in ci \
         else fallback
+    missing = prof[["region", "income_group", "mou_status"]].isna()
+    assert not missing.any().any(), f"country_profile has missing values: {prof.index[missing.any(axis=1)].tolist()}"
     prof.reset_index().to_csv(OUT / "country_profile.csv", index=False)
     print(f"  country_profile: {len(prof)} countries, {prof['region'].notna().sum()} with a region, "
           f"{(prof['mou_status'] == 'Signed').sum()} with a signed MOU")

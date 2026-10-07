@@ -131,9 +131,9 @@ INCOME_LABELS = {"low_income": "Low Income", "lower_middle_income": "Lower-Middl
 PROFILE_FILE = Path(__file__).parent / "model_data" / "country_profile.csv"   # built by prepare_model.py
 
 
-@st.cache_data(show_spinner=False)
 def load_profile() -> dict:
-    """iso3 -> {region, income_group, mou_status}; empty if the file is missing (pills then show n/a)."""
+    """iso3 -> {region, income_group, mou_status}. Read fresh every run (98 rows, ~1 ms): a cached copy could stay
+    empty if the app reran while a deploy was still writing the file, which showed n/a for every country."""
     if not PROFILE_FILE.exists():
         return {}
     d = pd.read_csv(PROFILE_FILE).set_index("iso3")
