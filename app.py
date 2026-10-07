@@ -127,6 +127,11 @@ ALLOWED_COUNTRIES = {
     "ZMB": "Zambia",
     "ZWE": "Zimbabwe",
 }
+# Not offered in the dropdown. Their data stays, and they still count in the all-country model results.
+HIDDEN_FROM_DROPDOWN = {
+    "AFG", "ALB", "ARM", "BLR", "BRA", "CHN", "COL", "CRI", "ECU", "GEO", "KAZ", "KSV", "MEX", "MAR", "MMR", "PRY",
+    "PER", "ROU", "RUS", "SDN", "THA", "TTO", "TKM", "UKR", "UZB", "PSE", "YEM",
+}
 
 HATCH_SHAPE = "+"                        # plotly pattern: "+" grid, "x" crosshatch, "/" diagonal
 
@@ -219,7 +224,7 @@ def load_countries() -> pd.DataFrame:
     m["name"] = m["location_name"].fillna(m["recipient_country"])   # prefer the spending-file name
     m["is_country"] = m["is_country"].fillna(True).astype(bool)
     m["has_spend"] = m["location_name"].notna()
-    m = m[m["iso3"].isin(ALLOWED_COUNTRIES)].copy()
+    m = m[m["iso3"].isin(ALLOWED_COUNTRIES) & ~m["iso3"].isin(HIDDEN_FROM_DROPDOWN)].copy()
     m["name"] = m["iso3"].map(ALLOWED_COUNTRIES)
     m["is_country"] = True
     m["label"] = m["name"]
