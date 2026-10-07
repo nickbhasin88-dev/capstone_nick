@@ -1,2 +1,5 @@
 datasets/dataset_2026-10-06T18_38_46.834794338Z_DEFAULT_INTEGRATION_IMF.STA_GFS_COFOG_11.0.0.csv
 datasets/IHME_DAH_DATABASE_1990_2026_Y2026M09D18.CSV
+
+# Local virtual environment
+.venv/

@@ -509,7 +509,7 @@ else:
     # which organizations the checkered money went through, per bar (for hover text)
     ngo_detail = (window[window["route"] == "ngo"].groupby(["year", "source", "channel"])["val"].sum().reset_index())
     ngo_detail = ngo_detail[ngo_detail["val"] > 0]
-    ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd)
+    ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd).astype(str)
     ngo_hover = ngo_detail.groupby(["year", "source"])["txt"].apply("<br>".join).to_dict()
     # axis unit adapts to size (millions / billions / trillions)
     unit_div, unit_name, unit_sfx = pick_unit(agg.groupby("year")["val"].sum().max() if len(agg) else 0)
