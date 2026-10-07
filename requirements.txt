@@ -1,4 +1,5 @@
 streamlit>=1.50
 pandas
+numpy
 plotly>=5.20
- 
+openpyxl   # only needed by prepare_model.py (reads the MOU spreadsheet)

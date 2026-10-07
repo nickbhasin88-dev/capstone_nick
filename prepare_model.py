@@ -8,12 +8,17 @@ Build the inputs for the funding-shock model (Section 4 of app.py).
                             --mou  <co-financing_MOU.xlsx>
                             [--download]      # refresh ext_data/ from the Gapminder WDI mirror on GitHub
 
+    python prepare_model.py --precompute-only   # only re-run the all-country results from the existing model_data/
+
 Writes ./model_data/:
     dah_lines.csv        baseline aid (avg 2021-2023, constant 2023 US$) by country x source group x channel x service line
     ihme_trend.csv       IHME's own 2025 (preliminary) / 2021-23 ratio by source group x channel x disease bucket
     country_inputs.csv   epidemiology, coverage, fiscal-space and MOU data, one row per country
     panel.csv            country-year panel used for the regressions
     regressions.json     fixed-effects estimates (fiscal replacement + coverage dose-response)
+    all_countries_<preset>.csv   health_model.run_all for every preset except Custom, with the default government
+                                 response (no backfill, pro-rata, 75th-percentile ceiling) and default parameters;
+                                 the app loads these instantly when its settings match
 
 Everything is in constant 2023 US$ unless noted. IHME DAH values are in thousands of US$.
 """
@@ -359,12 +364,37 @@ def main(a):
     print("done ->", OUT)
 
 
+# --------------------------------------------------------------------------- #
+# All-country results for each preset (loaded instantly by the app when its settings are the defaults)
+# --------------------------------------------------------------------------- #
+def precompute_all():
+    import health_model as hm
+    import scenarios as scn
+
+    print("precomputing all-country results ...")
+    inputs, ptab = hm.load_inputs(OUT), hm.load_params()
+    for preset in scn.PRECOMPUTED_PRESETS:
+        sc = scn.build_scenario(preset, scn.default_opts(preset, inputs["ci"]), inputs["ci"])
+        res = hm.run_all(sc, hm.Fiscal(*scn.DEFAULT_FISCAL), inputs, ptab, n_draws=scn.ALL_COUNTRY_DRAWS)
+        path = scn.precomputed_path(OUT, preset)
+        res.to_csv(path, index=False)
+        print(f"  {path.name}: {len(res)} countries, {res['deaths_5y'].sum():,.0f} extra deaths over 5 years")
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--dah", required=True)
-    p.add_argument("--spend", required=True)
-    p.add_argument("--expected", required=True)
-    p.add_argument("--gdp", required=True)
+    p.add_argument("--dah")
+    p.add_argument("--spend")
+    p.add_argument("--expected")
+    p.add_argument("--gdp")
     p.add_argument("--mou", default=None)
     p.add_argument("--download", action="store_true")
-    main(p.parse_args())
+    p.add_argument("--precompute-only", action="store_true",
+                   help="skip the rebuild and only refresh model_data/all_countries_<preset>.csv")
+    args = p.parse_args()
+    if not args.precompute_only:
+        missing = [f"--{k}" for k in ("dah", "spend", "expected", "gdp") if not getattr(args, k)]
+        if missing:
+            p.error(f"the full rebuild needs {', '.join(missing)} (or use --precompute-only)")
+        main(args)
+    precompute_all()

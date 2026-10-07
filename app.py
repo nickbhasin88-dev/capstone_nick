@@ -11,6 +11,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from model_section import how_to_read, render_model_section, stat, what_this_shows
+
 # Full-width kwarg differs by Streamlit version (older: use_container_width, 1.50+: width="stretch")
 _ver = tuple(int(x) for x in st.__version__.split(".")[:2] if x.isdigit())
 WIDE = {"width": "stretch"} if _ver >= (1, 50) else {"use_container_width": True}
@@ -312,7 +314,7 @@ def hex_to_rgba(hex_color: str, alpha: float) -> str:
 # Page
 # --------------------------------------------------------------------------- #
 st.set_page_config(page_title="Health financing", page_icon="📊", layout="wide")
-st.title("Health financing by country")
+st.title("Health Financing by Country")
 st.caption("IHME Development Assistance for Health (1990-2025) and Global Health Spending (1995-2023, "
            "expected 2024-2050). Constant 2023 US$.")
 
@@ -338,11 +340,11 @@ if _missing:
 
 countries = load_countries()
 
-# ---- country picker (left) with GDP / population / health-spend pills to its right ------ #
-pick_col, pill1, pill2 = st.columns([1.5, 2, 2])
-with pick_col:
+# ---- country picker (sidebar) with GDP / population pills at the top of the page ------ #
+with st.sidebar:
     default_i = int(countries.index[countries["name"] == DEFAULT_COUNTRY][0]) if (countries["name"] == DEFAULT_COUNTRY).any() else 0
     country_label = st.selectbox("Country", countries["label"], index=default_i)
+pill1, pill2, _ = st.columns([2, 2, 3])
 crow = countries[countries["label"] == country_label].iloc[0]
 country_name = crow["name"]
 
@@ -367,7 +369,7 @@ if crow["has_spend"] and (SPEND_DIR / f"{crow['iso3']}.csv").exists():
 
 
 def _pill(label, value, rgb, tip=""):
-    return (f"<div title='{tip}' style='margin-top:1.8rem;min-height:38px;border-radius:20px;display:flex;align-items:center;"
+    return (f"<div title='{tip}' style='min-height:38px;border-radius:20px;display:flex;align-items:center;"
             f"justify-content:center;gap:8px;padding:0 14px;box-sizing:border-box;background:rgba({rgb},0.14);"
             f"border:2px solid rgba({rgb},0.7);white-space:nowrap'>"
             f"<span style='font-size:13px;opacity:0.75'>{label}</span><span style='font-size:16px;font-weight:700'>{value}</span></div>")
@@ -386,7 +388,9 @@ st.divider()
 # =========================================================================== #
 # CHART 2 - total health spending by source: past vs expected
 # =========================================================================== #
-st.header(f"1. Money spent on health in {country_name}, over time")
+st.header(f"1. Money Spent on Health in {country_name}, Over Time")
+what_this_shows("How much is spent on health each year and who pays for it: the government, private insurance, "
+                "households out of pocket, or aid from abroad.")
 
 if not crow["has_spend"] or not (SPEND_DIR / f"{crow['iso3']}.csv").exists():
     st.info(f"{country_name} isn't in the IHME health-spending dataset (it covers 204 countries and territories), "
@@ -439,7 +443,8 @@ else:
                            line_width=0, annotation_text="IHME expected (projected)", annotation_position="top left",
                            annotation_font=dict(size=12, color="gray"))
         fig2.update_layout(
-            barmode="stack", height=680, margin=dict(l=10, r=10, t=30, b=10),
+            title=dict(text=f"Health Spending by Source, {y0}-{y1}", font=dict(size=16), x=0, xanchor="left"),
+            barmode="stack", height=680, margin=dict(l=10, r=10, t=50, b=10),
             xaxis=dict(range=[y0 - 0.5, y1 + 0.5], dtick=1, tickangle=-45, title="", automargin=True),
             yaxis=dict(title=ylab, rangemode="tozero", automargin=True, **({"range": [0, 100]} if view.startswith("Share") else {})),
             legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="left", x=0),
@@ -450,14 +455,14 @@ else:
         last_obs = sp[sp["year"] == SPEND_LAST_OBSERVED].iloc[0]
         end = sp[sp["year"] == min(y1, int(sp["year"].max()))].iloc[0]
         k1, k2, k3 = st.columns(3)
-        k1.metric(f"Total spending, {SPEND_LAST_OBSERVED}", fmt_usd(last_obs['the_total_mean'] / 1e3))
-        k2.metric(f"DAH share of total, {SPEND_LAST_OBSERVED}", f"{last_obs['dah_total_mean'] / last_obs['the_total_mean']:.0%}")
-        k3.metric(f"DAH share of total, {int(end['year'])} (expected)" if end["year"] > SPEND_LAST_OBSERVED else f"DAH share, {int(end['year'])}",
-                  f"{end['dah_total_mean'] / end['the_total_mean']:.0%}")
-        st.caption(
+        stat(k1, f"Total Spending, {SPEND_LAST_OBSERVED}", fmt_usd(last_obs['the_total_mean'] / 1e3))
+        stat(k2, f"Aid Share of Total, {SPEND_LAST_OBSERVED}", f"{last_obs['dah_total_mean'] / last_obs['the_total_mean']:.0%}")
+        stat(k3, f"Aid Share of Total, {int(end['year'])} (Expected)" if end["year"] > SPEND_LAST_OBSERVED else f"Aid Share, {int(end['year'])}",
+             f"{end['dah_total_mean'] / end['the_total_mean']:.0%}")
+        how_to_read(
             "Solid bars are IHME's estimates through 2023; paler bars after 2023 are IHME's *expected* (projected) spending. "
-            "Government, prepaid private and out-of-pocket are domestic sources; DAH is aid from abroad. The four parts add up "
-            "to total health spending."
+            "Government, prepaid private and out-of-pocket are domestic sources; development assistance for health (DAH) "
+            "is aid from abroad. The four parts add up to total health spending."
         )
 
 
@@ -466,7 +471,9 @@ st.divider()
 # =========================================================================== #
 # CHART 1 - who funds health (DAH)
 # =========================================================================== #
-st.header(f"2. Health aid in {country_name}: who is providing the money")
+st.header(f"2. Health Aid in {country_name}: Who Is Providing the Money")
+what_this_shows("Which donors pay for health aid here, and how much of it goes through NGOs and foundations instead "
+                "of channels that work with the government.")
 
 if pd.isna(crow["dah_file"]):
     st.info(f"{country_name} is not a recipient in the IHME DAH database (typically a high-income country), "
@@ -509,7 +516,7 @@ else:
     # which organizations the checkered money went through, per bar (for hover text)
     ngo_detail = (window[window["route"] == "ngo"].groupby(["year", "source", "channel"])["val"].sum().reset_index())
     ngo_detail = ngo_detail[ngo_detail["val"] > 0]
-    ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd)
+    ngo_detail["txt"] = ngo_detail["channel"].map(lambda c: CHANNEL_LABELS.get(c, c)) + ": " + ngo_detail["val"].map(fmt_usd).astype(str)
     ngo_hover = ngo_detail.groupby(["year", "source"])["txt"].apply("<br>".join).to_dict()
     # axis unit adapts to size (millions / billions / trillions)
     unit_div, unit_name, unit_sfx = pick_unit(agg.groupby("year")["val"].sum().max() if len(agg) else 0)
@@ -521,16 +528,15 @@ else:
     colors = {s: palette[i % len(palette)] for i, s in enumerate(top)}
     colors["All other sources"] = "#9aa0a6"
 
-    st.subheader(f"{country_name} - {metric_label}")
     latest = d[d["year"] == last_data_year]
     tot = latest["val"].sum()
     if tot > 0:
         ngo_share = latest.loc[latest["route"] == "ngo", "val"].sum() / tot
         top_src = latest.groupby("source")["val"].sum().idxmax()
         m1, m2, m3 = st.columns(3)
-        m1.metric(f"Total in {last_data_year}", fmt_usd(tot))
-        m2.metric(f"Via NGO / foundation channels, {last_data_year}", f"{ngo_share:.0%}")
-        m3.metric(f"Largest funder, {last_data_year}", top_src)
+        stat(m1, f"Total in {last_data_year}", fmt_usd(tot))
+        stat(m2, f"Via NGO / Foundation Channels, {last_data_year}", f"{ngo_share:.0%}")
+        stat(m3, f"Largest Funder, {last_data_year}", top_src)
     else:
         st.info("No funding recorded for this selection.")
 
@@ -571,7 +577,8 @@ else:
                       annotation_text="no data yet (forecast to come)", annotation_position="top left",
                       annotation_font=dict(size=12, color="gray"))
     fig.update_layout(
-        barmode="stack", height=560, margin=dict(l=10, r=10, t=30, b=10),
+        title=dict(text=f"Health Aid Received, by Funder: {metric_label}", font=dict(size=16), x=0, xanchor="left"),
+        barmode="stack", height=560, margin=dict(l=10, r=10, t=50, b=10),
         xaxis=dict(range=[YEAR_MIN - 0.5, YEAR_MAX + 0.5], dtick=1, tickangle=-45, title=""),
         yaxis=dict(title=f"US$ {unit_name} (constant 2023)", rangemode="tozero"),
         legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=1.01),
@@ -579,21 +586,20 @@ else:
     )
     st.plotly_chart(fig, **WIDE)
 
-    if crow["is_country"] and last_data_year < 2024:
-        st.caption(f"IHME's recipient-level aid data ends in {last_data_year}: 2024-2025 estimates exist only as "
-                   "unallocated totals with no country attached, so they can't be shown here.")
-    st.caption(
-        "**Reading the chart:** colour = who the money originally came from (source). Checkered = delivered through "
-        "NGO/foundation channels, a *proxy* for flows that may bypass the recipient government. IHME does not record "
-        "government awareness directly, and some government-facing channels (e.g. bilateral agencies, the Global Fund) "
-        "also fund NGOs on the ground."
+    how_to_read(
+        "Colour = who the money originally came from (source). Checkered = delivered through NGO/foundation channels, a "
+        "*proxy* for flows that may bypass the recipient government. IHME does not record government awareness directly, "
+        "and some government-facing channels (e.g. bilateral agencies, the Global Fund) also fund NGOs on the ground."
+        + (f"\n\nIHME's recipient-level aid data ends in {last_data_year}: 2024-2025 estimates exist only as "
+           "unallocated totals with no country attached, so they can't be shown here."
+           if crow["is_country"] and last_data_year < 2024 else "")
     )
 
 
 # =========================================================================== #
 # CHART 3 - what health aid is spent on (DAH by health focus area)
 # =========================================================================== #
-st.subheader("...and where is it being spent?")
+st.subheader("Where the Aid Is Spent")
 
 FOCUS_COLORS = {
     "hiv": "#c0392b", "mal": "#e67e22", "tb": "#8e5ea2", "rmh": "#e377c2", "nch": "#2e86c1",
@@ -646,7 +652,8 @@ else:
             fig4.add_bar(x=byyr.index, y=yv, name=lab, marker=dict(color=col, line=dict(color=col, width=0.5)), hovertemplate=hov,
                          customdata=None if view3.startswith("Share") else [[fmt_usd(v)] for v in byyr[c]])
         fig4.update_layout(
-            barmode="stack", height=560, margin=dict(l=10, r=10, t=30, b=10),
+            title=dict(text="Health Aid by What It Pays For", font=dict(size=16), x=0, xanchor="left"),
+            barmode="stack", height=560, margin=dict(l=10, r=10, t=50, b=10),
             xaxis=dict(range=[YEAR_MIN - 0.5, YEAR_MAX + 0.5], dtick=1, tickangle=-45, title="", automargin=True),
             yaxis=dict(title=("% of health aid" if view3.startswith("Share") else f"US$ {name3} (constant 2023)"),
                        rangemode="tozero", automargin=True, **({"range": [0, 100]} if view3.startswith("Share") else {})),
@@ -657,7 +664,7 @@ else:
             fig4.add_vrect(x0=data_end + 0.5, x1=YEAR_MAX + 0.5, fillcolor="rgba(128,128,128,0.08)", line_width=0,
                            annotation_text="No data yet", annotation_position="top left", annotation_font=dict(size=12, color="gray"))
         st.plotly_chart(fig4, **WIDE)
-        st.caption(
+        how_to_read(
             f"{country_name}: development assistance for health received, split by what it pays for ({sub_title}). "
             "Source: IHME DAH database, constant 2023 US$. This is aid only: IHME's total-spending files (government, "
             "private, out-of-pocket) are not split by disease. 'Unallocated' is aid with no focus-area information."
@@ -669,7 +676,9 @@ st.divider()
 # =========================================================================== #
 # SECTION 4 - the government budget: one treemap, revenue side and spending side sized to each other
 # =========================================================================== #
-st.header(f"3. The government's role in {country_name}: revenue (money in) and spending (money out)")
+st.header(f"3. The Government's Role in {country_name}: Revenue (Money In) and Spending (Money Out)")
+what_this_shows("Where the government's money comes from and what it spends it on, drawn to the same scale so any gap "
+                "shows up as borrowing or a surplus.")
 
 def _budget_section():
     rev = load_revenue(crow["iso3"]) if REVENUE_DIR.exists() else None
@@ -805,7 +814,8 @@ def _budget_section():
             marker=dict(colors=colors_, line=dict(width=1.5, color="white")), customdata=hov, textinfo="label+text",
             hovertemplate="<b>%{label}</b><br>%{customdata}<extra></extra>", sort=False,
         ))
-        fig4.update_layout(height=720, margin=dict(l=0, r=0, t=10, b=0))
+        fig4.update_layout(title=dict(text=f"Government Revenue and Spending, {int(yr4)}", font=dict(size=16), x=0,
+                                      xanchor="left"), height=720, margin=dict(l=0, r=0, t=50, b=0))
         st.plotly_chart(fig4, **WIDE)
 
         covs = []
@@ -813,28 +823,26 @@ def _budget_section():
             covs.append(f"revenue: {rg['coverage'].iloc[0].lower()}")
         if has_spd:
             covs.append(f"spending: {g['coverage'].iloc[0].lower()}")
-        st.caption(
-            f"{int(yr4)}. The revenue box (left) and spending box (right) are drawn to the same scale. When spending is larger, the "
-            "difference is shown as dark-purple 'Borrowing / debt' on the revenue side; when revenue is larger, a green 'Surplus' "
-            "box appears on the spending side. Debt interest is split out of general public services. "
-            f"Level of government ({'; '.join(covs)}). Grey = amounts the IMF doesn't break out.")
-
         # ---------------- headline numbers ----------------
         mcols = st.columns(4)
         def _m(col, label, pct, signed=False):
             if gdp_m:
-                col.metric(label, (("-" if pct < 0 else "+") if signed else "") + _amt(abs(pct)))
+                stat(col, label, (("-" if pct < 0 else "+") if signed else "") + _amt(abs(pct)))
             else:
-                col.metric(label, f"{pct:+.1f}% of GDP" if signed else f"{pct:.1f}% of GDP")
+                stat(col, label, f"{pct:+.1f}% of GDP" if signed else f"{pct:.1f}% of GDP")
         if R is not None:
             _m(mcols[0], f"Revenue, {int(yr4)}", R)
         if T is not None and has_spd:
             _m(mcols[1], f"Spending, {int(yr4)}", T)
         if can_compare:
-            _m(mcols[2], "Revenue minus spending", -gap, signed=True)
+            _m(mcols[2], "Revenue Minus Spending", -gap, signed=True)
         if debt_pct is not None:
-            mcols[3].metric(f"Gross government debt, {int(yr4)}", _amt(debt_pct) if gdp_m else f"{debt_pct:.0f}% of GDP")
-        st.caption(
+            stat(mcols[3], f"Gross Government Debt, {int(yr4)}", _amt(debt_pct) if gdp_m else f"{debt_pct:.0f}% of GDP")
+        how_to_read(
+            f"{int(yr4)}. The revenue box (left) and spending box (right) are drawn to the same scale. When spending is larger, the "
+            "difference is shown as dark-purple 'Borrowing / debt' on the revenue side; when revenue is larger, a green 'Surplus' "
+            "box appears on the spending side. Debt interest is split out of general public services. "
+            f"Level of government ({'; '.join(covs)}). Grey = amounts the IMF doesn't break out." + "\n\n"
             "Both IMF datasets report each item as a share of GDP, so dollar amounts = that share x GDP"
             + (f" (GDP in {gdp_basis})" if gdp_m else "") + ". After the IMF's latest actual year, GDP is the IMF's projection. "
             "Revenue and spending come from two different IMF datasets and a country can be reported at a different level of "
@@ -851,8 +859,6 @@ st.divider()
 # =========================================================================== #
 # SECTION 4 - the model: funding cut -> fiscal response -> coverage -> lives
 # =========================================================================== #
-from model_section import render_model_section  # noqa: E402
-
 _imf = {}
 _mac4 = load_macro(crow["iso3"]) if any(MACRO_DIR.glob("*.csv")) else None
 if _mac4 is not None and "gov_gross_debt_pct_gdp" in _mac4.columns:
@@ -864,4 +870,4 @@ if _rev4 is not None and not _rev4.empty:
     _ry = _rev4[_rev4["year"] <= 2024]["year"].max()
     if pd.notna(_ry):
         _imf["revenue_pct_gdp"] = float(_rev4.loc[_rev4["year"] == _ry, "pct_gdp"].sum())
-render_model_section(crow["iso3"], country_name, _imf)
+render_model_section(crow["iso3"], country_name, _imf, ALLOWED_COUNTRIES)

@@ -9,10 +9,11 @@ coverage falls and how many more people die?* Buckets: HIV, TB, malaria, immuniz
 |---|---|
 | `app.py` | Your dashboard, unchanged except: section 3 is wrapped in a function (so a country with no IMF data no longer stops the page) and section 4 is added at the end. |
 | `model_section.py` | Section 4 UI: scenario controls, charts, tables. |
+| `scenarios.py` | The donor-scenario presets (`build_scenario`), shared by the app and `prepare_model.py`. |
 | `health_model.py` | The model itself (no Streamlit). Import it in a notebook to run anything in batch. |
 | `model_params.csv` | Every unit cost and effect size, with low/central/high and a source note. Edit here, or live in the app. |
 | `prepare_model.py` | Rebuilds `model_data/` from the raw IHME files + the MOU sheet (+ `ext_data/`). |
-| `model_data/` | Prebuilt inputs: `dah_lines.csv`, `country_inputs.csv`, `ihme_trend.csv`, `panel.csv`, `regressions.json`. |
+| `model_data/` | Prebuilt inputs: `dah_lines.csv`, `country_inputs.csv`, `ihme_trend.csv`, `panel.csv`, `regressions.json`, plus `all_countries_<preset>.csv` (all-country results at the default settings, loaded instantly by the app). |
 | `ext_data/` | WDI / WHO / UNAIDS / UN IGME series pulled from Gapminder's GitHub mirrors (so the build is reproducible offline). |
 
 ## Run
@@ -32,6 +33,12 @@ python prepare_model.py --dah IHME_DAH_DATABASE_1990_2026_Y2026M09D18.CSV \
   --expected IHME_EXPECTED_HEALTH_SPENDING_2024_2050_Y2026M09D23.CSV \
   --gdp IHME_GDP_1960_2050_FGH_2026_Y2026M06D11.CSV \
   --mou co-financing_MOU.xlsx            # add --download to refresh ext_data/ from GitHub
+```
+
+To refresh only the precomputed all-country results (e.g. after editing `model_params.csv`):
+
+```
+python prepare_model.py --precompute-only
 ```
 
 ## The chain
