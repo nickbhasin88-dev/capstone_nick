@@ -60,8 +60,9 @@ def funder_color(source: str) -> str:
 
 
 def year_axis(y0: int, y1: int) -> dict:
-    """A year x-axis with flat labels: every year when there are 10 or fewer, otherwise every other year."""
-    return dict(range=[y0 - 0.5, y1 + 0.5], dtick=1 if y1 - y0 < 10 else 2, tickangle=0, tickformat="d", title="")
+    """A year x-axis with flat labels. Plotly picks the spacing from the chart's width, so a phone shows every fifth
+    year and a desktop every year or every other year; labels never rotate or overlap."""
+    return dict(range=[y0 - 0.75, y1 + 0.5], tickangle=0, tickformat="d", title="")
 
 
 def tint(hex_color: str, alpha: float) -> str:
@@ -132,6 +133,23 @@ def source_html(source: str | None = None, note: str | None = None) -> str:
     return f"<div class='ed-source'>{' '.join(parts)}</div>".replace("$", "&#36;") if parts else ""
 
 
+SHORT_NAMES = {"Reproductive & Maternal Health": "Maternal Health", "Newborn & Child Health": "Child Health",
+               "Health Systems Strengthening": "Health Systems", "Tuberculosis": "TB", "HIV/AIDS": "HIV",
+               "World Bank Lending": "World Bank", "Private Philanthropy": "Philanthropy", "Gates Foundation": "Gates",
+               "United States": "US", "United Kingdom": "UK", "All Other Sources": "All Other",
+               "Foreign Aid for Health": "Foreign Aid", "Out-of-Pocket": "Out of Pocket"}
+
+
+def short_name(name: str) -> str:
+    base = name.split(" (")[0]
+    return SHORT_NAMES.get(base, base)
+
+
+def title_sub(title: str, sub: str) -> str:
+    """A short chart title with a small grey subtitle under it (keeps titles short enough for a phone)."""
+    return f"{title}<br><span style='font-size:12px;color:{MUTED}'>{sub}</span>"
+
+
 def color_key(items) -> str:
     """An inline key for a chart subtitle: names written in their own colors ('HIV  TB  Malaria ...')."""
     return "   ".join(f"<span style='color:{c}'><b>{html.escape(n)}</b></span>" for n, c in items)
@@ -170,12 +188,17 @@ def direct_labels(fig, min_gap_px: float = 18):
         if y <= 0:
             continue
         if t in named:
-            segs.append([stack + y / 2, t.name.split(" (")[0], _trace_color(t)])
+            segs.append([stack + y / 2, short_name(t.name), _trace_color(t)])
         stack += y
     if not segs:
         return fig
+    totals = {}                                         # the axis is scaled to the tallest stack, not the last one
+    for t in bars:
+        for x, y in zip(t.x, t.y):
+            if y is not None and y == y and y > 0:
+                totals[x] = totals.get(x, 0.0) + float(y)
     yr = fig.layout.yaxis.range
-    top = float(yr[1]) if yr is not None else stack * 1.05
+    top = float(yr[1]) if yr is not None else max(totals.values()) * 1.06
     m = fig.layout.margin
     plot_px = max((fig.layout.height or 450) - (m.t or 50) - (m.b or 10) - 40, 120)
     gap = min_gap_px / plot_px * top
@@ -215,13 +238,16 @@ def style_fig(fig):
         # left-aligned to the chart's own edge (not the plot area), so long y labels don't push the title out of view
         fig.update_layout(title=dict(font=dict(family=SANS, size=15, color=INK), x=0, xanchor="left", xref="container",
                                      pad=dict(l=10)))
+        if "<br>" in fig.layout.title.text:            # a subtitle: room for two lines above the plot
+            fig.update_layout(title=dict(y=0.985, yanchor="top", yref="container"),
+                              margin=dict(t=max(fig.layout.margin.t or 0, 74)))
     if not any(getattr(t, "legendrank", None) not in (None, 1000) for t in fig.data):
         fig.update_layout(legend_traceorder="normal")      # charts that set legendrank keep their own order
     for t in fig.data:                 # 2px white gaps between stacked segments, unless a chart sets its own width
         if t.type == "bar" and t.marker.line.width is None:
             t.marker.line.color, t.marker.line.width = SURFACE, 2
     axis_font = dict(tickfont=dict(size=12, color=MUTED), title_font=dict(size=12, color=MUTED))
-    fig.update_xaxes(**axis_font)
+    fig.update_xaxes(**axis_font, ticklabelstandoff=6)
     fig.update_yaxes(**axis_font)
     if not any(t.type in ("bar", "scatter") for t in fig.data):
         return fig                     # treemaps and maps have no axes
@@ -229,9 +255,6 @@ def style_fig(fig):
     value_upd, cat_upd = (fig.update_xaxes, fig.update_yaxes) if horiz else (fig.update_yaxes, fig.update_xaxes)
     value_upd(showgrid=True, gridcolor=RULE, gridwidth=1, zeroline=True, zerolinecolor=ZERO_LINE, zerolinewidth=1)
     cat_upd(showgrid=False, zeroline=False)
-    value_ax = fig.layout.xaxis if horiz else fig.layout.yaxis
-    if value_ax.type != "log" and value_ax.tickvals is None and value_ax.dtick is None:
-        value_upd(nticks=7)
     # legend directly under the plot: y is a fraction of the plot height, so convert the pixel gap
     if fig.layout.showlegend is not False and fig.layout.legend.orientation in (None, "h") \
             and sum(1 for t in fig.data if t.showlegend is not False and t.name) > 1:
@@ -281,7 +304,7 @@ hr {{ border-color: {RULE} !important; }}
 [data-testid="stLayoutWrapper"]:has(> .st-key-hdr), .st-key-hdr {{ position: sticky; top: 3.75rem; z-index: 999; }}
 [data-testid="stLayoutWrapper"]:has(> .st-key-hdr) {{ margin-bottom: 24px; }}
 .st-key-hdr {{ background: {SURFACE}; border-bottom: 1px solid {RULE}; box-shadow: 0 2px 8px rgba(31,26,43,0.06);
-               padding: 0.5rem 0 20px !important; }}
+               padding: 0.5rem 20px 20px !important; }}      /* side padding keeps text off the edges */
 /* a short white fade under the border, so content sliding under the header never butts up against it */
 .st-key-hdr::after {{ content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1px); height: 14px;
                       background: linear-gradient({SURFACE}, rgba(255,255,255,0)); pointer-events: none; }}
@@ -310,7 +333,7 @@ hr {{ border-color: {RULE} !important; }}
 .ed-pills.lg .l {{ font-size: 12.5px; }}
 .ed-pills.lg .v {{ font-family: {SERIF}; font-size: 28px; font-weight: 600; line-height: 1.15; margin-top: 8px; }}
 @media (max-width: 720px) {{
-  .st-key-hdr {{ padding: 0.3rem 0 14px !important; }}
+  .st-key-hdr {{ padding: 0.3rem 14px 14px !important; }}
   .ed-country {{ font-size: 26px; margin-bottom: 0.35rem; }}
   .st-key-hdr .ed-pills {{ display: flex; overflow-x: auto; scrollbar-width: none; align-items: stretch; }}
   .st-key-hdr .ed-pill {{ flex: 0 0 128px; min-height: 58px; }}
@@ -386,22 +409,32 @@ hr {{ border-color: {RULE} !important; }}
 
 /* the funding-cut model control bar */
 .st-key-model_controls {{ background: {SURFACE_TINT}; border-color: {RULE} !important; border-radius: 12px; }}
+/* ---- dropdowns: white with a visible border (and a purple border on hover / focus), so they read as controls on
+   both the white page and the tinted scenario bar ---- */
+[data-testid="stSelectbox"] .react-aria-ComboBox > div, [data-baseweb="select"] > div {{
+    background-color: {SURFACE} !important; border: 1px solid #B8AEC6 !important; border-radius: 8px !important;
+    box-shadow: 0 1px 2px rgba(31,26,43,0.06); }}
+[data-testid="stSelectbox"] .react-aria-ComboBox > div:hover, [data-baseweb="select"] > div:hover {{
+    border-color: {BRAND} !important; }}
+[data-testid="stSelectbox"] .react-aria-ComboBox > div:focus-within, [data-baseweb="select"] > div:focus-within {{
+    border-color: {BRAND} !important; box-shadow: 0 0 0 2px {BRAND_LIGHT} !important; }}
+[data-testid="stSelectbox"] .react-aria-ComboBox button svg, [data-baseweb="select"] svg {{ color: {BRAND} !important; }}
+.st-key-model_controls {{ background: {SURFACE_TINT}; border-radius: 12px; padding: 12px 16px 6px !important; }}
+
 /* ---- no app chrome: the page should read like a website ---- */
 [data-testid="stAppDeployButton"], [data-testid="stMainMenu"], #MainMenu, [data-testid="stDecoration"],
 [data-testid="stStatusWidget"], [data-testid="stToolbarActions"], footer {{ display: none !important; }}
 
-/* ---- reading column: running text stays ~680px wide, charts and tables use the full width ---- */
-[data-testid="stMarkdownContainer"] > p, [data-testid="stMarkdownContainer"] > ul,
-[data-testid="stMarkdownContainer"] > ol, [data-testid="stCaptionContainer"] {{ max-width: 680px; }}
+/* ---- running text uses the full width of the page, like the charts ---- */
 [data-testid="stMarkdownContainer"] > p {{ font-size: 16.5px; line-height: 1.6; }}
 
 /* ---- story lede (top of the Dashboard) ---- */
-.ed-lede {{ max-width: 820px; margin: 8px 0 6px; }}
+.ed-lede {{ margin: 8px 0 6px; }}
 .ed-kicker {{ font-family: {SANS}; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
               color: {ACCENT}; margin-bottom: 10px; }}
 .ed-headline {{ font-family: {SERIF}; font-size: 42px; line-height: 1.12; font-weight: 600; color: {INK};
                 letter-spacing: -0.015em; margin: 0 0 14px; }}
-.ed-dek {{ font-family: {SANS}; font-size: 19px; line-height: 1.5; color: #4A4458; margin: 0 0 26px; max-width: 700px; }}
+.ed-dek {{ font-family: {SANS}; font-size: 19px; line-height: 1.5; color: #4A4458; margin: 0 0 26px; }}
 .ed-bignums {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid {INK};
                border-bottom: 1px solid {RULE}; margin: 0 0 18px; }}
 .ed-bignum {{ padding: 14px 18px 16px 0; }}
@@ -410,7 +443,6 @@ hr {{ border-color: {RULE} !important; }}
 .ed-bignum .v.hl {{ color: {ROSE}; }}
 .ed-bignum .l {{ font-size: 13px; font-weight: 600; color: {INK}; margin-top: 6px; }}
 .ed-bignum .n {{ font-size: 12.5px; color: {MUTED}; margin-top: 2px; }}
-.st-key-model_controls {{ padding: 4px 0 0 !important; }}
 @media (max-width: 720px) {{
   .ed-headline {{ font-size: 28px; }}
   .ed-dek {{ font-size: 16.5px; }}
@@ -420,7 +452,7 @@ hr {{ border-color: {RULE} !important; }}
 }}
 
 /* ---- "Source:" line under every chart ---- */
-.ed-source {{ font-family: {SANS}; font-size: 12px; color: {MUTED}; margin: -10px 0 6px; max-width: 760px;
+.ed-source {{ font-family: {SANS}; font-size: 12px; color: {MUTED}; margin: -10px 0 6px;
               line-height: 1.45; }}
 .ed-source b {{ font-weight: 600; color: #4A4458; }}
 </style>

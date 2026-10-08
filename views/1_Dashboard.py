@@ -370,7 +370,7 @@ else:
                            line_width=0, annotation_text="IHME expected (projected)", annotation_position="top left",
                            annotation_font=dict(size=12, color=th.MUTED))
         fig2.update_layout(
-            title=dict(text=f"Health Spending by Source, {y0}-{y1}"),
+            title=dict(text=th.title_sub("Health Spending by Source", f"{y0}-{y1}; paler bars are IHME projections")),
             barmode="stack", height=560, margin=dict(l=10, r=10, t=50, b=10),
             xaxis=th.year_axis(y0, y1),
             yaxis=dict(title=ylab, rangemode="tozero", automargin=True, **({"range": [0, 100]} if view.startswith("Share") else {})),
@@ -383,7 +383,7 @@ else:
             dah_share = float(r23["dah_total_mean"].iloc[0] / r23["the_total_mean"].iloc[0])
             fig2.add_annotation(x=SPEND_LAST_OBSERVED, y=top23, ax=-10, ay=-46, showarrow=True, arrowhead=0,
                                 arrowwidth=1, arrowcolor=th.MUTED, xanchor="right",
-                                text=f"Foreign aid: {dah_share:.0%} of health<br>spending in {SPEND_LAST_OBSERVED}",
+                                text=f"Aid: {dah_share:.0%}<br>in {SPEND_LAST_OBSERVED}",
                                 font=dict(size=12, color=th.INK), align="right", bgcolor=th.tint(th.SURFACE, 0.9))
         chart(fig2, labels=True, source="IHME Global Health Spending 1995-2023 and Expected Health Spending 2024-2050; constant 2023 US$.")
 
@@ -500,7 +500,7 @@ else:
                 marker=marker, customdata=custom, hovertemplate=hover,
             )
     fig.update_layout(
-        title=dict(text=f"Health Aid Received, by Funder: {title_case(metric_label)}"),
+        title=dict(text=th.title_sub("Health Aid by Funder", title_case(metric_label))),
         barmode="stack", height=520, margin=dict(l=10, r=10, t=50, b=10),
         xaxis=th.year_axis(YEAR_MIN, last_data_year),
         yaxis=dict(title=f"US$ {unit_name} (constant 2023)", rangemode="tozero"),
@@ -510,7 +510,7 @@ else:
         stack_top = float(agg.loc[agg["year"] == last_data_year, "val"].sum())
         fig.add_annotation(x=last_data_year, y=stack_top, ax=-10, ay=-42, showarrow=True, arrowhead=0, arrowwidth=1,
                            arrowcolor=th.MUTED, xanchor="right", align="right", bgcolor=th.tint(th.SURFACE, 0.9),
-                           text=f"{top_src}: {latest.loc[latest['source'].map(lambda x: th.FUNDER_ALIASES.get(x, x)) == top_src, 'val'].sum() / tot:.0%}"
+                           text=f"{th.short_name(top_src)}: {latest.loc[latest['source'].map(lambda x: th.FUNDER_ALIASES.get(x, x)) == top_src, 'val'].sum() / tot:.0%}"
                                 f"<br>of {last_data_year} aid", font=dict(size=12, color=th.INK))
     chart(fig, labels=True, source="IHME Development Assistance for Health database (1990-2026 release); constant 2023 US$.",
           note="Lighter shades are aid delivered through NGOs and foundations, a proxy for money that may bypass the "
@@ -587,7 +587,8 @@ else:
             fig4.add_bar(x=gy.index, y=yv, name=lab, marker=dict(color=col), hovertemplate=hov,
                          customdata=np.c_[amt, detail])
         fig4.update_layout(
-            title=dict(text="Health Aid by What It Pays For" + ("" if brk == "all" else f": {HFA_LABELS[brk]}")),
+            title=dict(text=th.title_sub("Health Aid by What It Pays For",
+                                         "All focus areas" if brk == "all" else f"Inside {HFA_LABELS[brk]}")),
             barmode="stack", height=560, margin=dict(l=10, r=10, t=50, b=10),
             xaxis=th.year_axis(YEAR_MIN, data_end),
             yaxis=dict(title=("% of health aid" if share else f"US$ {name3} (constant 2023)"),

@@ -327,7 +327,7 @@ def _controls(iso3, country_name, I) -> dict:
                 theta = st.slider("Share of Lost Aid Replaced (%)", 0, 100, 25, 5, key="m_theta") / 100
         with c3:
             st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
-            adv = st.popover("Advanced Settings", icon=":material/tune:", width="stretch")
+            adv = st.popover("Advanced", icon=":material/tune:", width="stretch")
         with adv:
             ceiling = CEILINGS[st.radio("Fiscal-Space Ceiling", list(CEILINGS), key="m_effort",
                                         disabled=(mode == "none"), format_func=title_case,
@@ -670,7 +670,7 @@ def _comparison(iso3, country_name, ctl, res_a, items_a):
                              marker=dict(color=col), text=[num(Bx.loc[k, "deaths_5y"]) for k in hm.BUCKETS], textposition="outside",
                              cliponaxis=False, hovertemplate=f"{tag}<br>%{{x}}: %{{y:,.0f}} extra deaths<extra></extra>"))
     fig.update_layout(barmode="group", bargap=0.3)
-    _layout(fig, h=340, title=_title("Extra Deaths Over 5 Years by Disease: Scenario A vs B"),
+    _layout(fig, h=340, title=_title(th.title_sub("Extra Deaths by Disease", "Scenario A vs. B, over 5 years")),
             legend=dict(orientation="h", y=-0.12, x=0, yanchor="top"),
             yaxis=dict(title="extra deaths, 5 years", rangemode="tozero"))
     chart(fig, source=SRC_MODEL)
@@ -761,8 +761,8 @@ def _loss_by_bucket_fig(B: pd.DataFrame, any_replaced: bool = False, n_rows: int
                              text=["  " + money(t) for t in tot], textposition="middle right",
                              textfont=dict(color=INK), showlegend=False, hoverinfo="skip", cliponaxis=False))
     fig.update_layout(barmode="stack", bargap=gap)
-    _layout(fig, h=h, title=_title("Aid Lost per Year, by Disease"
-                                   + (" (Lighter = Replaced by Government)" if any_replaced else "")),
+    _layout(fig, h=h, title=_title(th.title_sub("Aid Lost per Year", "Lighter = replaced by government")
+                                   if any_replaced else "Aid Lost per Year"),
             margin=dict(l=10, r=20, t=50, b=10), xaxis=dict(range=[0, xmax]))
     return fig
 
@@ -914,18 +914,20 @@ def _coverage_fig(rows: pd.DataFrame):
     if d.empty:
         return None
     d = d.sort_values("drop")                      # plotly draws the first row at the bottom
-    labels = [f"<b>{n}</b>" for n in d["name"]]
-    text = [f"  {_pts(v)} ({cov_pair(c0, a)})" for v, c0, a in zip(d["drop"], d["cov0"], d["after"])]
+    # the row label carries the coverage before -> after, so the bar end only needs the drop (fits on a phone)
+    labels = [f"<b>{n}</b><br><span style='color:{MUTED}'>{cov_pair(c0, a)}</span>"
+              for n, c0, a in zip(d["name"], d["cov0"], d["after"])]
+    text = [f"  {_pts(v)}" for v in d["drop"]]
     xmax = float(d["drop"].max())
-    fig = go.Figure(go.Bar(y=labels, x=_visible(list(d["drop"]), xmax * 2.0), orientation="h",
+    fig = go.Figure(go.Bar(y=labels, x=_visible(list(d["drop"]), xmax * 1.35), orientation="h",
                            marker=dict(color=[BUCKET_COLORS[b] for b in d["bucket"]]), text=text,
                            textposition="outside", cliponaxis=False, textfont=dict(color=INK, size=13),
                            customdata=d["drop"], hovertemplate="%{y}: −%{customdata:.1f} percentage points"
                                                                "<extra></extra>"))
-    h, gap = _loss_layout(len(d))
-    fig.update_layout(bargap=gap)
-    _layout(fig, h=h, title=_title("How Much Coverage Each Service Loses (Percentage Points)"),
-            margin=dict(l=10, r=20, t=50, b=10), xaxis=dict(range=[0, xmax * 2.0], nticks=5))
+    h = max(260, 100 + 46 * len(d))                # two-line row labels need a little more height per row
+    fig.update_layout(bargap=0.45)
+    _layout(fig, h=h, title=_title(th.title_sub("Coverage Lost, by Service", "Percentage points; coverage before → after")),
+            margin=dict(l=10, r=20, t=50, b=10), xaxis=dict(range=[0, xmax * 1.35]))
     return fig
 
 
@@ -957,7 +959,7 @@ def _dose_fig(dr: pd.DataFrame, bucket: str, cur_cut: float, bb: pd.Series, path
         left = cur_cut >= 0.3           # above-left of the dot; above-right for small cuts so it stays on the chart
         fig.add_annotation(x=cur_cut * 100, y=bb["deaths_5y"], ax=-28 if left else 28, ay=-44,
                            xanchor="right" if left else "left", yanchor="bottom",
-                           text=f"This Scenario: {cur_cut:.0%} Cut, {num(bb['deaths_5y'])} Deaths",
+                           text=f"This scenario:<br>{cur_cut:.0%} cut, {num(bb['deaths_5y'])} deaths",
                            showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=MUTED, standoff=7,
                            font=dict(color=INK, size=12), bgcolor=th.tint(th.SURFACE, 0.9))
     # direct labels instead of a legend: name the even-cut line at its end and the band inside it
@@ -983,7 +985,7 @@ def _path_fig(res: dict):
         fig.add_trace(go.Bar(x=years, y=p[b], name=b, marker=dict(color=BUCKET_COLORS[b]),
                              hovertemplate=f"{b}<br>%{{x}}: %{{y:,.0f}} extra deaths<extra></extra>"))
     fig.update_layout(barmode="stack", bargap=0.35)
-    _layout(fig, h=400, title=_title(f"Extra Deaths Each Year, All Buckets, {FIRST_YEAR}-{FIRST_YEAR + 4}"),
+    _layout(fig, h=400, title=_title(th.title_sub("Extra Deaths Each Year", f"All four diseases, {FIRST_YEAR}-{FIRST_YEAR + 4}")),
             legend=dict(orientation="h", y=-0.12, x=0), yaxis=dict(title="extra deaths in that year"),
             xaxis=dict(type="category"))
     return fig
@@ -1054,21 +1056,25 @@ def _fiscal_panel(res: dict, country_name: str, imf: dict):
     st.markdown(_esc(_fiscal_sentence(F, country_name)))
     typical = F["ghes"] * max(F["ghes_growth_median"], 0)
     bars = [(title_case(lbl), v, c) for lbl, v, c in (
-            ("Aid lost (gross, per year)", G, LOSS),
-            ("Backfill capacity (fiscal space)", F["capacity"], BACKFILL),
-            ("Replaced in this scenario", F["replacement"], th.tint(BACKFILL, 0.55)),
-            ("One year of typical growth in<br>government health spending", typical, th.OTHER))]
+            ("Aid lost", G, LOSS),
+            ("Budget can absorb", F["capacity"], BACKFILL),
+            ("Replaced here", F["replacement"], th.tint(BACKFILL, 0.55)),
+            ("Typical yearly growth", typical, th.OTHER))]
     biggest = max(b[1] for b in bars)
     if biggest > 0 and G < TINY_GAP_SHARE * biggest:       # bars can't be compared: show the four values instead
-        st.markdown(th.pills_html([(lbl.replace("<br>", " "), money(v), "") for lbl, v, _ in bars]),
+        tips = ["Gross aid lost per year", "Backfill capacity: what a strong budget year could add for these programs",
+                "What the government replaces in this scenario", "One year of typical growth in government health "
+                "spending"]
+        st.markdown(th.pills_html([(lbl, money(v), tip) for (lbl, v, _), tip in zip(bars, tips)]),
                     unsafe_allow_html=True)
         return
     fig = go.Figure(go.Bar(y=[b[0] for b in bars][::-1], x=[b[1] for b in bars][::-1], orientation="h",
                            marker=dict(color=[b[2] for b in bars][::-1]),
                            text=[money(b[1]) for b in bars][::-1], textposition="outside", cliponaxis=False,
                            textfont=dict(color=INK), hovertemplate="%{y}: %{text}<extra></extra>"))
-    _layout(fig, h=300, title=_title("The Gap vs. What the Budget Can Absorb (US$ per Year)"),
-            xaxis=dict(range=[0, biggest * 1.25]), margin=dict(l=10, r=80, t=50, b=10))
+    _layout(fig, h=300, title=_title(th.title_sub("The Gap vs. the Budget", "US$ per year")),
+            xaxis=dict(range=[0, biggest * 1.25], nticks=4),   # values are printed on the bars; a few ticks suffice
+            margin=dict(l=10, r=80, t=50, b=10))
     chart(fig, source="IHME government health spending and its real growth, 2001-2023; World Bank WDI (interest "
                       "and revenue); model estimates.")
 
@@ -1157,11 +1163,11 @@ def cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
                                arrowwidth=1, arrowcolor=MUTED, standoff=4, xanchor="left",
                                font=dict(size=11, color=th.BRAND if r.iso3 == iso3 else INK, family=th.SANS))
         y_lo = float(np.log10(d["deaths_per_100k"].min())) - 0.15
-        _layout(fig, h=480, title=_title("Budget Exposure vs. Deaths per Person"), showlegend=False,
-                xaxis=dict(type="log", title="aid lost as % of government health spending (log)", ticksuffix="%",
+        _layout(fig, h=480, title=_title(th.title_sub("Budget Exposure vs. Deaths", "Each circle is a country")), showlegend=False,
+                xaxis=dict(type="log", title="aid lost, % of govt. health spending (log)", ticksuffix="%",
                            tickvals=LOG_TICKS, ticktext=[f"{v:g}" for v in LOG_TICKS],
                            range=[float(np.log10(d["loss_pct_ghes_pct"].min())) - 0.15, lx + 0.45]),
-                yaxis=dict(type="log", title="extra deaths per 100,000 people over 5 years (log)",
+                yaxis=dict(type="log", title="extra deaths per 100,000, 5 years (log)",
                            tickvals=LOG_TICKS, ticktext=[f"{v:g}" for v in LOG_TICKS],
                            range=[min(y_lo, (prev or y_lo) - 0.1), float(np.log10(d["deaths_per_100k"].max())) + 0.2]))
         chart(fig, source=SRC_MODEL, note=f"Each circle is a country, sized by aid lost per year; "
@@ -1181,8 +1187,8 @@ def cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
         key = th.color_key([(b, BUCKET_COLORS[b]) for b in hm.BUCKETS])
         sel = names.get(iso3, iso3)
         _layout(fig, h=500, showlegend=False,
-                title=dict(text=f"15 Countries with the Most Extra Deaths (5 Years)<br><span style='font-size:12px'>"
-                                f"{key}</span>", x=0, xanchor="left"),
+                title=dict(text=f"Most Extra Deaths, 5 Years<br><span style='font-size:12px'>{key}</span>",
+                           x=0, xanchor="left"),
                 yaxis=dict(tickvals=list(top["name"]),
                            ticktext=[f"<b><span style='color:{th.BRAND}'>{n}</span></b>" if n == sel else n
                                      for n in top["name"]]),
@@ -1217,7 +1223,7 @@ def _world_map(A: pd.DataFrame, iso3: str, world: bool = False):
     fig.update_geos(projection_type="natural earth", showframe=False, showcoastlines=False, showcountries=True,
                     countrycolor=th.SURFACE, countrywidth=0.5, showland=True, landcolor=th.RULE,
                     bgcolor=th.SURFACE, **(dict(lataxis_range=[-45, 75]) if world else MAP_FOCUS))
-    _layout(fig, h=470, title=_title("Extra Deaths per 100,000 People Over 5 Years"), margin=dict(l=0, r=0, t=40, b=50))
+    _layout(fig, h=470, title=_title(th.title_sub("Extra Deaths per 100,000 People", "Over 5 years")), margin=dict(l=0, r=0, t=40, b=50))
     return fig
 
 

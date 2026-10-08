@@ -19,7 +19,7 @@ from scenarios import PRESETS
 
 METHOD_COLORS = {"Unit-Cost Model": th.GRAPE, "Poisson Regression": th.BLUE, "Lancet Rate Ratios": th.TEAL}
 CATEGORIES = ["HIV", "TB", "Malaria", "Immunization", "Maternal"]
-CATEGORY_LABELS = {"Immunization": "Immunization / Under-5", "Maternal": "Maternal"}
+CATEGORY_LABELS = {"Immunization": "Under-5", "Maternal": "Maternal"}
 
 # --------------------------------------------------------------------------- #
 # Country and scenario (start from the dashboard's choices)
@@ -170,7 +170,7 @@ for method, vals in est.items():
         hovertemplate=f"{method}<br>%{{x}}: %{{y:,.0f}} extra deaths over 5 years<extra></extra>"))
 fig.add_hline(y=0, line=dict(color=th.MUTED, width=1))
 fig.update_layout(barmode="group", bargap=0.25)
-ms._layout(fig, h=460, title=ms._title(f"Extra Deaths Over 5 Years by Method, {country_name}"),
+ms._layout(fig, h=460, title=ms._title(th.title_sub("Extra Deaths by Method", f"{country_name}, over 5 years")),
            legend=dict(orientation="h", y=-0.12, x=0, yanchor="top"),
            yaxis=dict(title="extra deaths over 5 years"))
 chart(fig, source="Unit-cost model (this dashboard); Poisson regressions fitted for this project on 2005-2023 data; "
