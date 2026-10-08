@@ -107,7 +107,7 @@ with tabs[0]:
     | What | Years |
     |---|---|
     | Aid by donor and focus area (Section 2) | 2015-2023 (IHME's recipient-level data end in 2023) |
-    | Health spending by source (Section 1) | 1995-2023 observed, 2024-2030 IHME projections (paler bars) |
+    | Health spending by source (Section 1) | 2015-2023, observed years only |
     | Government revenue and spending (Section 3) | latest year with IMF data (user can pick earlier years) |
     | Aid baseline the model cuts | average of 2021, 2022 and 2023 (smooths lumpy bednet campaigns and Gavi tranches) |
     | Model horizon | five years after the cut, 2026-2030 |
@@ -132,7 +132,7 @@ with tabs[1]:
 
     th.section_header("payments", "Section 1: Money Spent on Health")
     md("""
-    **Data:** IHME Global Health Spending 1995-2023 and IHME Expected Health Spending 2024-2050.
+    **Data:** IHME Global Health Spending 1995-2023 (the chart shows 2015-2023).
 
     Total health spending is split into four sources that add up to the total:
 
@@ -145,8 +145,10 @@ with tabs[1]:
 
     - **US$ Total** shows the totals; **US$ per Person** uses IHME's per-capita values; **Share of Total** divides each
       source by total health spending.
-    - Years after 2023 are IHME's *expected* (projected) spending, drawn paler.
-    - **Foreign Aid Share of Total** = DAH ÷ total health spending, for 2023 and for 2030 (expected).
+    - Foreign aid sits at the bottom of each bar so its share is easy to compare across years.
+    - IHME's projections for 2024 onward are not shown: they assume aid keeps flowing, which the cuts modelled in
+      Section 4 make unlikely.
+    - **Foreign Aid Share of Total** = DAH ÷ total health spending in 2023.
     """)
 
     th.section_header("public", "Section 2: Who Is Providing the Money")
@@ -455,7 +457,7 @@ with tabs[3]:
     |---|---|---|---|
     | Development Assistance for Health | IHME, 1990-2026 (Sept 2026 release) | Aid (`dah_23`) by source, channel, recipient, focus and program area; 2025 preliminary totals | Section 2; model baseline (2021-23) and IHME 2025 scenario |
     | Global Health Spending | IHME, 1995-2023 | Government, prepaid private, out-of-pocket and aid spending: totals, per person, % of GDP | Section 1; government health spending and its growth (fiscal space) |
-    | Expected Health Spending | IHME, 2024-2050 | Same variables, projected | Section 1 (2024-2030) |
+    | Expected Health Spending | IHME, 2024-2050 | Same variables, projected | Not used: loaded into the model's input file, but no calculation or chart uses it |
     | GDP | IHME Financing Global Health, 1960-2050 (2026) | GDP per person, constant 2023 US$ | Constant-dollar GDP; ART staff-cost scaling; regression controls |
     | World Economic Outlook | IMF | GDP, population, general-government revenue, expenditure, net lending and gross debt (% of GDP) | Header; Section 3 totals |
     | World Revenue Longitudinal Data | IMF | Revenue by type, % of GDP | Section 3 revenue mix |

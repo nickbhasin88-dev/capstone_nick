@@ -28,8 +28,8 @@ WIDE = {"width": "stretch"} if _ver >= (1, 50) else {"use_container_width": True
 ROOT = Path(__file__).resolve().parent.parent              # the repo folder (this page lives in views/)
 DATA_DIR = ROOT / "country_data"          # DAH, one file per recipient
 SPEND_DIR = ROOT / "spending_data"        # total spending, one file per ISO3
-YEAR_MIN, YEAR_MAX = 2015, 2030          # chart 1 x-axis window, fixed (future years stay blank)
-SPEND_YEAR_MIN, SPEND_YEAR_MAX = 2015, 2030   # chart 2 x-axis window, fixed
+YEAR_MIN = 2015                          # aid charts start here and end with the last year of recipient data (2023)
+SPEND_YEAR_MIN, SPEND_YEAR_MAX = 2015, 2023   # observed years only: IHME's projections assume aid keeps flowing
 DEFAULT_COUNTRY = "Kenya"
 NGO_SHADE = 0.45                         # NGO/foundation channels: the funder's color at this opacity
 # funders shown individually (fixed colors in theme.FUNDER_COLORS); everything else is "All Other Sources"
@@ -78,11 +78,11 @@ NON_COUNTRY_ISO = {"WLD", "INKIND", "QZA"}
 SOURCE_LABELS = {"Debt repayments": "World Bank Lending (Loan Repayments)", "Private other": "Private Philanthropy"}
 
 # Chart 2 components: (column prefix, label, color). Stack order = bottom to top.
-SPEND_PARTS = [
+SPEND_PARTS = [                                     # foreign aid at the bottom of every bar
+    ("dah", "Foreign Aid for Health (DAH)", th.ROSE),
     ("ghes", "Government", th.GRAPE),
     ("ppp", "Prepaid Private", th.BLUE),
     ("oop", "Out-of-Pocket", th.TEAL),
-    ("dah", "Foreign Aid for Health (DAH)", th.ROSE),
 ]
 COFOG_ALL_DIR = ROOT / "cofog_all"        # IMF: whole-government spending by function, per ISO3
 _HEALTH = ["Hospital services", "Outpatient services", "Medical products", "Public health services", "Health R&D",
@@ -120,8 +120,6 @@ def _resolve_dir(d: Path) -> Path:
 log = logging.getLogger("dashboard.budget")
 DATA_DIR, SPEND_DIR, COFOG_ALL_DIR, REVENUE_DIR, MACRO_DIR = (_resolve_dir(p) for p in (DATA_DIR, SPEND_DIR, COFOG_ALL_DIR, REVENUE_DIR, MACRO_DIR))
 SPEND_LAST_OBSERVED = 2023                 # 2024+ are IHME expected values
-PROJECTED_OPACITY = 0.45                   # projected years drawn at this opacity
-PROJECTION_BAND = th.tint(th.RULE, 0.45)    # background band behind projected / no-data years
 
 # --------------------------------------------------------------------------- #
 # Data loading
@@ -351,51 +349,33 @@ else:
                 w[f"v_{k}"] = 100 * w[f"{k}_total_mean"] / w["the_total_mean"]
             ylab = "% of total health spending"
 
-        proj = w["projected"] == 1
         fig2 = go.Figure()
         def _hov(label_txt):
             return (f"<b>{label_txt}</b><br>%{{x}}: "
                     + ("%{y:,.1f}%" if view.startswith("Share") else "$%{y:,.0f}" if view == "US$ per person"
                        else "%{customdata[0]}"))
 
-        opac = [PROJECTED_OPACITY if p else 1.0 for p in proj]
         for k, label, col in SPEND_PARTS:
             fig2.add_bar(
                 x=w["year"], y=w[f"v_{k}"], name=label,
                 customdata=[[fmt_usd(v * _div)] for v in w[f"v_{k}"]] if view == "US$ total" else None,
-                marker=dict(color=col, opacity=opac),
+                marker=dict(color=col),
                 hovertemplate=_hov(label) + "<extra></extra>",
             )
-        if y1 > SPEND_LAST_OBSERVED:
-            fig2.add_vrect(x0=max(y0, SPEND_LAST_OBSERVED + 1) - 0.5, x1=y1 + 0.5, fillcolor=PROJECTION_BAND, layer="below",
-                           line_width=0, annotation_text="Projected", annotation_position="top left",
-                           annotation_font=dict(size=12, color=th.MUTED))
         fig2.update_layout(
-            title=dict(text=th.title_sub("Health Spending by Source", f"{y0}-{y1}; paler bars are IHME projections")),
+            title=dict(text=th.title_sub("Health Spending by Source", f"{y0}-{y1}; constant 2023 US$")),
             barmode="stack", height=560, margin=dict(l=10, r=10, t=50, b=10),
             xaxis=th.year_axis(y0, y1),
             yaxis=dict(title=ylab, rangemode="tozero", automargin=True, **({"range": [0, 100]} if view.startswith("Share") else {})),
             bargap=0.15, hovermode="closest",
         )
-        # one annotation: how much of health spending was foreign aid in the last observed year
-        r23 = w[w["year"] == SPEND_LAST_OBSERVED]
-        if len(r23):
-            top23 = float(sum(r23[f"v_{k}"].iloc[0] for k, _, _ in SPEND_PARTS))
-            dah_share = float(r23["dah_total_mean"].iloc[0] / r23["the_total_mean"].iloc[0])
-            fig2.add_annotation(x=SPEND_LAST_OBSERVED, y=top23, ax=-10, ay=-46, showarrow=True, arrowhead=0,
-                                arrowwidth=1, arrowcolor=th.MUTED, xanchor="right",
-                                text=f"Aid: {dah_share:.0%}<br>in {SPEND_LAST_OBSERVED}",
-                                font=dict(size=12, color=th.INK), align="right", bgcolor=th.tint(th.SURFACE, 0.9))
-        chart(fig2, labels=True, source="IHME Global Health Spending 1995-2023 and Expected Health Spending 2024-2050; constant 2023 US$.")
+        chart(fig2, labels=True, source="IHME Global Health Spending 1995-2023; constant 2023 US$.")
 
         last_obs = sp[sp["year"] == SPEND_LAST_OBSERVED].iloc[0]
-        end = sp[sp["year"] == min(y1, int(sp["year"].max()))].iloc[0]
         pill_row([
             (f"Total Spending, {SPEND_LAST_OBSERVED}", fmt_usd(last_obs['the_total_mean'] / 1e3)),
             (f"Foreign Aid Share of Total, {SPEND_LAST_OBSERVED}",
              f"{last_obs['dah_total_mean'] / last_obs['the_total_mean']:.0%}"),
-            (f"Foreign Aid Share of Total, {int(end['year'])}" + (" (Expected)" if end["year"] > SPEND_LAST_OBSERVED else ""),
-             f"{end['dah_total_mean'] / end['the_total_mean']:.0%}"),
         ])
 
 

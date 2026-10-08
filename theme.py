@@ -434,6 +434,11 @@ hr {{ border-color: {RULE} !important; }}
 .ed-lede {{ margin: 8px 0 6px; }}
 .ed-kicker {{ font-family: {SANS}; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
               color: {ACCENT}; margin-bottom: 10px; }}
+.ed-kicker-row {{ display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }}
+.ed-jump {{ font-family: {SANS}; font-size: 13px; font-weight: 600; color: {ACCENT} !important; text-decoration: none;
+            white-space: nowrap; }}
+.ed-jump:hover {{ text-decoration: underline; }}
+#change-scenario {{ scroll-margin-top: 230px; }}       /* lands below the sticky header */
 .ed-headline {{ font-family: {SERIF}; font-size: 42px; line-height: 1.12; font-weight: 600; color: {INK};
                 letter-spacing: -0.015em; margin: 0 0 14px; }}
 .ed-dek {{ font-family: {SANS}; font-size: 19px; line-height: 1.5; color: #4A4458; margin: 0 0 26px; }}

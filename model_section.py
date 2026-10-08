@@ -308,7 +308,8 @@ def _controls(iso3, country_name, I) -> dict:
         st.session_state["m_mode"] = list(GOV_MODES)[0]
     th_c, th_lo, th_hi = hm.theta_historical(I["reg"])
     with st.container(key="model_controls"):
-        st.markdown("<div class='ed-kicker' style='margin:0'>Change the Scenario</div>", unsafe_allow_html=True)
+        st.markdown("<div id='change-scenario' class='ed-kicker' style='margin:0'>Change the Scenario</div>",
+                    unsafe_allow_html=True)
         c1, c2, c3 = st.columns([1.45, 1.25, 0.8], gap="medium")
         with c1:
             preset = th.shared_select("Donor Scenario", list(PRESETS), "m_preset", "sel_preset", list(PRESETS)[0],
@@ -415,7 +416,29 @@ SCENARIO_PHRASE = {
 }
 CAUSE_PHRASE = {"HIV": "people losing HIV treatment and prevention", "TB": "untreated tuberculosis",
                 "Malaria": "lost malaria nets and treatment", "Immunization": "missed childhood vaccinations"}
-TREATMENT_LINES = ["hiv_art", "hiv_pmtct", "tb_ds", "tb_dr", "mal_cm"]
+# "People Losing Care Each Year": every service line except HIV prevention (its unit is infections averted)
+CARE_LABELS = {"mal_itn": "bednet users", "mal_irs": "people under indoor spraying", "hiv_art": "on HIV treatment",
+               "mal_cm": "malaria patients", "hiv_ovc": "orphans & vulnerable children", "imm": "children unvaccinated",
+               "hiv_pmtct": "HIV+ pregnant women", "tb_ds": "TB patients", "tb_dr": "drug-resistant TB patients"}
+CARE_TIP = ("People who lose a service in each year the cut lasts, under the selected scenario and government "
+            "response. Bednet users and vaccinated children are prevention; HIV and TB patients are treatment.")
+
+
+def care_breakdown(L: pd.DataFrame) -> tuple:
+    """(total, [(count, label), ...] largest first) of people losing a service each year (central run, after
+    government replacement and continuity), all lines except HIV prevention."""
+    u = L["units_lost"].reindex(list(CARE_LABELS)).fillna(0).clip(lower=0)
+    parts = sorted(((float(v), CARE_LABELS[k]) for k, v in u.items() if v >= 0.5), reverse=True)
+    return float(sum(v for v, _ in parts)), parts
+
+
+def response_kicker(fiscal_t) -> str:
+    mode, theta = fiscal_t[0], fiscal_t[1]
+    capped = len(fiscal_t) > 2 and fiscal_t[2]
+    return {"none": "No Government Replacement",
+            "custom": f"Government Replaces {'Up to ' if capped else ''}{theta:.0%}",
+            "max": "Government Replaces What Its Budget Allows",
+            "historical": "No Government Replacement"}.get(mode, _resp_label(fiscal_t))
 SPELLED = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine"}
 
 
@@ -450,11 +473,14 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
     """HTML for the top of the Dashboard: kicker, headline, dek and three big numbers."""
     I = _inputs()
     e = html.escape
-    kicker = f"Funding-Cut Scenario · {title_case(ctl['preset'])}"
+    kicker = f"Funding-Cut Scenario · {title_case(ctl['preset'])} · {response_kicker(ctl['fiscal_t'])}"
+    # the controls sit in the scenario bar just below; the link jumps there (same cached run as Section 4)
+    kick_html = (f"<div class='ed-kicker-row'><div class='ed-kicker'>{e(kicker)}</div>"
+                 f"<a class='ed-jump' href='#change-scenario' target='_self'>Change Scenario ↓</a></div>")
     if iso3 not in I["ci"].index or iso3 not in set(I["lines"].iso3):
         head = f"{country_name} receives no recorded HIV, TB, malaria or vaccine aid"
         dek = "There is nothing for a donor cut to remove here; the spending and budget charts below still apply."
-        return (f"<div class='ed-lede'><div class='ed-kicker'>{e(kicker)}</div><div class='ed-headline'>{e(head)}</div>"
+        return (f"<div class='ed-lede'>{kick_html}<div class='ed-headline'>{e(head)}</div>"
                 f"<p class='ed-dek'>{e(dek)}</p></div>")
     res = _run(iso3, sk, ctl["fiscal_t"], ctl["ptab_json"], ctl["trend"])
     T, B, L = res["totals"], res["buckets"].set_index("bucket"), res["lines"].set_index("line")
@@ -468,6 +494,8 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
         dek = f"The model finds almost no extra deaths: {country_name} records very few deaths from these diseases."
     else:
         head = f"{phrase}, {country_name} could see about {round_words(d5)} more deaths by 2030"
+        if T["replaced"] > 0 and T["gross"] > 0:
+            head += f", even if the government replaces {T['replaced'] / T['gross']:.0%} of the lost aid"
         top = B["deaths_5y"].idxmax()
         share = B.loc[top, "deaths_5y"] / d5 if d5 > 0 else 0
         dek = (f"{'Most' if share >= 0.5 else 'The largest share'} would come from {CAUSE_PHRASE[top]}"
@@ -478,16 +506,18 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
         else:
             dek += (f"About {money_words(T['gross'])} a year would be lost, and historically governments have not "
                     "replaced falling aid.")
-    treated = float(L.reindex(TREATMENT_LINES)["units_lost"].clip(lower=0).sum())
+    care, parts = care_breakdown(L)
+    breakdown = " · ".join(f"{num(v)} {lbl}" for v, lbl in parts[:3]) + (" + others" if len(parts) > 3 else "")
     nums = [
         (money(T["gross"]), "Health Aid Lost Each Year",
-         f"{T['gross'] / T['base']:.0%} of aid for these four diseases" if T["base"] else "", False),
-        (num(treated) if treated >= 1 else "0", "People Losing Treatment", "HIV, TB and malaria", False),
-        (num(d5), "Extra Deaths by 2030", f"range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}", True),
+         f"{T['gross'] / T['base']:.0%} of aid for these four diseases" if T["base"] else "", False, ""),
+        (num(care) if care >= 1 else "0", "People Losing Care Each Year", breakdown or "none", False, CARE_TIP),
+        (num(d5), f"Extra Deaths, {FIRST_YEAR}-{FIRST_YEAR + 4}", f"range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}",
+         True, ""),
     ]
-    big = "".join(f"<div class='ed-bignum'><div class='v{' hl' if hl else ''}'>{e(v)}</div>"
-                  f"<div class='l'>{e(lbl)}</div><div class='n'>{e(note)}</div></div>" for v, lbl, note, hl in nums)
-    return (f"<div class='ed-lede'><div class='ed-kicker'>{e(kicker)}</div><div class='ed-headline'>{e(head)}</div>"
+    big = "".join(f"<div class='ed-bignum' title='{e(tip, quote=True)}'><div class='v{' hl' if hl else ''}'>{e(v)}</div>"
+                  f"<div class='l'>{e(lbl)}</div><div class='n'>{e(note)}</div></div>" for v, lbl, note, hl, tip in nums)
+    return (f"<div class='ed-lede'>{kick_html}<div class='ed-headline'>{e(head)}</div>"
             f"<p class='ed-dek'>{e(dek)}</p></div><div class='ed-bignums'>{big}</div>").replace("$", "&#36;")
 
 
