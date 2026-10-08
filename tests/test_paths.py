@@ -14,7 +14,7 @@ import scenarios as scn  # noqa: E402
 from make_baseline import COUNTRIES, FISCALS, N_DRAWS, snapshot  # noqa: E402
 
 I, P = hm.load_inputs(), hm.load_params()
-NEW_MECHANISMS = ["tb_secondary", "mal_resurgence"]      # added after the baseline; at 0 they switch off
+NEW_MECHANISMS = ["tb_secondary", "mal_resurgence", "hiv_inf_death_untreated", "hiv_inf_death_treated"]  # at 0 they switch off
 P0 = P.copy()
 P0.loc[NEW_MECHANISMS, ["central", "low", "high"]] = 0.0
 BASE = json.loads((Path(__file__).parent / "baseline_sudden.json").read_text())
@@ -75,19 +75,23 @@ def test_full_government_money_zero_deaths(iso):
     assert abs(r["totals"]["deaths_5y"]) < 1e-6 and abs(r["committed"]["deaths"]) < 1e-6
 
 
-# (e) a cut that starts in 2030: few 2026-2030 deaths, but HIV-treatment committed deaths match a 2026 cut of the same size
+# (e) a cut that starts in 2030: few 2026-2030 deaths, but people still off ART at the end of 2030 keep dying until they
+# return to care (funding back from 2031): none if everyone returns at once, more the slower they return, and with nobody
+# returning at least as many HIV-treatment deaths as a 2026 cut of the same size
 @pytest.mark.parametrize("iso", COUNTRIES)
 def test_late_cut_committed(iso):
-    early, late = run(iso), run(iso, cut_path=[0, 0, 0, 0, 1])
-    assert late["totals"]["deaths_5y"] < 0.5 * early["totals"]["deaths_5y"] + 1e-9
-    # people off ART: the 2030 cohort is followed for its own 5 years, so it commits the same deaths as the 2026 cohort
-    hiv_early = early["lines"].set_index("line").loc["hiv_art", "deaths_5y"] + 0.0
-    hiv_late = late["committed"]["after_parts"]["hiv_art"] + late["lines"].set_index("line").loc["hiv_art", "deaths_5y"]
-    assert abs(hiv_late - hiv_early) <= 1e-6 * max(1.0, hiv_early)
-    # returning to care averts deaths: a cut in force 2026-2027 only, then restored, commits fewer HIV deaths
-    temp = run(iso, cut_path=[1, 1, 0, 0, 0])
-    hiv_temp = temp["committed"]["after_parts"]["hiv_art"] + temp["lines"].set_index("line").loc["hiv_art", "deaths_5y"]
-    assert hiv_temp <= hiv_early + 1e-6
+    no_inf = dict(hiv_inf_death_untreated=0.0, hiv_inf_death_treated=0.0)    # isolate the treatment cohorts
+    hiv = lambda r: (r["committed"]["after_parts"]["hiv_art"]
+                     + r["lines"].set_index("line").loc["hiv_art", "deaths_5y"])
+    early = run_p(iso, with_param(art_reengage=1.0, **no_inf))            # 2026 cohort: its own 5 years only
+    late = {g: run_p(iso, with_param(art_reengage=g, **no_inf), cut_path=[0, 0, 0, 0, 1]) for g in (0.0, 0.5, 1.0)}
+    assert late[0.5]["totals"]["deaths_5y"] < 0.5 * early["totals"]["deaths_5y"] + 1e-9
+    assert abs(late[1.0]["committed"]["after_parts"]["hiv_art"]) < 1e-9
+    assert hiv(late[1.0]) <= hiv(late[0.5]) + 1e-6 <= hiv(late[0.0]) + 2e-6
+    assert hiv(late[0.0]) >= hiv(early) - 1e-6
+    # returning to care averts deaths: a cut in force 2026-2027 only, then restored, leaves nobody off care after 2030
+    temp = run_p(iso, with_param(art_reengage=1.0, **no_inf), cut_path=[1, 1, 0, 0, 0])
+    assert abs(temp["committed"]["after_parts"]["hiv_art"]) < 1e-9 and hiv(temp) <= hiv(early) + 1e-6
 
 
 # (f) TB, malaria and immunization deaths in a year depend only on that year's net gap
@@ -165,7 +169,8 @@ def test_malaria_resurgence(iso):
     assert close(L1.loc["mal_cm", "deaths_5y"], L0.loc["mal_cm", "deaths_5y"])
 
 
-# (j) HIV infections: deaths after 2030 rise with the death risk of a new infection, and are zero with no cut
+# (j) HIV infections: deaths in 2031-2035 rise with the death risk of a new infection and with faster progression,
+# and are zero with no cut
 @pytest.mark.parametrize("iso", COUNTRIES)
 def test_hiv_infection_deaths(iso):
     lo = run_p(iso, with_param(hiv_inf_death_untreated=0.0, hiv_inf_death_treated=0.0))
@@ -175,3 +180,5 @@ def test_hiv_infection_deaths(iso):
     if lo["lines"]["infections_5y"].sum() > 1:
         assert hi["committed"]["after_parts"]["hiv_infections"] > 0
     assert run(iso, cut_path=[0] * 5)["committed"]["after_parts"]["hiv_infections"] == 0
+    slow, fast = (run_p(iso, with_param(hiv_survival_median=m)) for m in (12.5, 8.6))
+    assert fast["committed"]["after_parts"]["hiv_infections"] >= slow["committed"]["after_parts"]["hiv_infections"] - 1e-6

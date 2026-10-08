@@ -78,6 +78,8 @@ LAG = {
 }
 ART_HAZARD = np.array([0.012, 0.028, 0.038, 0.045, 0.05])  # excess deaths per person-year off ART, by year since loss
 ART_INFECT_LAG = np.array([0.5, 1, 1, 1, 1])
+POST_YEARS = 5                  # deaths set in motion are counted in 2031-2035, with funding back from 2031
+HIV_WEIBULL_SHAPE = 2.25        # survival after HIV infection without ART (Todd et al. 2007; UNAIDS Spectrum)
 DR_TB_SHARE, DR_TB_COV = 0.04, 0.45
 MAL_CM_MIN_INCIDENCE = 50       # malaria cases per 1,000 at risk needed to read fever treatment as case coverage
 _EXCESS_LOGGED: set = set()     # (iso3, line) pairs already logged as "donor money exceeds the service cost"
@@ -356,13 +358,15 @@ def per_unit_deaths(row: pd.Series, P: dict, art_cov: float, trend: bool = True)
     return out
 
 
-def art_cohorts(stock: np.ndarray, hazard_by_age: np.ndarray, transmission: np.ndarray):
+def art_cohorts(stock: np.ndarray, hazard_by_age: np.ndarray, transmission: np.ndarray, reengage: np.ndarray):
     """People off ART tracked as cohorts. stock: (n x 5) people off ART in each year. A rise in the stock is a new
     cohort with years-since-loss = 1; a fall returns the most recent cohorts to care first. Each cohort's excess death
-    risk follows hazard_by_age (n x 5, by its own years since losing care), and it transmits HIV at `transmission` per
-    person-year (half in its first year). Negative stock (aid gains) uses the hazard of the calendar year, as before.
-    Returns (deaths n x 5, infections n x 5, deaths after 2030 n, infections after 2030 n): the cohorts still off care
-    at the end of 2030 followed to the end of their own 5 years, with no new cuts after 2030."""
+    risk follows hazard_by_age (n x 5, by its own years since losing care; the year-5 value after that), and it
+    transmits HIV at `transmission` per person-year (half in its first year). Negative stock (aid gains) uses the
+    hazard of the calendar year, as before.
+    After 2030 funding is back: people still off care return at `reengage` a year (mid-year average), and those who
+    have not yet returned keep their risk. Returns (deaths n x 5, infections n x 5, deaths n x POST, infections
+    n x POST, people still off care n x POST) for 2026-2030 and 2031-2035."""
     n = stock.shape[0]
     pos, neg = np.clip(stock, 0, None), np.clip(stock, None, 0)
     deaths, infections = np.zeros((n, N_YEARS)), np.zeros((n, N_YEARS))
@@ -385,12 +389,25 @@ def art_cohorts(stock: np.ndarray, hazard_by_age: np.ndarray, transmission: np.n
         prev = pos[:, t]
         deaths[:, t] += neg[:, t] * hazard_by_age[:, t]          # gains: same as the sudden-cut formula
         infections[:, t] += neg[:, t] * transmission * ART_INFECT_LAG[t]
-    after, after_inf = np.zeros(n), np.zeros(n)
+    post_d, post_i, off = np.zeros((n, POST_YEARS)), np.zeros((n, POST_YEARS)), np.zeros((n, POST_YEARS))
     for size, age in cohorts:                          # still off care at the end of 2030
-        for a in range(age, N_YEARS + 1):
-            after += size * hazard_by_age[:, a - 1]
-            after_inf += size * transmission * ART_INFECT_LAG[a - 1]
-    return deaths, infections, after, after_inf
+        for k in range(POST_YEARS):
+            stay = size * (1 - reengage) ** (k + 0.5)
+            a = min(age + k, N_YEARS) - 1
+            post_d[:, k] += stay * hazard_by_age[:, a]
+            post_i[:, k] += stay * transmission * ART_INFECT_LAG[a]
+            off[:, k] += stay
+    return deaths, infections, post_d, post_i, off
+
+
+def hiv_death_timing(median: np.ndarray, n_years: int) -> np.ndarray:
+    """Share of the eventual HIV deaths among people infected (mid-year) in year 0 that happen in years 0..n_years-1
+    after infection, without treatment: Weibull survival with shape HIV_WEIBULL_SHAPE and the given median (years).
+    Returns n x n_years."""
+    lam = np.asarray(median, dtype=float)[:, None] / np.log(2) ** (1 / HIV_WEIBULL_SHAPE)
+    k = np.arange(n_years)[None, :]
+    F = lambda t: 1 - np.exp(-(np.maximum(t, 0) / lam) ** HIV_WEIBULL_SHAPE)
+    return F(k + 0.5) - F(k - 0.5)
 
 
 def malaria_levels(row, P, units, need_cov) -> dict:
@@ -601,9 +618,9 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
     TB_ARRIVAL = (0.5, 0.5)                            # secondary TB cases appear 1 and 2 years after the untreated year
 
     def lives(Px, U):
-        """Deaths (n x 5), infections (n x 5) and deaths set in motion after 2030 (dict of n arrays) for one set of
-        draws. After-2030 parts: people still off ART (hiv_art), deaths from new HIV infections (hiv_infections),
-        missed birth cohorts (imm) and TB spread from untreated cases (tb)."""
+        """Deaths (n x 5), infections (n x 5) and deaths in 2031-2035 set in motion by the 2026-2030 losses (dict of n
+        arrays) for one set of draws, with funding back from 2031. Parts: people still off ART (hiv_art), new HIV
+        infections (hiv_infections), missed birth cohorts (imm) and TB spread from untreated cases (tb)."""
         nx = len(Px["uc_imm"])
         lv = per_unit_levels(row, Px, ep["art_cov"], mortality_trend)
         d, inf, after = {}, {}, {}
@@ -641,9 +658,11 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
                     d["tb_ds"][:, t] += dd
                 else:
                     after["tb"] += dd
-        # HIV treatment cohorts
+        # HIV treatment cohorts (2026-2030, and those still off care in 2031-2035)
         hz = np.outer(Px["art_hazard_mult"], ART_HAZARD)
-        d["hiv_art"], inf["hiv_art"], after["hiv_art"], inf_after = art_cohorts(U["hiv_art"], hz, Px["art_transmission"])
+        d["hiv_art"], inf["hiv_art"], post_d, post_i, off_post = art_cohorts(
+            U["hiv_art"], hz, Px["art_transmission"], Px["art_reengage"])
+        after["hiv_art"] = post_d.sum(axis=1)
         # malaria: Lives Saved Tool each year; lost vector control rebounds while the loss lasts
         mal = {k: np.zeros((nx, N_YEARS)) for k in ("mal_itn", "mal_irs", "mal_cm")}
         for t in years:
@@ -654,13 +673,30 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
         d.update(mal)
         inf["hiv_pmtct"] = U["hiv_pmtct"] * Px["pmtct_vt_reduction"][:, None]
         inf["hiv_prev"] = U["hiv_prev"].copy()
-        # new HIV infections (adults: from people off ART, and lost prevention) die mostly after 2030; lifetime risk
-        # weighted by treatment coverage after the cut (infant infections from PMTCT are already counted above)
+        # new adult HIV infections (from people off ART, and lost prevention) die on the untreated survival curve,
+        # scaled by the chance of dying of HIV with / without treatment at that year's ART coverage. Deaths up to 2030
+        # go to the line that caused the infection; 2031-2035 deaths are set in motion. (Infant infections from PMTCT
+        # are already counted under PMTCT.)
+        H = N_YEARS + POST_YEARS
         ok_art = not (np.isnan(art_need) or np.isnan(art_cov0) or art_need <= 0)
-        cov_art = np.clip(art_cov0 - U["hiv_art"][:, -1] / art_need, 0, 1) if ok_art else np.full(nx, 0.0)
-        per_inf = cov_art * Px["hiv_inf_death_treated"] + (1 - cov_art) * Px["hiv_inf_death_untreated"]
-        new_inf = inf["hiv_art"].sum(axis=1) + inf_after + inf["hiv_prev"].sum(axis=1)
-        after["hiv_infections"] = new_inf * per_inf
+        off_all = np.hstack([U["hiv_art"], off_post])                     # people off ART, 2026-2035
+        cov_all = np.clip(art_cov0 - off_all / art_need, 0, 1) if ok_art else np.zeros((nx, H))
+        risk = (cov_all * Px["hiv_inf_death_treated"][:, None]
+                + (1 - cov_all) * Px["hiv_inf_death_untreated"][:, None])
+        timing = hiv_death_timing(Px["hiv_survival_median"], H)
+
+        def infection_deaths(new_inf):                                    # n x H infections -> n x H deaths
+            out = np.zeros((nx, H))
+            for s_ in range(H):
+                for t in range(s_, H):
+                    out[:, t] += new_inf[:, s_] * timing[:, t - s_] * risk[:, t]
+            return out
+
+        da = infection_deaths(np.hstack([inf["hiv_art"], post_i]))
+        dp = infection_deaths(np.hstack([inf["hiv_prev"], np.zeros((nx, POST_YEARS))]))
+        d["hiv_art"] = d["hiv_art"] + da[:, :N_YEARS]
+        d["hiv_prev"] = d["hiv_prev"] + dp[:, :N_YEARS]
+        after["hiv_infections"] = da[:, N_YEARS:].sum(axis=1) + dp[:, N_YEARS:].sum(axis=1)
         return d, inf, after
 
     deaths, infections, after_parts = lives(P, units)

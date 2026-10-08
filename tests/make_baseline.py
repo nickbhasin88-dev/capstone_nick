@@ -1,5 +1,7 @@
-"""Save the model's current results (before the year-path change) so tests can check the default path reproduces them.
-Run once from the repo root:  python tests/make_baseline.py"""
+"""Save sudden-cut results so tests can check that the current model, with the default path and the later mechanisms
+switched off, reproduces them. baseline_sudden.json was made by running this file at commit 5eb6111 (before TB spread,
+malaria rebound, vaccine cohorts and HIV infection deaths) with the current model_data/country_inputs.csv.
+Run from the repo root:  python tests/make_baseline.py"""
 import json
 import logging
 import sys

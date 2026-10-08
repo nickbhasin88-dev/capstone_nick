@@ -482,7 +482,7 @@ CAUSE_PHRASE = {"HIV": "people losing HIV treatment and prevention", "TB": "untr
                 "Malaria": "lost malaria nets and treatment", "Immunization": "missed childhood vaccinations"}
 # "People Losing Care Each Year": every service line except HIV prevention (its unit is infections averted)
 CARE_LABELS = {"mal_itn": "bednet users", "mal_irs": "people under indoor spraying", "hiv_art": "on HIV treatment",
-               "mal_cm": "malaria patients", "hiv_ovc": "orphans & vulnerable children", "imm": "children unvaccinated",
+               "mal_cm": "malaria patients", "imm": "children unvaccinated",
                "hiv_pmtct": "HIV+ pregnant women", "tb_ds": "TB patients", "tb_dr": "drug-resistant TB patients"}
 CARE_TIP = ("People who lose a service in each year the cut lasts, under the selected scenario and government "
             "response. Bednet users and vaccinated children are prevention; HIV and TB patients are treatment.")
@@ -490,7 +490,8 @@ CARE_TIP = ("People who lose a service in each year the cut lasts, under the sel
 
 def care_breakdown(L: pd.DataFrame) -> tuple:
     """(total, [(count, label), ...] largest first) of people losing a service each year (central run, after
-    government replacement and continuity), all lines except HIV prevention."""
+    government replacement and continuity), the same services as the table's People Losing Service total (all lines
+    except HIV prevention, whose unit is infections averted, and orphan support, which has no modelled effect)."""
     u = L["units_lost"].reindex(list(CARE_LABELS)).fillna(0).clip(lower=0)
     parts = sorted(((float(v), CARE_LABELS[k]) for k, v in u.items() if v >= 0.5), reverse=True)
     return float(sum(v for v, _ in parts)), parts
@@ -583,7 +584,7 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
         (num(care) if care >= 1 else "0", "People Losing Care Each Year", breakdown or "none", False, CARE_TIP),
         (num(d5), f"Extra Deaths, {FIRST_YEAR}-{FIRST_YEAR + 4}",
          f"range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}"
-         + (f" · +{num(res['committed']['after_2030'])} more after 2030" if res["committed"]["after_2030"] >= 0.5
+         + (f" · +{num(res['committed']['after_2030'])} more in 2031-2035" if res["committed"]["after_2030"] >= 0.5
             else ""), True, after_2030_help(res["committed"])),
     ]
     big = "".join(f"<div class='ed-bignum' title='{e(tip, quote=True)}'><div class='v{' hl' if hl else ''}'>{e(v)}</div>"
@@ -675,19 +676,23 @@ def _country_results(iso3, country_name, ctl, sk, imf):
         notes.append("Where the aid lost would pay for more people than are covered today, the loss is capped at "
                      "current coverage.")
     notes += [f"{f[0].upper() + f[1:]}." for f in res["flags"]]
-    notes.append("HIV prevention turns money into infections averted (no deaths within 5 years). Program money with no "
+    notes.append("HIV prevention turns money into infections averted; deaths from those infections are counted in the "
+                 "year they happen (few before 2031). Program money with no "
                  "reported purpose is spread over each bucket's known mix, and "
                  f"{float(ptab.loc['hss_kappa', 'central']):.0%} of lost systems money (labs, staff, monitoring) is "
                  "assumed to cut services. Bednets and spraying protect the same population at risk, so they share one "
                  "row. Deaths ranges are 95% intervals.")
     st.subheader("What Each Service Loses", help=" ".join(notes))
-    st.html(_service_table_html(rows, country_name))
+    st.html(_service_table_html(rows, country_name, T))
     ovc = show[show["line"] == "hiv_ovc"]
-    if len(ovc) and ovc["net_loss_usd"].sum() > 0:
-        st.caption(_esc(f"Excludes support for orphans and vulnerable children ({money(ovc['net_loss_usd'].sum())} a "
-                        "year lost), which has no modelled effect on deaths."))
+    st.caption(_esc("Other Aid is money the model does not link to deaths: support for orphans and vulnerable children"
+                    + (f" ({money(ovc['net_loss_usd'].sum())} a year lost)" if len(ovc) else "")
+                    + f" and the {1 - float(ptab.loc['hss_kappa', 'central']):.0%} of lost systems money (labs, staff, "
+                    "monitoring) assumed not to cut services. With it, the totals match Aid at Risk and Net Loss to "
+                    "Services above. The deaths range is for the total, so it is narrower than adding the rows' ranges."))
     if cov_fig is not None:
-        chart(cov_fig, source="Model estimates; coverage today from World Bank WDI (UNAIDS, WHO, WUENIC series).")
+        chart(cov_fig, source="Model estimates; coverage today: UNAIDS/WHO 2025 (HIV), WHO 2024 (TB), WHO/Malaria Atlas "
+                              "Project 2024 or latest survey (bednets), latest survey (malaria treatment), WUENIC (DTP3).")
 
     # ------------------------------ dose response + path ------------------------------ #
     st.subheader("How the Damage Scales",
@@ -725,16 +730,17 @@ def _country_results(iso3, country_name, ctl, sk, imf):
 # --------------------------------------------------------------------------- #
 # Headline, comparison, cards
 # --------------------------------------------------------------------------- #
-AFTER_2030_PARTS = {"hiv_infections": "new HIV infections", "hiv_art": "people still off HIV treatment",
+AFTER_2030_PARTS = {"hiv_art": "people still off HIV treatment", "hiv_infections": "new HIV infections",
                     "imm": "children who missed vaccines", "tb": "TB spread by untreated patients"}
 
 
 def after_2030_help(C) -> str:
-    """Tooltip: what the deaths set in motion after 2030 are made of (central estimates)."""
+    """Tooltip: what the deaths in 2031-2035 set in motion by the 2026-2030 losses are made of (central estimates)."""
     parts = C.get("after_parts", {})
     bits = [f"{AFTER_2030_PARTS[k]} {num(v)}" for k, v in sorted(parts.items(), key=lambda kv: -kv[1])
             if k in AFTER_2030_PARTS and v >= 0.5]
-    return ("Deaths after 2030 caused by the 2026-2030 losses, assuming no new cuts after 2030"
+    return ("Deaths in 2031-2035 caused by the 2026-2030 losses, with funding back from 2031 (people off HIV "
+            "treatment return gradually)"
             + (": " + "; ".join(bits) if bits else "") + ". Range = 95% interval.")
 
 
@@ -748,7 +754,7 @@ def _headline_items(res) -> list:
          f"{T['replaced'] / T['gross']:.0%} of the loss" if T["gross"] > 0 else None,
          "Set by the government response in the sidebar, limited by fiscal space."),
         ("Net Loss to Services", money(T["net"]), "per year", "Aid lost minus what the government replaces."),
-        ("Deaths Set in Motion After 2030", num(res["committed"]["after_2030"]),
+        ("Further Deaths, 2031-2035", num(res["committed"]["after_2030"]),
          "range " + rng(res["committed"]["after_2030_lo"], res["committed"]["after_2030_hi"]),
          after_2030_help(res["committed"])),
         ("Extra Deaths Over 5 Years", num(T["deaths_5y"]), "range " + rng(T["deaths_5y_lo"], T["deaths_5y_hi"]),
@@ -973,8 +979,10 @@ def cov_pair(c0: float, c1: float) -> str:
     return f"{f.format(c0)} → {f.format(c1)}"
 
 
-def _service_table_html(rows: pd.DataFrame, country_name: str = "") -> str:
-    """'What Each Service Loses': NYT-style HTML table, grouped by disease, with a Total row."""
+def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | None = None) -> str:
+    """'What Each Service Loses': NYT-style HTML table, grouped by disease, with a Total row. With the run's totals T,
+    an Other Aid row (orphan support and systems money not modelled as services) makes the money columns add up to
+    the headline figures, and the Total deaths range is the run's own 95% interval."""
     e = html.escape
     grey = lambda t: f"<span class='sub'>{t}</span>"
     nm = f"<span class='nm'>{e('Not Modelled')}</span>"
@@ -995,9 +1003,9 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "") -> str:
             cov = "<span class='nm'>No Single<br>Target Group</span>"
         else:
             cov = nm
-        if r.line == "hiv_prev":             # the only line with no death pathway inside the 5 years
-            tip = ("Prevention averts new HIV infections; their deaths mostly fall after the 5-year window, so "
-                   "they're counted in the New HIV Infections card.")
+        if r.line == "hiv_prev" and not (r.deaths_5y >= 0.5):   # infections averted, few deaths before 2031
+            tip = ("Prevention averts new HIV infections; their deaths mostly fall after 2030 (see Further Deaths, "
+                   "2031-2035) and in the New HIV Infections card.")
             deaths = f"<span class='nm' title='{e(tip, quote=True)}'>See New<br>Infections</span>"
         elif not (r.deaths_5y_hi > 0) and r.net_loss_usd > 0:
             tip = (f"{country_name} records almost no {DISEASE_WORD[r.bucket]} deaths, so cutting this aid adds "
@@ -1010,12 +1018,23 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "") -> str:
                  f"<span class='big'>{e(r.cost_big)}</span><br>"
                  f"{grey(e(r.cost_unit).replace('per infection averted', 'per infection<br>averted'))}", people, cov, deaths]
         body.append("<tr>" + service + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
+    # Other Aid: money with no modelled effect on deaths, so the money columns add up to the headline figures
+    base_tot, net_tot = rows["base_usd"].sum(), rows["net_loss_usd"].sum()
+    d_lo, d_hi = rows["deaths_5y_lo"].sum(), rows["deaths_5y_hi"].sum()
+    if T is not None:
+        o_base, o_net = T["base"] - base_tot, T["net"] - net_tot
+        if max(o_base, o_net) >= 0.005 * max(T["base"], 1.0):
+            body.append("<tr class='gap'><td colspan='7'></td></tr>")
+            body.append("<tr><td class='svc' style='border-left:3px solid #cfcad6'><b>Other Aid</b><br>"
+                        f"{grey('orphan support; systems money not cutting services')}</td>"
+                        + "".join(f"<td>{c}</td>" for c in (money(max(o_base, 0)), money(max(o_net, 0)), "", nm, "",
+                                                            nm)) + "</tr>")
+        base_tot, net_tot, d_lo, d_hi = T["base"], T["net"], T["deaths_5y_lo"], T["deaths_5y_hi"]
     # total row (people exclude HIV prevention, whose unit is infections averted)
     ppl = rows.loc[rows["line"] != "hiv_prev", "units_lost"].sum()
-    total = ["<td class='svc'><b>Total</b></td>", f"<td><b>{money(rows['base_usd'].sum())}</b></td>",
-             f"<td><b>{money(rows['net_loss_usd'].sum())}</b></td>", "<td></td>", f"<td><b>{num(ppl)}</b></td>",
-             "<td></td>", f"<td><b>{num(rows['deaths_5y'].sum())}</b><br>"
-                          f"{grey(rng(rows['deaths_5y_lo'].sum(), rows['deaths_5y_hi'].sum()))}</td>"]
+    total = ["<td class='svc'><b>Total</b></td>", f"<td><b>{money(base_tot)}</b></td>",
+             f"<td><b>{money(net_tot)}</b></td>", "<td></td>", f"<td><b>{num(ppl)}</b></td>",
+             "<td></td>", f"<td><b>{num(rows['deaths_5y'].sum())}</b><br>{grey(rng(d_lo, d_hi))}</td>"]
     body.append("<tr class='tot'>" + "".join(total) + "</tr>")
     return ("<div class='ed-nyt-wrap'><table class='ed-nyt'><colgroup><col style='width:26%'>"
             + "<col style='width:12.3%'>" * 6 + "</colgroup><thead><tr>" + th_html + "</tr></thead><tbody>"
@@ -1226,11 +1245,11 @@ def cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
     tot = A[["gross_loss_usd", "net_loss_usd", "deaths_y1", "deaths_5y", "deaths_5y_lo", "deaths_5y_hi",
              "hiv_infections_5y"] + after_cols].sum()
     st.markdown(th.pills_html([
-        (f"Aid Lost per Year, {len(A)} Countries", money(tot["gross_loss_usd"]),
+        (f"Aid Lost per Year, {len(A)} of {len(names)} Countries", money(tot["gross_loss_usd"]),
          "HIV, TB, malaria and vaccine aid removed by the scenario", f"Net of Backfill {money(tot['net_loss_usd'])}"),
-        ("Deaths Set in Motion After 2030", num(tot["deaths_after_2030"]),
-         "Deaths after 2030 caused by the 2026-2030 losses: new HIV infections, people still off HIV treatment, "
-         "children who missed vaccines and TB spread by untreated patients",
+        ("Further Deaths, 2031-2035", num(tot["deaths_after_2030"]),
+         "Deaths in 2031-2035 caused by the 2026-2030 losses, with funding back from 2031: people still off HIV "
+         "treatment, new HIV infections, children who missed vaccines and TB spread by untreated patients",
          "Range " + rng(tot["deaths_after_2030_lo"], tot["deaths_after_2030_hi"]))
         if "deaths_after_2030" in tot else
         ("Extra Deaths, Year 1", num(tot["deaths_y1"]), "Deaths build up over the five years", ""),

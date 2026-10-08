@@ -7,6 +7,7 @@ Build the inputs for the funding-shock model (Section 4 of app.py).
                             --gdp  <IHME_GDP_1960_2050_*.CSV>
                             --mou  <co-financing_MOU.xlsx>
                             [--download]      # refresh ext_data/ from the Gapminder WDI mirror on GitHub
+                                              # (and run `python who_inputs.py --download` for ext_data/gho/)
 
     python prepare_model.py --precompute-only   # only re-run the all-country results from the existing model_data/
 
@@ -246,6 +247,8 @@ def main(a):
     OUT.mkdir(exist_ok=True)
     if a.download:
         download_ext()
+        import who_inputs
+        who_inputs.download()
 
     # ---------------- DAH ---------------- #
     print("reading DAH ...")
@@ -395,6 +398,8 @@ def main(a):
             st_.columns = ["iso3", "status"]
             ci["mou_status"] = (st_.set_index("iso3")["status"].astype(str).str.strip().str.lower()
                                 .map(MOU_STATUS_VALUES).reindex(ci.index))
+    import who_inputs                    # current WHO / UNAIDS estimates replace the derived HIV and malaria inputs
+    ci = who_inputs.apply(ci)
     ci.loc[DASHBOARD_ISO3].reset_index().to_csv(OUT / "country_inputs.csv", index=False)
     print(f"  country_inputs: {len(DASHBOARD_ISO3)} dashboard countries ({len(ISO3)} built for the regressions)")
 

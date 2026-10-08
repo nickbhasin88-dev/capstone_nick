@@ -226,10 +226,10 @@ def outcome_panel(country_name, shape, response_phrase, res, base_committed, bre
         ("Extra Deaths 2026-2030", num(max(T["deaths_5y"], 0.0)) if T["deaths_5y"] > -0.5 else num(T["deaths_5y"]),
          "Central estimate; range = 95% interval",
          f"Range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}"),
-        ("Further Deaths Already Set in Motion After 2030", num(max(C["after_2030"], 0.0)),
+        ("Further Deaths, 2031-2035, Set in Motion by 2030", num(max(C["after_2030"], 0.0)),
          after_help(C), f"Range {rng(C['after_2030_lo'], C['after_2030_hi'])}"),
         ("Deaths Avoided vs Sudden Cut With No Response", num(max(avoided, 0)) if avoided >= -0.5 else f"−{num(-avoided)}",
-         "Committed basis: deaths in 2026-2030 plus those set in motion by then", f"of {num(base_committed)}"),
+         "Committed basis: deaths in 2026-2035 caused by the 2026-2030 losses", f"of {num(base_committed)}"),
         ("Break-Even Budget Increase", be, "Smallest steady yearly rise in health's share of government spending that "
                                            "keeps pace with the lost aid every year (up to the 15% Abuja target)", ""),
     ], large=True), unsafe_allow_html=True)
@@ -252,5 +252,5 @@ def outcome_panel(country_name, shape, response_phrase, res, base_committed, bre
         sent += f" Keeping pace every year needs at least +{break_even:.1f} points a year."
     st.markdown(html.escape(sent).replace("$", "\\$"))
     st.caption("Assumes people return to care when funding returns and that new government money is spent as "
-               "efficiently as donor money. Deaths avoided count deaths set in motion before 2030, so delaying a cut "
-               "isn't counted as preventing it.")
+               "efficiently as donor money. Deaths avoided include 2031-2035 deaths caused by losses before 2031 "
+               "(funding back from 2031), so delaying a cut isn't counted as preventing it.")

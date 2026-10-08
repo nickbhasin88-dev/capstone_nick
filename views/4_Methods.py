@@ -214,7 +214,7 @@ with tabs[1]:
     | Aid at Risk (per Year) | Yearly HIV, TB, malaria and vaccine aid removed by the scenario (gross loss), out of the 2021-2023 average |
     | Replaced by Government | The government's replacement, set by the response chosen, capped by fiscal space |
     | Net Loss to Services | Aid at risk minus what is replaced |
-    | Extra Deaths Over 5 Years; Deaths Set in Motion After 2030 | Central estimate (all parameters at their central values); range = 2.5th to 97.5th percentile of the Monte Carlo draws |
+    | Extra Deaths Over 5 Years; Further Deaths, 2031-2035 | Central estimate (all parameters at their central values); range = 2.5th to 97.5th percentile of the Monte Carlo draws |
     | New HIV Infections, 5 Years | Infections from people off ART, mothers without PMTCT, and lost prevention |
     | Every US$1 Million Lost | People losing the service per $1M = $1M ÷ cost per person x (1 - continuity); coverage drop = that ÷ people in need; extra deaths = deaths per dollar x $1M x (1 - continuity); "aid per death" = $5M (five years of $1M) ÷ those deaths |
     | What Each Service Loses | Per service line: baseline aid, aid lost after replacement, cost per person, people losing the service, coverage before and after, extra deaths (range) |
@@ -359,16 +359,21 @@ with tabs[2]:
     | Malaria testing & treatment | per confirmed case treated | ${C['uc_mal_cm']:.2f} (*assumption*: ACT + tests + delivery) |
     | Routine immunization | full cost per child immunized (vaccines + delivery) | ${C['uc_imm']:.0f}: delivery $45.6 per infant (Lydon et al. 2014, 2016-20) + vaccines $41.3 (MSF The Right Shot 2015, low end), both in 2023 US$; range $38 (Brenzel 2015, Gavi-country plans) to $104 (MSF high end). Check: donor vaccine aid per immunized child has a median of $40, below the full cost, as expected when governments co-finance |
 
-    **People in need and current coverage:**
+    **People in need and current coverage.** HIV and malaria figures are the current WHO / UNAIDS estimates from
+    the WHO Global Health Observatory (people living with HIV, ART and PMTCT coverage: UNAIDS 2025 round; malaria
+    deaths, cases and population at risk: World Malaria Report, 2024). Where WHO publishes no estimate for a country
+    the older derived value is kept and flagged in `country_inputs.csv` (column `<input>_source`); this applies to
+    people living with HIV in Côte d'Ivoire, Guatemala, Iraq, Jordan and Nicaragua. The download and patch are done by
+    `who_inputs.py`.
 
     | Service | People in need | Current coverage |
     |---|---|---|
-    | HIV treatment | People living with HIV = HIV prevalence 15-49 x population 15-64 x calibration + children 0-14 with HIV (calibration = UNAIDS PLHIV ÷ that product in 2011, clipped 0.6-1.6) | ART coverage, WDI `SH.HIV.ARTC.ZS` |
-    | PMTCT | HIV+ pregnancies = births x prevalence x 1.15 (women's prevalence ~15% above all adults) | PMTCT coverage, WDI `SH.HIV.PMTC.ZS` (ART coverage if missing) |
-    | TB treatment | TB incidence, all forms (WHO via Gapminder) | TB treatment coverage, WDI `SH.TBS.DTEC.ZS` |
+    | HIV treatment | People living with HIV, all ages, 2025 (UNAIDS/WHO, GHO `HIV_0000000001`) | ART coverage, 2025 (UNAIDS/WHO, GHO `HIV_ARTCOVERAGE`) |
+    | PMTCT | Pregnant women living with HIV, 2025 = women receiving ARVs (GHO `HIV_0000000016`) ÷ PMTCT coverage (GHO `HIV_0000000020`, which the GHO catalogue names "number of pregnant women living with HIV" but which holds coverage in %); where coverage is top-coded at 100%, the larger of that and births x prevalence x 1.15 | PMTCT coverage, 2025 (UNAIDS/WHO) |
+    | TB treatment | TB incidence, all forms, 2024 (WHO Global TB Report, via Gapminder) | TB treatment coverage, 2024, WDI `SH.TBS.DTEC.ZS` (WHO) |
     | Drug-resistant TB | 4% of TB incidence | 45% (*assumption*) |
-    | Bednets / spraying | Population at risk = population x 95% in sub-Saharan Africa, 35% elsewhere | Children sleeping under nets, WDI `SH.MLR.NETS.ZS`; {C['mal_itn_default_use']:.0%} if not surveyed |
-    | Malaria testing & treatment | Malaria cases = incidence per 1,000 at risk (WDI `SH.MLR.INCD.P3`) x population at risk | Children with fever receiving antimalarials, WDI `SH.MLR.TRET.ZS`, used only where malaria incidence is at least {hm.MAL_CM_MIN_INCIDENCE} cases per 1,000 at risk; otherwise {C['mal_cm_default_cov']:.0%} (where malaria is rare, most fevers are not malaria, so the survey is near zero for that reason and does not measure coverage of malaria cases) |
+    | Bednets / spraying | Population at risk, 2024 = WHO estimated cases ÷ incidence per 1,000 at risk (GHO `MALARIA_EST_CASES`, `MALARIA_EST_INCIDENCE`) | Whole-population ITN use, 2024, modelled by WHO / Malaria Atlas Project (GHO `MALARIA_ITN_USE`, 31 African countries); elsewhere the latest household survey of children under 5 sleeping under a net (WDI `SH.MLR.NETS.ZS`); {C['mal_itn_default_use']:.0%} if neither exists |
+    | Malaria testing & treatment | Malaria cases, 2024 (WHO estimate, GHO `MALARIA_EST_CASES`) | Children with fever receiving antimalarials, latest household survey (WDI `SH.MLR.TRET.ZS`; WHO publishes no modelled series), used only where malaria incidence is at least {hm.MAL_CM_MIN_INCIDENCE} cases per 1,000 at risk; otherwise {C['mal_cm_default_cov']:.0%} (where malaria is rare, most fevers are not malaria, so the survey is near zero for that reason and does not measure coverage of malaria cases). Reported treatment courses ÷ estimated cases were checked but are not used: they exceed 100% in some countries (e.g. Kenya, Mozambique) and are far below survey values in others |
     | Routine immunization | Births = crude birth rate x population (WDI) | DTP3 coverage, WDI `SH.IMM.IDPT` |
 
     Where nobody is counted as in need (for example malaria treatment in Iraq), coverage cannot be calculated and the
@@ -404,15 +409,16 @@ with tabs[2]:
     pulmonary cases smear-positive (WHO) x 5-10% of those infected developing disease (Vynnycky & Fine 1997). Half the
     new cases appear 1 year later and half 2 years later. They are treated at that year's (reduced) TB treatment
     coverage, so each dies with probability coverage x treated CFR + (1 - coverage) x untreated CFR (same HIV mix as
-    above). Deaths before the end of 2030 are added to TB treatment; later ones are counted as set in motion after
-    2030. Onward chains beyond these secondary cases are not modelled, so this is conservative.
+    above). Deaths before the end of 2030 are added to TB treatment; cases arriving in 2031-2032 are counted in
+    *Further deaths, 2031-2035*. Only one year of infectiousness per untreated patient and no onward chains beyond
+    these secondary cases are modelled, so this is conservative (untreated TB typically lasts 2-3 years).
 
     **Malaria** uses the Lives Saved Tool form. Coverage after the cut feeds a multiplicative death reduction:
     """)
     st.latex(r"D_1=D_0\times\frac{1-E_v C_{v,1}}{1-E_v C_{v,0}}\times\frac{1-E_c C_{c,1}}{1-E_c C_{c,0}}")
     md(f"""
-    - D₀ = all-age malaria deaths = WHO/MCEE child (1-59 months) malaria deaths ÷ 0.76 in sub-Saharan Africa (WHO:
-      under-5s are ~76% of malaria deaths there) or ÷ 0.40 elsewhere.
+    - D₀ = all-age malaria deaths, 2024, as estimated in WHO's World Malaria Report (GHO `MALARIA_EST_DEATHS`). Its
+      trend is the country's 2010-2019 trend in the same WHO series.
     - E_v = {rng_txt('mal_vc_eff')}, the reduction in deaths at full vector-control coverage (Eisele et al. 2010);
       E_c = {rng_txt('mal_cm_eff')} for case management (Thwing et al. 2011).
     - C₀ = current coverage; C₁ = C₀ - people losing the service ÷ people in need.
@@ -444,8 +450,8 @@ with tabs[2]:
     **Vaccines by birth cohort.** Each year's missed birth cohort dies over the following years: 40% of its
     under-5 deaths in the year it is missed, then 35%, 20% and 5% (the yearly increments of the vaccine row above).
     Deaths are scaled by under-5 mortality in the year they happen. Adding up the cohorts gives exactly the vaccine
-    row above for a sudden cut. Deaths of cohorts missed in 2027-2030 that fall after 2030 are counted as set in
-    motion after 2030 (under-5 mortality keeps its trend), so a vaccine cut late in the period is not undercounted.
+    row above for a sudden cut. Deaths of cohorts missed in 2027-2030 that fall in 2031-2034 are counted in *Further
+    deaths, 2031-2035* (under-5 mortality keeps its trend), so a vaccine cut late in the period is not undercounted.
 
     **Already-falling death rates** (on by default). Baseline malaria deaths and under-5 mortality were falling
     before any cut, so in year y they are multiplied by (1 + trend)^(y-1). Each country's trend is its average annual
@@ -454,13 +460,17 @@ with tabs[2]:
     and HIV effects are per patient and unchanged.
 
     **New HIV infections.** HIV prevention turns money into infections averted, and people off ART transmit HIV
-    (see *Funding Paths*). Few of those infected die within five years, so their deaths are counted only as set in
-    motion after 2030: each new adult infection (from people off treatment, inside 2030 and later in their cohorts,
-    plus lost prevention) dies of HIV with probability ART coverage after the cut x {rng_txt('hiv_inf_death_treated')}
-    + (1 - coverage) x {rng_txt('hiv_inf_death_untreated')}. The untreated figure is lifetime HIV mortality without
-    treatment (Todd et al. 2007, *AIDS*; CASCADE: median survival ~10-11 years); the treated figure is an
-    *assumption* for excess HIV deaths over a lifetime on ART with typical interruptions. Infant infections from
-    lost PMTCT are not included here because their deaths are already counted under PMTCT. **Orphans and
+    (see *Funding Paths*). Deaths from these adult infections are counted in the year they happen, up to 2035. Without
+    treatment, time from infection to death follows a Weibull curve with shape {hm.HIV_WEIBULL_SHAPE} and median
+    {rng_txt('hiv_survival_median')} years (Todd et al. 2007, *AIDS*, ALPHA network: 12.5 years if infected at 15-24,
+    10.5 at 25-34, 8.6 at 35-44; the shape used in UNAIDS Spectrum), so about 2% of these deaths fall within 2 years
+    of infection and about 10% within 4.5 years. The deaths in a year are scaled by that year's ART coverage: ART
+    coverage x {rng_txt('hiv_inf_death_treated')} + (1 - coverage) x {rng_txt('hiv_inf_death_untreated')}, the chance
+    of eventually dying of HIV with and without treatment (untreated: Todd et al. 2007 and CASCADE; treated:
+    *assumption* allowing for late diagnosis and interruptions). Deaths up to 2030 are added to the line that caused
+    the infection (HIV treatment for infections from people off ART, HIV prevention for lost prevention); deaths in
+    2031-2035 are counted in *Further deaths, 2031-2035*. Infant infections from lost PMTCT are not included here
+    because their deaths are already counted under PMTCT. **Orphans and
     vulnerable children** support has no modelled effect on deaths.
     """)
 
@@ -512,13 +522,14 @@ with tabs[2]:
     every scenario and 3 government responses).
 
     **Committed deaths.** A cut that starts late shows few deaths inside 2026-2030 simply because they happen
-    later. To avoid flattering late or delayed cuts, deaths set in motion by the 2026-2030 losses are followed past
-    2030, assuming no new cuts after 2030. **Deaths set in motion after 2030** add up four parts:
+    later. To avoid flattering late or delayed cuts, deaths caused by the 2026-2030 losses are followed for another
+    five years, to the end of 2035, assuming funding is back from 2031 (no cut after 2030). Every part uses the same
+    2031-2035 window, so nothing is projected over a lifetime. **Further deaths, 2031-2035** add up four parts:
 
-    | Part | What is followed past 2030 |
+    | Part | What is counted in 2031-2035 |
     |---|---|
-    | People off HIV treatment | every cohort that loses ART during 2026-2030, for its own 5 years (people still off care at the end of 2030 stay off for the rest of their 5 years) |
-    | New HIV infections | lifetime HIV deaths of infections caused by people off ART (including those cohorts' infections after 2030) and by lost prevention |
+    | People off HIV treatment | people still off ART at the end of 2030 return to care at {rng_txt('art_reengage')} a year (*assumption*: tracing studies find many but not all people lost to follow-up re-engage within 1-2 years); until they return they keep their excess death risk (by years since losing care, staying at the year-5 rate of 5% a year after that) |
+    | New HIV infections | deaths in 2031-2035 of adults infected in 2026-2035 by people off ART, or because prevention was lost in 2026-2030 (timing as in *New HIV infections* above) |
     | Missed vaccines | the remaining under-5 deaths of birth cohorts missed in 2027-2030 |
     | TB spread | secondary TB cases arriving in 2031-2032 from patients untreated in 2029-2030 |
 
@@ -561,7 +572,8 @@ with tabs[3]:
     | World Revenue Longitudinal Data | IMF | Revenue by type, % of GDP | Section 3 revenue mix |
     | Government Finance Statistics (COFOG) | IMF | Spending by function, % of outlays | Section 3 spending mix |
     | World Development Indicators | World Bank, via Gapminder's open-numbers mirror | See the table below | Model inputs |
-    | Systema Globalis | Gapminder (WHO estimates) | People living with HIV; TB incidence and deaths (HIV-negative and HIV-positive); child (1-59 months) malaria, measles and pneumonia deaths (WHO/MCEE) | Model inputs |
+    | Global Health Observatory | WHO (UNAIDS 2025 round for HIV; World Malaria Report for 2024 malaria) | People living with HIV; ART and PMTCT coverage; women receiving ARVs for PMTCT; malaria deaths, cases and incidence per 1,000 at risk; modelled ITN use | Model inputs (people in need, coverage, malaria deaths and trend) |
+    | Systema Globalis | Gapminder (WHO estimates) | TB incidence and deaths (HIV-negative and HIV-positive); child (1-59 months) malaria, measles and pneumonia deaths (WHO/MCEE) | TB inputs; Validation page regressions |
     | HIV share of deaths | Gapminder fasttrack (IHME GBD) | HIV deaths as % of all deaths | Validation page (Lancet rate ratios) |
     | Country classifications | World Bank (Gapminder mirror) | Income group | Header; TB costs |
     | MOU / co-financing sheet | Capstone team | US reference funding 2021-25 and 2026-2030 schedules; MOU status | America First MOUs scenario; header |
@@ -573,14 +585,14 @@ with tabs[3]:
 
     | Code | Meaning | Used for |
     |---|---|---|
-    | `SH.DYN.AIDS.ZS` | HIV prevalence, ages 15-49 (%) | People living with HIV; HIV+ pregnancies |
-    | `SH.HIV.ARTC.ZS` | ART coverage (% of people living with HIV) | HIV treatment coverage |
+    | `SH.DYN.AIDS.ZS` | HIV prevalence, ages 15-49 (%) | Fallbacks for people living with HIV and HIV+ pregnancies where UNAIDS publishes no estimate; regressions |
+    | `SH.HIV.ARTC.ZS` | ART coverage (% of people living with HIV) | Fallback where the GHO has no 2025 value |
     | `SH.HIV.INCD.TL` | New HIV infections | HIV incidence (prevention cost) |
-    | `SH.HIV.0014` | Children 0-14 living with HIV | People living with HIV |
-    | `SH.HIV.PMTC.ZS` | PMTCT coverage (%) | PMTCT coverage |
+    | `SH.HIV.0014` | Children 0-14 living with HIV | Fallback for people living with HIV |
+    | `SH.HIV.PMTC.ZS` | PMTCT coverage (%) | Fallback for PMTCT coverage |
     | `SH.TBS.DTEC.ZS` | TB treatment coverage (%) | TB coverage |
-    | `SH.MLR.INCD.P3` | Malaria incidence per 1,000 at risk | Malaria cases |
-    | `SH.MLR.NETS.ZS` | Children under 5 sleeping under nets (%) | Vector-control coverage |
+    | `SH.MLR.INCD.P3` | Malaria incidence per 1,000 at risk | Whether fever-treatment surveys measure malaria treatment; fallback for malaria cases |
+    | `SH.MLR.NETS.ZS` | Children under 5 sleeping under nets (%) | Vector-control coverage where WHO has no modelled ITN use |
     | `SH.MLR.TRET.ZS` | Children with fever receiving antimalarials (%) | Malaria treatment coverage |
     | `SH.IMM.IDPT` | DTP3 immunization (%) | Immunization coverage |
     | `SH.DYN.MORT` | Under-5 mortality per 1,000 | Vaccine effect scaling; trend |
