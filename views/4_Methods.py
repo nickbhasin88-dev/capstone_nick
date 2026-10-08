@@ -438,6 +438,67 @@ with tabs[2]:
     vulnerable children** support has no modelled effect on deaths.
     """)
 
+    th.section_header("timeline", "Funding Paths Over 2026-2030")
+    md("""
+    By default a scenario's cut starts in full in 2026 and lasts five years (a **sudden cut**). Under **How Funding
+    Changes** the cut can instead be phased in, and under **Government Response** the government can add money
+    gradually. Each year t = 1..5 (2026-2030) then has its own values:
+
+    - **Share of the scenario's cut in force**, c(t) between 0 and 1. Aid lost in year t = full scenario loss x c(t).
+    - **Extra government health money**, A(t), in US$.
+    """)
+    st.latex(r"\text{net gap}(t)=\max\big(0,\ \text{aid lost}\times c(t)-\text{government response}(t)-A(t)\big)")
+    md(f"""
+    The net gap is allocated to services exactly as for a sudden cut, and the people losing each service in year t
+    follow from that year's gap (same costs per person and the same cap on what donor money pays for).
+
+    **Shapes** of c(t) over N = 5 years:
+
+    | Shape | c(t), t = 1..5 | 2026-2030 |
+    |---|---|---|
+    | Sudden (default) | 1 | {", ".join(f"{v:.0%}" for v in scn.path_shape("Sudden (default)"))} |
+    | Linear phase-out | t / 5 | {", ".join(f"{v:.0%}" for v in scn.path_shape("Linear phase-out"))} |
+    | Front-loaded | 1 - (1 - t/5)² | {", ".join(f"{v:.0%}" for v in scn.path_shape("Front-loaded"))} |
+    | Back-loaded | (t/5)² | {", ".join(f"{v:.0%}" for v in scn.path_shape("Back-loaded"))} |
+    | S-curve | logistic with midpoint year 3 (slope {scn.S_CURVE_STEEPNESS}), rescaled so year 5 = 1 | {", ".join(f"{v:.0%}" for v in scn.path_shape("S-curve"))} |
+    | MOU schedule | each year's cut in US bilateral aid from the team's MOU sheet (1 - US funding that year ÷ 2021-25 reference), as a share of the deepest year's cut | MOU countries only |
+    | Custom | set year by year with the sliders | |
+
+    **Gradual budget increase.** The government raises health's share of its total spending by a number of
+    percentage points each year (cumulative): Steady p·t; Fast start 5p·(1 - (1 - t/5)²); Slow start 5p·(t/5)², never
+    past the Abuja target of 15%. Extra money A(t) = points(t) ÷ 100 x total government spending, where total
+    government spending = government health spending (IHME, 2023) ÷ health's share of government spending (World
+    Bank WDI `SH.XPD.GHED.GE.ZS`). No other government response applies with this option.
+
+    **Which services are tracked how.**
+
+    | Service | Method |
+    |---|---|
+    | HIV treatment (and HIV transmission from people off treatment) | **Cohorts.** When the number off ART rises, the increase is a new cohort with 1 year since losing care; when it falls, the most recent cohorts return to care first. Each cohort's death risk follows the ART hazard by its own years since losing care (1.2%, 2.8%, 3.8%, 4.5%, 5.0%), and it transmits HIV at half the full rate in its first year. |
+    | Mother-to-child transmission | **Year by year.** Deaths and infections belong to the year the mother and infant miss the service. |
+    | TB, malaria (nets, spraying, treatment), routine immunization | **Year by year.** Deaths in year t depend only on the coverage lost in year t, using the same formulas as for a sudden cut (TB case fatality for that year's untreated cases; the Lives Saved Tool formula for malaria; deaths per missed child for that year's birth cohort). Each service's ramp-up (see *Timing*) is counted from when the cut started, not from the calendar year. |
+
+    With a sudden cut every method gives exactly the original results (checked by automated tests for 5 countries,
+    every scenario and 3 government responses).
+
+    **Committed deaths.** A cut that starts late shows few deaths inside 2026-2030 simply because they happen
+    later. To avoid flattering late or delayed cuts, every cohort that loses HIV treatment during 2026-2030 is
+    followed for its own 5 years, beyond 2030 where needed, assuming no new cuts after 2030 (people still off care
+    at the end of 2030 stay off for the rest of their 5 years). **Further deaths already set in motion after 2030** =
+    those extra deaths. **Deaths avoided vs sudden cut with no response** = committed deaths (2026-2030 plus those
+    set in motion) of a sudden cut with no government response, minus committed deaths of the chosen path. For TB,
+    malaria and vaccines a later cut means fewer years of lost services, which genuinely costs fewer lives.
+
+    **Break-even budget increase.** The smallest constant yearly rise s in health's share of government spending
+    (cumulative: s points in 2026, 2s in 2027, ...) that keeps the net gap at or below zero in every year of the chosen
+    funding path, on top of the chosen government response. Found by bisection between 0 and the rise that reaches
+    15% in 2030; "not reachable by 15%" if even that falls short in some year.
+
+    **Assumptions.** People return to care when funding returns; new government money is spent as efficiently as
+    donor money. The benchmark under the sliders is the country's fastest sustained rise in health's share of
+    government spending: the 90th percentile of its 2001-2023 yearly changes (WDI).
+    """)
+
     th.section_header("casino", "Uncertainty")
     md("""
     Every parameter in the *Parameters* tab is drawn from a triangular distribution (low, central, high), 400 times

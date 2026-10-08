@@ -121,3 +121,63 @@ def preset_slug(preset: str) -> str:
 
 def precomputed_path(model_dir, preset: str):
     return model_dir / f"all_countries_{preset_slug(preset)}.csv"
+
+
+# --------------------------------------------------------------------------- #
+# How funding changes over 2026-2030 (share of the scenario's full cut in force each year) and the shape of a gradual
+# government budget increase (extra percentage points of the government budget going to health, cumulative)
+# --------------------------------------------------------------------------- #
+YEARS = [2026, 2027, 2028, 2029, 2030]
+PATH_SHAPES = ["Sudden (default)", "Linear phase-out", "Front-loaded", "Back-loaded", "S-curve", "MOU schedule", "Custom"]
+GOV_SHAPES = ["Steady", "Fast start", "Slow start", "Custom"]
+S_CURVE_STEEPNESS = 1.5          # logistic slope around the midpoint year (year 3)
+
+
+def path_shape(name: str, mou_path=None) -> list:
+    """Share of the full cut in force in years t = 1..5 (N = 5): linear t/5; front-loaded 1-(1-t/5)^2; back-loaded
+    (t/5)^2; S-curve a logistic with midpoint year 3, rescaled so year 5 = 1; MOU schedule from the team's sheet."""
+    t = np.arange(1, 6) / 5
+    if name == "Linear phase-out":
+        v = t
+    elif name == "Front-loaded":
+        v = 1 - (1 - t) ** 2
+    elif name == "Back-loaded":
+        v = t ** 2
+    elif name == "S-curve":
+        s = 1 / (1 + np.exp(-S_CURVE_STEEPNESS * (np.arange(1, 6) - 3)))
+        v = s / s[-1]
+    elif name == "MOU schedule" and mou_path is not None:
+        v = np.asarray(mou_path, dtype=float)
+    else:
+        v = np.ones(5)
+    return [float(x) for x in np.clip(v, 0, 1)]
+
+
+def mou_cut_path(ci: pd.DataFrame, iso3: str):
+    """The country's 2026-2030 cuts in US bilateral aid from the team's MOU sheet (1 - US funding that year / 2021-25
+    reference), as shares of the deepest year's cut; None if the country has no MOU schedule."""
+    if iso3 not in ci.index:
+        return None
+    r = ci.loc[iso3]
+    ref = r.get("mou_us_ref")
+    if pd.isna(ref) or ref <= 0:
+        return None
+    cuts, last = [], None
+    for y in YEARS:
+        v = r.get(f"mou_us_{y}")
+        last = last if pd.isna(v) else float(np.clip(1 - v / ref, 0, 1))
+        cuts.append(last)
+    if all(c is None for c in cuts):
+        return None
+    cuts = [0.0 if c is None else c for c in cuts]
+    top = max(cuts)
+    return [c / top for c in cuts] if top > 0 else [0.0] * 5
+
+
+def gov_shape(name: str, points_per_year: float, ceiling: float) -> list:
+    """Extra percentage points of the government budget going to health in years 1..5 (cumulative): Steady p*t;
+    Fast start 5p * (1-(1-t/5)^2); Slow start 5p * (t/5)^2; never above the room left to the Abuja ceiling."""
+    t = np.arange(1, 6) / 5
+    p = max(float(points_per_year), 0.0)
+    v = {"Fast start": 5 * p * (1 - (1 - t) ** 2), "Slow start": 5 * p * t ** 2}.get(name, p * np.arange(1, 6))
+    return [float(x) for x in np.clip(v, 0, max(ceiling, 0.0))]

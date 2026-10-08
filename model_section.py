@@ -20,6 +20,7 @@ import streamlit as st
 
 import health_model as hm
 import scenarios as scn
+import paths_ui
 import theme as th
 from scenarios import PRESETS
 
@@ -41,7 +42,7 @@ BUCKET_WORD = {"HIV": "HIV", "TB": "TB", "Malaria": "malaria", "Immunization": "
 
 # "Historical behaviour" is not offered: the estimated historical response is no backfilling, the same as "none"
 GOV_MODES = {"No backfill (historical norm)": "none", "Replace a set share": "custom",
-             "As much as fiscal space allows": "max"}
+             "As much as fiscal space allows": "max", "Gradual budget increase": "gradual"}
 SRC_MODEL = "Model estimates from IHME aid data (2021-23 average), WHO, UNAIDS and World Bank data; see Methods."
 SHOW_BRIEF = False                   # the Download Country Brief button (code kept for later)
 PRESET_SHORT = {
@@ -74,10 +75,23 @@ def _default_params() -> pd.DataFrame:
 
 
 @st.cache_data(show_spinner=False, max_entries=64)
-def _run(iso3, sc_key, fiscal_t, ptab_json, trend=True, n_draws=400):
+def _run(iso3, sc_key, fiscal_t, ptab_json, trend=True, n_draws=400, cut_path=None, gov_add=None):
+    """Cached by (country, scenario, response, parameters, trend, cut path, government-money path), so moving a
+    slider back to an earlier value is instant. cut_path / gov_add: tuples of 5 (None = sudden cut, no extra money)."""
     ptab = pd.read_json(io.StringIO(ptab_json), orient="split")
     return hm.run_country(iso3, scn.scenario_from_key(sc_key), hm.Fiscal(*fiscal_t), _inputs(), ptab, n_draws=n_draws,
-                          mortality_trend=trend)
+                          mortality_trend=trend, cut_path=cut_path, gov_add_usd=gov_add)
+
+
+@st.cache_data(show_spinner=False, max_entries=64)
+def _break_even(iso3, sc_key, fiscal_t, cut_path):
+    return hm.break_even_share(iso3, scn.scenario_from_key(sc_key), hm.Fiscal(*fiscal_t), _inputs(), cut_path)
+
+
+def run_ctl(iso3, sk, ctl, **kw):
+    """The model run for the current settings, including the funding and budget paths."""
+    return _run(iso3, sk, kw.get("fiscal_t", ctl["fiscal_t"]), ctl["ptab_json"], ctl["trend"],
+                cut_path=ctl.get("cut_path"), gov_add=kw.get("gov_add", ctl.get("gov_add")))
 
 
 @st.cache_data(show_spinner=False, max_entries=32)
@@ -90,7 +104,7 @@ def _dose(iso3, bucket, fiscal_t, ptab_json, trend=True):
 
 
 @st.cache_data(show_spinner=False, max_entries=32)
-def _scenario_path(iso3, sc_key, bucket, fiscal_t, ptab_json, trend=True):
+def _scenario_path(iso3, sc_key, bucket, fiscal_t, ptab_json, trend=True, cut_path=None, gov_add=None):
     """This scenario's own path for one bucket: every cut scaled from 0% to 100% of its size (21 points, the same
     draws as the even-cut curve), as (share of the bucket's aid lost, extra deaths over 5 years)."""
     ptab = pd.read_json(io.StringIO(ptab_json), orient="split")
@@ -98,7 +112,8 @@ def _scenario_path(iso3, sc_key, bucket, fiscal_t, ptab_json, trend=True):
     for k in np.linspace(0, 1, 21):
         sc = scn.scenario_from_key(sc_key)
         sc.scale = float(k)
-        r = hm.run_country(iso3, sc, hm.Fiscal(*fiscal_t), _inputs(), ptab, n_draws=100, mortality_trend=trend)
+        r = hm.run_country(iso3, sc, hm.Fiscal(*fiscal_t), _inputs(), ptab, n_draws=100, mortality_trend=trend,
+                           cut_path=cut_path, gov_add_usd=gov_add)
         bb = r["buckets"].set_index("bucket").loc[bucket]
         rows.append({"k": k, "cut": bb["gross_loss_usd"] / bb["base_usd"] if bb["base_usd"] > 0 else 0.0,
                      "deaths_5y": bb["deaths_5y"]})
@@ -136,6 +151,8 @@ def money(x: float) -> str:
 def num(x: float) -> str:
     if x is None or (isinstance(x, float) and np.isnan(x)):
         return "n/a"
+    if abs(x) < 0.5:                                   # no "-0" from tiny negative rounding
+        return "0"
     a = abs(x)
     if a >= 1e6:
         return f"{x / 1e6:,.2f}M"
@@ -255,8 +272,8 @@ def _title(text):
 def _resp_label(fiscal_t) -> str:
     mode, theta, _, alloc, ceiling = fiscal_t
     lbl = {"none": "No backfill", "historical": "Historical behaviour", "custom": f"Government replaces {theta:.0%}",
-           "max": "As much as fiscal space allows"}[mode]
-    if mode != "none":
+           "max": "As much as fiscal space allows", "gradual": "Gradual budget increase"}[mode]
+    if mode not in ("none", "gradual"):
         lbl += (", lives first" if alloc == "lives_first" else ", pro-rata")
         lbl += (", best-years ceiling" if ceiling == "p90" else "")
     return title_case(lbl)
@@ -310,7 +327,7 @@ def _controls(iso3, country_name, I) -> dict:
     with st.container(key="model_controls"):
         st.markdown("<div id='change-scenario' class='ed-kicker' style='margin:0'>Change the Scenario</div>",
                     unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1.45, 1.25, 0.8], gap="medium")
+        c1, c2, c3, c4 = st.columns([1.3, 1.1, 1.3, 0.75], gap="medium")
         with c1:
             preset = th.shared_select("Donor Scenario", list(PRESETS), "m_preset", "sel_preset", list(PRESETS)[0],
                                       format_func=title_case,
@@ -318,6 +335,10 @@ def _controls(iso3, country_name, I) -> dict:
             st.caption(_esc(PRESET_SHORT.get(preset, PRESETS[preset])))
             opts = _preset_options(preset, ci, iso3, country_name, "m")
         with c2:
+            shape = paths_ui.path_selector(ci, iso3)
+        budget = hm.health_budget(iso3, I)
+        room = 0.0
+        with c3:
             mode = GOV_MODES[st.selectbox(
                 "Government Response", list(GOV_MODES), key="m_mode", format_func=title_case,
                 help=_esc(f"How much of the lost aid the government replaces from its own budget. No Backfill is the "
@@ -326,7 +347,15 @@ def _controls(iso3, country_name, I) -> dict:
             theta = 0.0
             if mode == "custom":
                 theta = st.slider("Share of Lost Aid Replaced (%)", 0, 100, 25, 5, key="m_theta") / 100
-        with c3:
+            if mode != "gradual":
+                st.session_state["gov_panel_on"] = False
+            if mode == "gradual":
+                if budget["gov_spend_usd"] == budget["gov_spend_usd"]:
+                    room = paths_ui.gradual_controls(budget)
+                else:
+                    st.caption("No data on this government's total spending, so a budget increase can't be modelled.")
+                    mode = "none"
+        with c4:
             st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
             adv = st.popover("Advanced", icon=":material/tune:", width="stretch")
         with adv:
@@ -378,8 +407,24 @@ def _controls(iso3, country_name, I) -> dict:
                                                                              "status", "source")}}, width=900)
             ptab = ptab.set_index("param")
 
+        # ---- when the funding path or the response is not the default, the box expands: chart + year sliders ----
+        expanded = shape != paths_ui.SUDDEN or mode == "gradual"
+        cut_path, pts, outcome_slot = None, [0.0] * 5, None
+        if expanded:
+            st.divider()
+            cut, pts = paths_ui.year_panel(iso3, country_name, scn.build_scenario(preset, opts, ci),
+                                           hm.Fiscal(mode, theta, cap, alloc, ceiling), I, mode == "gradual", budget,
+                                           room, scn.mou_cut_path(ci, iso3))
+            cut_path = tuple(round(c, 4) for c in cut)
+            outcome_slot = st.container()
+    gov_add = tuple(float(v) for v in hm.gov_add_from_points(pts, budget["gov_spend_usd"])) \
+        if mode == "gradual" and any(pts) else None
+    if cut_path is not None and all(abs(c - 1) < 1e-9 for c in cut_path):
+        cut_path = None                                # identical to the sudden cut: share its cached results
     return {"preset": preset, "opts": opts, "fiscal_t": (mode, theta, cap, alloc, ceiling), "mode": mode,
-            "ptab": ptab, "ptab_json": ptab.to_json(orient="split"), "cmp": cmp, "trend": trend}
+            "ptab": ptab, "ptab_json": ptab.to_json(orient="split"), "cmp": cmp, "trend": trend,
+            "shape": shape, "cut_path": cut_path, "gov_pts": pts, "gov_add": gov_add, "budget": budget,
+            "expanded": expanded, "outcome_slot": outcome_slot}
 
 
 # --------------------------------------------------------------------------- #
@@ -398,8 +443,27 @@ def scenario_bar(iso3: str, country_name: str):
     sk = scn.scenario_key(scn.build_scenario(ctl["preset"], ctl["opts"], I["ci"]))
     st.session_state["model_ctx"] = {"iso3": iso3, "country_name": country_name, "preset": ctl["preset"],
                                      "opts": ctl["opts"], "fiscal_t": ctl["fiscal_t"], "ptab_json": ctl["ptab_json"],
-                                     "trend": ctl["trend"]}
+                                     "trend": ctl["trend"], "cut_path": ctl["cut_path"], "gov_add": ctl["gov_add"]}
+    if ctl["expanded"] and iso3 in I["ci"].index and iso3 in set(I["lines"].iso3):
+        res = run_ctl(iso3, sk, ctl)
+        base = _run(iso3, sk, scn.DEFAULT_FISCAL, ctl["ptab_json"], ctl["trend"])      # sudden cut, no response
+        be = _break_even(iso3, sk, ctl["fiscal_t"], ctl["cut_path"])
+        with ctl["outcome_slot"]:
+            paths_ui.outcome_panel(country_name, ctl["shape"], response_phrase(ctl), res, base["committed"]["deaths"],
+                                   be, ctl["budget"], num, rng, round_words)
     return ctl, sk
+
+
+def response_phrase(ctl) -> str:
+    """The government response, as a phrase for the outcome sentence."""
+    mode, theta = ctl["fiscal_t"][0], ctl["fiscal_t"][1]
+    if mode == "gradual":
+        p = ctl["gov_pts"]
+        steady = all(abs(p[i] - p[0] * (i + 1)) < 0.051 for i in range(5))
+        return (f"raising health's budget share by {p[0]:.1f} points a year" if steady and p[0] > 0
+                else f"raising health's budget share to +{p[-1]:.1f} points by 2030")
+    return {"none": "with no government response", "custom": f"with the government replacing up to {theta:.0%} of "
+            "the lost aid", "max": "with the government replacing what its budget allows"}.get(mode, "")
 
 
 # --------------------------------------------------------------------------- #
@@ -437,7 +501,7 @@ def response_kicker(fiscal_t) -> str:
     capped = len(fiscal_t) > 2 and fiscal_t[2]
     return {"none": "No Government Replacement",
             "custom": f"Government Replaces {'Up to ' if capped else ''}{theta:.0%}",
-            "max": "Government Replaces What Its Budget Allows",
+            "max": "Government Replaces What Its Budget Allows", "gradual": "Gradual Budget Increase",
             "historical": "No Government Replacement"}.get(mode, _resp_label(fiscal_t))
 SPELLED = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine"}
 
@@ -473,7 +537,8 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
     """HTML for the top of the Dashboard: kicker, headline, dek and three big numbers."""
     I = _inputs()
     e = html.escape
-    kicker = f"Funding-Cut Scenario · {title_case(ctl['preset'])} · {response_kicker(ctl['fiscal_t'])}"
+    path_lbl = "Sudden Cut" if ctl.get("shape", paths_ui.SUDDEN) == paths_ui.SUDDEN else title_case(ctl["shape"])
+    kicker = f"Funding-Cut Scenario · {title_case(ctl['preset'])} · {path_lbl} · {response_kicker(ctl['fiscal_t'])}"
     # the controls sit in the scenario bar just below; the link jumps there (same cached run as Section 4)
     kick_html = (f"<div class='ed-kicker-row'><div class='ed-kicker'>{e(kicker)}</div>"
                  f"<a class='ed-jump' href='#change-scenario' target='_self'>Change Scenario ↓</a></div>")
@@ -482,13 +547,17 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
         dek = "There is nothing for a donor cut to remove here; the spending and budget charts below still apply."
         return (f"<div class='ed-lede'>{kick_html}<div class='ed-headline'>{e(head)}</div>"
                 f"<p class='ed-dek'>{e(dek)}</p></div>")
-    res = _run(iso3, sk, ctl["fiscal_t"], ctl["ptab_json"], ctl["trend"])
+    res = run_ctl(iso3, sk, ctl)
     T, B, L = res["totals"], res["buckets"].set_index("bucket"), res["lines"].set_index("line")
     phrase = SCENARIO_PHRASE.get(ctl["preset"], "Under this scenario")
     d5 = T["deaths_5y"]
     if T["gross"] <= 1e4:
         head = f"{phrase}, {country_name} would lose almost no aid for HIV, TB, malaria or vaccines"
         dek = "The services these programs pay for would carry on unchanged."
+    elif d5 < 10 and T["replaced"] >= 0.99 * T["gross"]:
+        head = f"{phrase}, {country_name} could keep services running if the government fills the gap"
+        dek = (f"About {money_words(T['gross'])} a year of aid would be lost on average, and the government's added "
+               "money covers it every year, so the model finds almost no extra deaths.")
     elif d5 < 10:
         head = f"{phrase}, {country_name} would lose {money_words(T['gross'])} a year in health aid"
         dek = f"The model finds almost no extra deaths: {country_name} records very few deaths from these diseases."
@@ -537,8 +606,9 @@ def render_model_section(iso3: str, country_name: str, imf: dict | None, ctl: di
 def _country_results(iso3, country_name, ctl, sk, imf):
     preset, fiscal_t, ptab, ptab_json, mode = ctl["preset"], ctl["fiscal_t"], ctl["ptab"], ctl["ptab_json"], ctl["mode"]
     trend = ctl["trend"]
-    res = _run(iso3, sk, fiscal_t, ptab_json, trend)
-    res0 = _run(iso3, sk, scn.DEFAULT_FISCAL, ptab_json, trend) if mode != "none" else res
+    res = run_ctl(iso3, sk, ctl)
+    # the same funding path with no government money, for "backfill averts N deaths"
+    res0 = run_ctl(iso3, sk, ctl, fiscal_t=scn.DEFAULT_FISCAL, gov_add=None) if mode != "none" else res
     T, B, L = res["totals"], res["buckets"].set_index("bucket"), res["lines"]
 
     if T.get("gains", 0) > 1e5:
@@ -626,7 +696,7 @@ def _country_results(iso3, country_name, ctl, sk, imf):
     bsel = st.radio("Bucket (Left Chart Only)", hm.BUCKETS, horizontal=True, key="m_dose_b",
                     help="Picks the bucket for the left chart; the right chart always shows all four buckets.")
     dr = _dose(iso3, bsel, fiscal_t, ptab_json, trend)
-    path = _scenario_path(iso3, sk, bsel, fiscal_t, ptab_json, trend)
+    path = _scenario_path(iso3, sk, bsel, fiscal_t, ptab_json, trend, ctl.get("cut_path"), ctl.get("gov_add"))
     base_b = B.loc[bsel, "base_usd"]
     cur_cut = B.loc[bsel, "gross_loss_usd"] / base_b if base_b > 0 else 0
     if base_b > 0:
@@ -681,7 +751,7 @@ def _comparison(iso3, country_name, ctl, res_a, items_a):
     c = ctl["cmp"]
     ci = _inputs()["ci"]
     sk_b = scn.scenario_key(scn.build_scenario(c["preset"], c["opts"], ci))
-    res_b = _run(iso3, sk_b, c["fiscal_t"], ctl["ptab_json"], ctl["trend"])
+    res_b = _run(iso3, sk_b, c["fiscal_t"], ctl["ptab_json"], ctl["trend"], cut_path=ctl.get("cut_path"))
     st.subheader("Scenario A vs Scenario B")
     a, b = st.columns(2, gap="large")
     for col, tag, preset, fiscal_t, items in ((a, "A", ctl["preset"], ctl["fiscal_t"], items_a),

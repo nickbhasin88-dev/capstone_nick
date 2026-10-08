@@ -423,6 +423,19 @@ hr {{ border-color: {RULE} !important; }}
 [data-testid="stSelectbox"] .react-aria-ComboBox button svg, [data-baseweb="select"] svg {{ color: {BRAND} !important; }}
 .st-key-model_controls {{ background: {SURFACE_TINT}; border-radius: 12px; padding: 12px 16px 6px !important; }}
 
+/* ---- funding-path sliders: red = aid cut, blue = extra health share; the year in bold above each column ---- */
+.ed-year {{ font-family: {SANS}; font-weight: 700; font-size: 14px; color: {INK}; text-align: center; margin-bottom: -6px; }}
+/* Streamlit draws the slider fill and thumb in the theme purple (fill % is in its own CSS), so they are re-coloured
+   with a filter: purple -> rose for the aid cut, purple -> blue for the extra health share */
+[class*="st-key-cutsl_"] [role="group"] > div > div:first-child,
+[class*="st-key-cutsl_"] div:has(> [data-testid="stSliderThumbValue"]) {{
+    filter: hue-rotate(84deg) saturate(1.7) brightness(1.4); }}
+[class*="st-key-govsl_"] [role="group"] > div > div:first-child,
+[class*="st-key-govsl_"] div:has(> [data-testid="stSliderThumbValue"]) {{
+    filter: hue-rotate(-50deg) saturate(1.4) brightness(1.35); }}
+[class*="st-key-cutsl_"] [data-testid="stWidgetLabel"] p {{ color: {ROSE}; font-weight: 600; font-size: 12px; }}
+[class*="st-key-govsl_"] [data-testid="stWidgetLabel"] p {{ color: {BLUE}; font-weight: 600; font-size: 12px; }}
+
 /* ---- no app chrome: the page should read like a website ---- */
 [data-testid="stAppDeployButton"], [data-testid="stMainMenu"], #MainMenu, [data-testid="stDecoration"],
 [data-testid="stStatusWidget"], [data-testid="stToolbarActions"], footer {{ display: none !important; }}
