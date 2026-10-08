@@ -9,14 +9,13 @@ import streamlit as st
 
 import theme as th
 
-th.apply_page("Validation & Benchmarks")
 
-import health_model as hm  # noqa: E402  (page config has to come first)
-import model_section as ms  # noqa: E402
-import scenarios as scn  # noqa: E402
-from country_lists import dropdown_countries  # noqa: E402
-from model_section import chart, num, rng, title_case  # noqa: E402
-from scenarios import PRESETS  # noqa: E402
+import health_model as hm
+import model_section as ms
+import scenarios as scn
+from country_lists import dropdown_countries
+from model_section import chart, num, rng, title_case
+from scenarios import PRESETS
 
 METHOD_COLORS = {"Unit-Cost Model": th.GRAPE, "Poisson Regression": th.BLUE, "Lancet Rate Ratios": th.TEAL}
 CATEGORIES = ["HIV", "TB", "Malaria", "Immunization", "Maternal"]
@@ -32,14 +31,13 @@ isos = list(names)
 st.title("Validation & Benchmarks")
 st.caption("How the funding-cut model on the dashboard compares with published studies, and with two other ways of "
            "estimating the same cut.")
-# seed once from the dashboard's choices (stable keys, so later picks always register)
-if st.session_state.get("v_country") not in isos:
-    st.session_state["v_country"] = ctx["iso3"] if ctx.get("iso3") in isos else "KEN"
-if st.session_state.get("v_preset") not in PRESETS:
-    st.session_state["v_preset"] = ctx.get("preset", list(PRESETS)[0])
+# country and scenario are shared with the other pages
 pc1, pc2 = st.columns(2)
-iso3 = pc1.selectbox("Country", isos, format_func=names.get, key="v_country")
-preset = pc2.selectbox("Donor Scenario", list(PRESETS), format_func=title_case, key="v_preset")
+with pc1:
+    iso3 = th.shared_select("Country", isos, "v_country", "sel_iso3", "KEN", format_func=names.get)
+with pc2:
+    preset = th.shared_select("Donor Scenario", list(PRESETS), "v_preset", "sel_preset", list(PRESETS)[0],
+                              format_func=title_case)
 fiscal_t = tuple(ctx.get("fiscal_t", scn.DEFAULT_FISCAL))
 ptab_json = ctx.get("ptab_json", ms._default_params().to_json(orient="split"))
 trend = ctx.get("trend", scn.DEFAULT_MORTALITY_TREND)
@@ -53,8 +51,7 @@ st.caption(ms._esc(PRESETS[preset]) + f" Government response ({ms._resp_label(fi
 # --------------------------------------------------------------------------- #
 # A. Published estimates
 # --------------------------------------------------------------------------- #
-th.section_header("fact_check", "How Our Totals Compare with Published Estimates",
-                  "Are the model's all-country totals in the range of published studies?", rule=False)
+th.section_header("fact_check", "How Our Totals Compare with Published Estimates", rule=False)
 
 rows, all_country = [], {}
 for p in scn.PRECOMPUTED_PRESETS:
@@ -114,8 +111,7 @@ if us is not None:
 # --------------------------------------------------------------------------- #
 # B. Three methods for the selected country and scenario
 # --------------------------------------------------------------------------- #
-th.section_header("compare_arrows", f"Three Ways to Estimate the Same Cut: {country_name}",
-                  "Do three different methods give extra deaths in the same range?")
+th.section_header("compare_arrows", f"Three Ways to Estimate the Same Cut: {country_name}")
 st.caption(f"{title_case(preset)} · {ms._resp_label(fiscal_t)}" + ("" if trend else " · Death Rates Held Constant"))
 
 if iso3 not in I["ci"].index or iso3 not in set(I["lines"].iso3):
@@ -216,7 +212,7 @@ st.caption("Ranges are 95% intervals; the Lancet ratios are point estimates.")
 # --------------------------------------------------------------------------- #
 # C. How each method works
 # --------------------------------------------------------------------------- #
-th.section_header("functions", "How Each Method Works", "What does each method assume, and where can it go wrong?")
+th.section_header("functions", "How Each Method Works")
 c1, c2, c3 = st.columns(3, gap="large")
 with c1:
     st.subheader("Unit-Cost Model")

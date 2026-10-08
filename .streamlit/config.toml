@@ -1,8 +1,5 @@
-[client]
-# The sidebar shows named links (Dashboard / Validation & Benchmarks / Methods) instead of the automatic page list
-showSidebarNavigation = false
 
-# Colours mirror theme.py (BRAND, SURFACE, SURFACE_TINT, INK)
+# Colors mirror theme.py (BRAND, SURFACE, SURFACE_TINT, INK)
 [theme]
 base = "light"
 primaryColor = "#63458A"

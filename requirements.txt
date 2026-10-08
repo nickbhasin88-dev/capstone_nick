@@ -1,4 +1,4 @@
-streamlit>=1.50
+streamlit>=1.50   # 1.46+ needed for st.navigation(position="top")
 pandas
 numpy
 plotly>=5.20

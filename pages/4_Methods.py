@@ -10,21 +10,21 @@ import streamlit as st
 
 import theme as th
 
-th.apply_page("Methods")
 
-import health_model as hm  # noqa: E402  (page config has to come first)
-import model_section as ms  # noqa: E402
-import scenarios as scn  # noqa: E402
-from country_lists import dropdown_countries  # noqa: E402
-from model_section import title_case  # noqa: E402
+import health_model as hm
+import model_section as ms
+import scenarios as scn
+from country_lists import dropdown_countries
+from model_section import title_case
 
 I = ms._inputs()
 ctx = st.session_state.get("model_ctx", {})
 names = dropdown_countries()
-iso3 = ctx.get("iso3") if ctx.get("iso3") in names else "KEN"
+iso3 = st.session_state.get("sel_iso3", "KEN")
+iso3 = iso3 if iso3 in names else "KEN"
 country_name = names[iso3]
-preset = ctx.get("preset", list(scn.PRESETS)[0])
-opts = ctx.get("opts") or scn.default_opts(preset, I["ci"])
+preset = st.session_state.get("sel_preset", list(scn.PRESETS)[0])
+opts = ctx["opts"] if ctx.get("preset") == preset and ctx.get("opts") else scn.default_opts(preset, I["ci"])
 fiscal_t = tuple(ctx.get("fiscal_t", scn.DEFAULT_FISCAL))
 ptab_json = ctx.get("ptab_json", ms._default_params().to_json(orient="split"))
 trend = ctx.get("trend", scn.DEFAULT_MORTALITY_TREND)
@@ -36,7 +36,7 @@ st.caption("How the funding-cut model on the dashboard turns an aid cut into los
 # --------------------------------------------------------------------------- #
 # The model, step by step (same text as before, one header per part)
 # --------------------------------------------------------------------------- #
-th.section_header("account_tree", "How the Model Works", "What happens, step by step, between a cut and a death?",
+th.section_header("account_tree", "How the Model Works",
                   rule=False)
 for block in re.split(r"\n\s*\n", ms.METHODS.strip()):
     m = re.match(r"^\*\*(.+?)\*\*\s*(.*)$", block.strip(), flags=re.S)
@@ -50,7 +50,7 @@ for block in re.split(r"\n\s*\n", ms.METHODS.strip()):
 # --------------------------------------------------------------------------- #
 # Cross-check and published estimates, for the dashboard's current choices
 # --------------------------------------------------------------------------- #
-th.section_header("fact_check", "Cross-Checks", "Do 20 years of data and published studies point the same way?")
+th.section_header("fact_check", "Cross-Checks")
 st.caption(f"{country_name} · {title_case(preset)} · {ms._resp_label(fiscal_t)}"
            + ("" if trend else " · Death Rates Held Constant"))
 sk = scn.scenario_key(scn.build_scenario(preset, opts, I["ci"]))
@@ -64,7 +64,7 @@ ms._published_estimates(A[A["gross_loss_usd"] > 0], I, ptab)
 # --------------------------------------------------------------------------- #
 # Parameters
 # --------------------------------------------------------------------------- #
-th.section_header("tune", "Model Parameters", "Which numbers drive the model, and where does each one come from?")
+th.section_header("tune", "Model Parameters")
 params = hm.load_params().reset_index()
 st.table(params.rename(columns={c: title_case(c.replace("_", " ")) for c in params.columns}).set_index("Param"))
 st.caption("Each parameter is drawn from a triangular distribution (low, central, high); edit them in the dashboard's "
