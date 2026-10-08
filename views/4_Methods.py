@@ -355,7 +355,7 @@ with tabs[2]:
     | Bednets | per person-year of net use | ${C['uc_itn']:.2f} (GiveWell: $4-6 per net, 1.8 people per net, ~2 years, ~63% used) |
     | Indoor spraying | per person-year protected | ${C['uc_irs']:.2f} (PMI Mali 2012-14, $6.08-7.40 in 2014 US$ x 1.287) |
     | Malaria testing & treatment | per confirmed case treated | ${C['uc_mal_cm']:.2f} (*assumption*: ACT + tests + delivery) |
-    | Routine immunization | per child immunized | ${C['uc_imm']:.0f} (Gavi disbursements ÷ children reached, 2021 and 2024) |
+    | Routine immunization | full cost per child immunized (vaccines + delivery) | ${C['uc_imm']:.0f}: delivery $45.6 per infant (Lydon et al. 2014, 2016-20) + vaccines $41.3 (MSF The Right Shot 2015, low end), both in 2023 US$; range $38 (Brenzel 2015, Gavi-country plans) to $104 (MSF high end). Check: donor vaccine aid per immunized child has a median of $40, below the full cost, as expected when governments co-finance |
 
     **People in need and current coverage:**
 
@@ -499,7 +499,11 @@ with tabs[3]:
     - Results for Development, PEPFAR expenditure analysis (above-service-delivery spending, 45%).
     - Laurence YV, Griffiths UK, Vassall A 2015, *PharmacoEconomics* (TB treatment costs by income group).
     - GiveWell insecticide-treated net cost-effectiveness analysis; PMI Africa IRS project costs (*Malaria Journal* 2018).
-    - Gavi progress reports (deaths averted per child; disbursements per child).
+    - Gavi progress reports (future deaths averted per child immunized).
+    - Lydon P, Gandhi G, Vandelaer J, Okwo-Bele JM 2014, *Bulletin of the WHO* 92:382-384 (health-system cost of
+      delivering routine vaccination per infant, 2011-2020).
+    - Brenzel L 2015, *Vaccine* (costs and financing of routine immunization from Gavi countries' multi-year plans).
+    - Médecins Sans Frontières 2015, *The Right Shot*, 2nd edition (price to fully vaccinate a child).
     - Li X et al. 2021, *Lancet* (VIMC: lifetime vs under-5 vaccine deaths averted).
     - Newell ML et al. 2004, *Lancet* (mortality of HIV-infected infants).
     - WHO Global TB Report technical appendix, Glaziou et al. (TB case fatality, Tables 4-5).
