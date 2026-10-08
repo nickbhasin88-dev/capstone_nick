@@ -143,7 +143,8 @@ def style_fig(fig):
         # left-aligned to the chart's own edge (not the plot area), so long y labels don't push the title out of view
         fig.update_layout(title=dict(font=dict(family=SANS, size=15, color=INK), x=0, xanchor="left", xref="container",
                                      pad=dict(l=10)))
-    fig.update_layout(legend_traceorder="normal")
+    if not any(getattr(t, "legendrank", None) not in (None, 1000) for t in fig.data):
+        fig.update_layout(legend_traceorder="normal")      # charts that set legendrank keep their own order
     for t in fig.data:                 # 2px white gaps between stacked segments, unless a chart sets its own width
         if t.type == "bar" and t.marker.line.width is None:
             t.marker.line.color, t.marker.line.width = SURFACE, 2
@@ -182,7 +183,11 @@ html, body, .stApp, .stMarkdown, button, input, select, textarea {{ font-family:
 .stMainBlockContainer {{ max-width: 1150px; padding-top: 3.5rem; padding-bottom: 6rem; }}
 h1, h2, h3, h4 {{ font-family: {SERIF} !important; color: {INK}; letter-spacing: -0.01em; }}
 h2 {{ font-weight: 600 !important; }}
-h3 {{ font-weight: 600 !important; font-size: 1.35rem !important; padding-top: 1.2rem !important; }}
+h3 {{ font-weight: 600 !important; font-size: 1.35rem !important; }}
+/* subsection headers (st.subheader): 48px above (32px + Streamlit's 16px gap) and 20px below (Streamlit pulls a
+   markdown block up by 16px, which cancels the gap underneath, so all 20px come from the padding) */
+[data-testid="stHeading"]:has(h3) {{ padding-top: 32px; }}
+[data-testid="stHeading"] h3 {{ padding-top: 0 !important; padding-bottom: 20px !important; margin: 0 !important; }}
 a {{ color: {ACCENT}; }}
 [data-testid="stCaptionContainer"], .stCaption {{ color: {MUTED} !important; }}
 hr {{ border-color: {RULE} !important; }}
@@ -286,7 +291,7 @@ hr {{ border-color: {RULE} !important; }}
 .ed-card .foot {{ font-size: 12px; color: {MUTED}; margin-top: 12px; padding-top: 8px; border-top: 1px solid {RULE}; }}
 
 /* section headers */
-.ed-sec {{ margin-top: 56px; }}
+.ed-sec {{ margin-top: 56px; margin-bottom: 32px; }}      /* 32px under the title (the element gap is cancelled) */
 .ed-sec.rule {{ border-top: 1px solid {RULE}; padding-top: 40px; }}
 .ed-sec-row {{ display: flex; align-items: center; gap: 14px; }}
 .ed-badge {{ flex: 0 0 36px; width: 36px; height: 36px; border-radius: 50%; background: {BRAND}; color: {SURFACE};

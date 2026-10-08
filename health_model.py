@@ -133,6 +133,7 @@ class Scenario:
     us_direct_by_country: dict = field(default_factory=dict)   # iso3 -> cut on US direct channels (MOU schedule)
     ihme_trend: bool = False
     bucket_only: str | None = None                      # restrict the shock to one bucket (dose-response curves)
+    scale: float = 1.0                                  # multiplies every cut (the scenario's own path, 0 -> 1)
 
     def cuts(self, cells: pd.DataFrame, iso3: str, trend_map: dict) -> np.ndarray:
         out = np.zeros(len(cells))
@@ -149,7 +150,7 @@ class Scenario:
             x = self.pair.get((s, c), x)
             y = self.chan.get(c, 0.0)
             out[i] = 1.0 - (1.0 - x) * (1.0 - y)
-        return np.clip(out, -1.0, 1.0)
+        return np.clip(out, -1.0, 1.0) * self.scale
 
 
 def uniform_scenario(bucket: str, cut: float) -> Scenario:

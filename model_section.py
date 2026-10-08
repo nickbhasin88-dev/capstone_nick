@@ -88,6 +88,22 @@ def _dose(iso3, bucket, fiscal_t, ptab_json, trend=True):
                             mortality_trend=trend)
 
 
+@st.cache_data(show_spinner=False, max_entries=32)
+def _scenario_path(iso3, sc_key, bucket, fiscal_t, ptab_json, trend=True):
+    """This scenario's own path for one bucket: every cut scaled from 0% to 100% of its size (21 points, the same
+    draws as the even-cut curve), as (share of the bucket's aid lost, extra deaths over 5 years)."""
+    ptab = pd.read_json(io.StringIO(ptab_json), orient="split")
+    rows = []
+    for k in np.linspace(0, 1, 21):
+        sc = scn.scenario_from_key(sc_key)
+        sc.scale = float(k)
+        r = hm.run_country(iso3, sc, hm.Fiscal(*fiscal_t), _inputs(), ptab, n_draws=100, mortality_trend=trend)
+        bb = r["buckets"].set_index("bucket").loc[bucket]
+        rows.append({"k": k, "cut": bb["gross_loss_usd"] / bb["base_usd"] if bb["base_usd"] > 0 else 0.0,
+                     "deaths_5y": bb["deaths_5y"]})
+    return pd.DataFrame(rows)
+
+
 @st.cache_data(show_spinner="Running the model for every country...", max_entries=16)
 def _run_all(sc_key, fiscal_t, ptab_json, trend=True):
     ptab = pd.read_json(io.StringIO(ptab_json), orient="split")
@@ -470,20 +486,26 @@ def _country_results(iso3, country_name, ctl, sk, imf):
                       "flattens once everyone whose service donors pay for has lost it, and bends where backfill runs "
                       "out of fiscal space. Right: deaths after losing HIV treatment rise from about 1% to 5% a year, "
                       "unvaccinated birth cohorts add up, and nets already hanging protect for about a year.")
+    bsel = st.radio("Bucket (Left Chart Only)", hm.BUCKETS, horizontal=True, key="m_dose_b",
+                    help="Picks the bucket for the left chart; the right chart always shows all four buckets.")
+    dr = _dose(iso3, bsel, fiscal_t, ptab_json, trend)
+    path = _scenario_path(iso3, sk, bsel, fiscal_t, ptab_json, trend)
+    base_b = B.loc[bsel, "base_usd"]
+    cur_cut = B.loc[bsel, "gross_loss_usd"] / base_b if base_b > 0 else 0
+    if base_b > 0:
+        at10 = float(np.interp(0.10, dr["cut"], dr["deaths_5y"]))
+        st.markdown(f"An even 10% cut to {BUCKET_WORD[bsel]} aid adds about **{num(at10)}** extra deaths over 5 years.")
+    else:
+        st.markdown(f"{country_name} receives no {BUCKET_WORD[bsel]} aid in the model, so cutting it changes nothing.")
     d1, d2 = st.columns(2)
     with d1:
-        bsel = st.radio("Bucket (Left Chart Only)", hm.BUCKETS, horizontal=True, key="m_dose_b",
-                        help="Picks the bucket for the left chart; the right chart always shows all four.")
-        dr = _dose(iso3, bsel, fiscal_t, ptab_json, trend)
-        base_b = B.loc[bsel, "base_usd"]
-        cur_cut = B.loc[bsel, "gross_loss_usd"] / base_b if base_b > 0 else 0
-        chart(_dose_fig(dr, bsel, cur_cut, B.loc[bsel]))
-        st.caption("The shaded band is the 95% uncertainty range. It widens as the cut grows because uncertain inputs "
-                   "(unit costs, mortality effects) apply to more people losing services.")
+        chart(_dose_fig(dr, bsel, cur_cut, B.loc[bsel], path))
     with d2:
-        # keep the two charts level with each other (the left column has a bucket picker above its chart)
-        st.markdown("<div style='height:4.1rem'></div>", unsafe_allow_html=True)
         chart(path_fig)
+    st.caption("The solid line cuts every donor and service by the same share. The dashed line is this scenario's "
+               "actual cut, which can run higher or lower because it falls on specific services (for example, US "
+               "money is concentrated in HIV treatment, where each dollar saves more lives). The shaded band is the "
+               "95% uncertainty range for the even cut.")
 
     # ------------------------------ fiscal space ------------------------------ #
     _fiscal_panel(res, country_name, imf)
@@ -781,35 +803,40 @@ def _coverage_fig(rows: pd.DataFrame):
     return fig
 
 
-def _dose_fig(dr: pd.DataFrame, bucket: str, cur_cut: float, bb: pd.Series):
+def _dose_fig(dr: pd.DataFrame, bucket: str, cur_cut: float, bb: pd.Series, path: pd.DataFrame | None = None):
+    """Even cut across all donors (solid, with its 95% band) and this scenario's own path (dashed, ending at the dot)."""
     col = BUCKET_COLORS[bucket]
-    fill = th.tint(col, 0.15)
     x = dr["cut"] * 100
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=list(x) + list(x[::-1]), y=list(dr["hi"]) + list(dr["lo"][::-1]), fill="toself",
-                             fillcolor=fill, line=dict(width=0), hoverinfo="skip", name="95% range"))
-    fig.add_trace(go.Scatter(x=x, y=dr["deaths_5y"], mode="lines", line=dict(color=col, width=2), name="Extra deaths, 5 yrs",
+                             fillcolor=th.tint(col, 0.15), line=dict(width=0), hoverinfo="skip",
+                             name="95% Uncertainty Range", legendrank=3))
+    fig.add_trace(go.Scatter(x=x, y=dr["deaths_5y"], mode="lines", line=dict(color=col, width=2),
+                             name="Even Cut Across All Donors", legendrank=1,
                              customdata=np.c_[dr["net_loss_usd"].map(money), dr["cov_drop_pp"].fillna(0)],
-                             hovertemplate="%{x:.0f}% of aid cut (%{customdata[0]} a year)<br>coverage "
+                             hovertemplate="even cut: %{x:.0f}% of aid (%{customdata[0]} a year)<br>coverage "
                                            "-%{customdata[1]:.1f} percentage points<br>%{y:,.0f} extra deaths over "
                                            "5 years<extra></extra>"))
-    if cur_cut > 0:
-        fig.add_trace(go.Scatter(x=[cur_cut * 100], y=[bb["deaths_5y"]], mode="markers", name="This scenario",
-                                 marker=dict(size=13, color=col, line=dict(color=th.SURFACE, width=2)),
-                                 hovertemplate="this scenario: %{x:.0f}% cut, %{y:,.0f} deaths<extra></extra>"))
-        # label in the empty space above the band (the band rises to the right), with a leader line to the point;
-        # to the right of the point for small cuts, to the left for large ones so it never runs off the chart
-        right = cur_cut <= 0.4
-        fig.add_annotation(x=cur_cut * 100, y=bb["deaths_5y"], axref="x", ayref="y",
-                           ax=cur_cut * 100 + (4 if right else -4), ay=float(dr["hi"].max()) * 1.3 * 0.86,
-                           text=f"This scenario: {cur_cut:.0%} cut, {num(bb['deaths_5y'])} deaths",
-                           showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=MUTED, standoff=7,
-                           xanchor="left" if right else "right", yanchor="bottom",
-                           font=dict(color=INK, size=12), bgcolor=th.tint(th.SURFACE, 0.9))
     ymax = float(dr["hi"].max()) * 1.3
-    _layout(fig, h=400, title=_title("Extra Deaths as More Aid Is Cut"), showlegend=False,
+    if cur_cut > 0:
+        if path is not None and len(path):
+            fig.add_trace(go.Scatter(x=path["cut"] * 100, y=path["deaths_5y"], mode="lines", name="This Scenario", legendrank=2,
+                                     line=dict(color=INK, width=2, dash="dash"),
+                                     hovertemplate="this scenario, scaled: %{x:.0f}% of aid lost<br>%{y:,.0f} extra "
+                                                   "deaths over 5 years<extra></extra>"))
+            ymax = max(ymax, float(path["deaths_5y"].max()) * 1.3)
+        fig.add_trace(go.Scatter(x=[cur_cut * 100], y=[bb["deaths_5y"]], mode="markers", showlegend=False,
+                                 marker=dict(size=12, color=INK, line=dict(color=th.SURFACE, width=2)),
+                                 hovertemplate="this scenario: %{x:.0f}% cut, %{y:,.0f} deaths<extra></extra>"))
+        left = cur_cut >= 0.3           # above-left of the dot; above-right for small cuts so it stays on the chart
+        fig.add_annotation(x=cur_cut * 100, y=bb["deaths_5y"], ax=-28 if left else 28, ay=-44,
+                           xanchor="right" if left else "left", yanchor="bottom",
+                           text=f"This Scenario: {cur_cut:.0%} Cut, {num(bb['deaths_5y'])} Deaths",
+                           showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=MUTED, standoff=7,
+                           font=dict(color=INK, size=12), bgcolor=th.tint(th.SURFACE, 0.9))
+    _layout(fig, h=420, title=_title("Extra Deaths as More Aid Is Cut"),
             # x starts a little left of 0 so the "0%" tick does not sit on top of the y-axis "0"
-            xaxis=dict(title="Share of this bucket's aid cut", ticksuffix="%", range=[-4, 102]),
+            xaxis=dict(title="Share of this bucket's aid lost", ticksuffix="%", range=[-4, 102]),
             yaxis=dict(title="extra deaths over 5 years", range=[0, ymax if ymax > 0 else 1]))
     return fig
 
