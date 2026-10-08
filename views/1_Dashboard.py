@@ -15,6 +15,7 @@ import streamlit as st
 
 from country_lists import ALLOWED_COUNTRIES
 import theme as th
+import model_section as ms
 from model_section import chart, pill_row, render_model_section, title_case
 
 # Full-width kwarg differs by Streamlit version (older: use_container_width, 1.50+: width="stretch")
@@ -306,6 +307,12 @@ with hdr_left:
                 "<span class='ed-units'>All dollar figures in constant 2023 US$</span></div>" + th.pills_html(_items),
                 unsafe_allow_html=True)
 
+# ---- story lede: headline, summary and three big numbers from the model, with the scenario bar under it ---- #
+lede = st.container()                    # filled after the scenario bar has run (it decides the numbers)
+ctl, sk = ms.scenario_bar(crow["iso3"], country_name)
+with lede:
+    st.markdown(ms.story_lede(crow["iso3"], country_name, ctl, sk), unsafe_allow_html=True)
+
 # =========================================================================== #
 # CHART 2 - total health spending by source: past vs expected
 # =========================================================================== #
@@ -369,7 +376,16 @@ else:
             yaxis=dict(title=ylab, rangemode="tozero", automargin=True, **({"range": [0, 100]} if view.startswith("Share") else {})),
             bargap=0.15, hovermode="closest",
         )
-        chart(fig2)
+        # one annotation: how much of health spending was foreign aid in the last observed year
+        r23 = w[w["year"] == SPEND_LAST_OBSERVED]
+        if len(r23):
+            top23 = float(sum(r23[f"v_{k}"].iloc[0] for k, _, _ in SPEND_PARTS))
+            dah_share = float(r23["dah_total_mean"].iloc[0] / r23["the_total_mean"].iloc[0])
+            fig2.add_annotation(x=SPEND_LAST_OBSERVED, y=top23, ax=-10, ay=-46, showarrow=True, arrowhead=0,
+                                arrowwidth=1, arrowcolor=th.MUTED, xanchor="right",
+                                text=f"Foreign aid: {dah_share:.0%} of health<br>spending in {SPEND_LAST_OBSERVED}",
+                                font=dict(size=12, color=th.INK), align="right", bgcolor=th.tint(th.SURFACE, 0.9))
+        chart(fig2, labels=True, source="IHME Global Health Spending 1995-2023 and Expected Health Spending 2024-2050; constant 2023 US$.")
 
         last_obs = sp[sp["year"] == SPEND_LAST_OBSERVED].iloc[0]
         end = sp[sp["year"] == min(y1, int(sp["year"].max()))].iloc[0]
@@ -490,9 +506,15 @@ else:
         yaxis=dict(title=f"US$ {unit_name} (constant 2023)", rangemode="tozero"),
         bargap=0.15, hovermode="closest",
     )
-    chart(fig)
-    st.caption("Lighter shades are aid delivered through NGOs and foundations, a proxy for money that may bypass the "
-               f"government; IHME's country-level data end in {last_data_year}.")
+    if tot > 0:                           # one annotation: the largest funder's share in the last year
+        stack_top = float(agg.loc[agg["year"] == last_data_year, "val"].sum())
+        fig.add_annotation(x=last_data_year, y=stack_top, ax=-10, ay=-42, showarrow=True, arrowhead=0, arrowwidth=1,
+                           arrowcolor=th.MUTED, xanchor="right", align="right", bgcolor=th.tint(th.SURFACE, 0.9),
+                           text=f"{top_src}: {latest.loc[latest['source'].map(lambda x: th.FUNDER_ALIASES.get(x, x)) == top_src, 'val'].sum() / tot:.0%}"
+                                f"<br>of {last_data_year} aid", font=dict(size=12, color=th.INK))
+    chart(fig, labels=True, source="IHME Development Assistance for Health database (1990-2026 release); constant 2023 US$.",
+          note="Lighter shades are aid delivered through NGOs and foundations, a proxy for money that may bypass the "
+               f"government. IHME's country-level data end in {last_data_year}.")
 
 
 # =========================================================================== #
@@ -572,7 +594,7 @@ else:
                        rangemode="tozero", automargin=True, **({"range": [0, 100]} if share else {})),
             bargap=0.15, hovermode="closest",
         )
-        chart(fig4)
+        chart(fig4, labels=True, source="IHME Development Assistance for Health database (1990-2026 release); constant 2023 US$.")
 
 
 # =========================================================================== #
@@ -755,7 +777,8 @@ def _budget_section():
     fig4.update_layout(title=dict(text=f"Government Revenue and Spending, {int(yr4)}"), height=720,
                        margin=dict(l=0, r=0, t=50, b=0),
                        uniformtext=dict(minsize=11, mode="hide"))     # boxes too small for text: hover only
-    chart(fig4)
+    chart(fig4, source="IMF World Economic Outlook (totals); IMF World Revenue Longitudinal Data (revenue mix); IMF "
+                       "Government Finance Statistics, COFOG (spending mix); constant 2023 US$.")
 
     # ---------------- headline numbers ----------------
     mix = []
@@ -820,4 +843,4 @@ if _rev4 is not None and not _rev4.empty:
     _ry = _rev4[_rev4["year"] <= 2024]["year"].max()
     if pd.notna(_ry):
         _imf["revenue_pct_gdp"] = float(_rev4.loc[_rev4["year"] == _ry, "pct_gdp"].sum())
-render_model_section(crow["iso3"], country_name, _imf, ALLOWED_COUNTRIES)
+render_model_section(crow["iso3"], country_name, _imf, ctl, sk)

@@ -173,7 +173,8 @@ fig.update_layout(barmode="group", bargap=0.25)
 ms._layout(fig, h=460, title=ms._title(f"Extra Deaths Over 5 Years by Method, {country_name}"),
            legend=dict(orientation="h", y=-0.12, x=0, yanchor="top"),
            yaxis=dict(title="extra deaths over 5 years"))
-chart(fig)
+chart(fig, source="Unit-cost model (this dashboard); Poisson regressions fitted for this project on 2005-2023 data; "
+                  "rate ratios from Cavalcanti et al. 2025, Lancet.")
 
 
 METHOD_PHRASE = {"Poisson Regression": "the Poisson regression", "Lancet Rate Ratios": "the Lancet rate-ratio estimate"}

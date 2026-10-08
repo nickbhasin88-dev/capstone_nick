@@ -122,6 +122,78 @@ ZERO_LINE = "#A9A1B5"        # darker than the gridlines
 LEGEND_GAP_PX = 34           # legend top sits this far below the plot (room for the tick labels)
 
 
+def source_html(source: str | None = None, note: str | None = None) -> str:
+    """The small grey 'Note: ... Source: ...' line NYT puts under every chart."""
+    parts = []
+    if note:
+        parts.append(f"<b>Note:</b> {html.escape(note)}")
+    if source:
+        parts.append(f"<b>Source:</b> {html.escape(source)}")
+    return f"<div class='ed-source'>{' '.join(parts)}</div>".replace("$", "&#36;") if parts else ""
+
+
+def color_key(items) -> str:
+    """An inline key for a chart subtitle: names written in their own colors ('HIV  TB  Malaria ...')."""
+    return "   ".join(f"<span style='color:{c}'><b>{html.escape(n)}</b></span>" for n, c in items)
+
+
+def _trace_color(t):
+    c = t.marker.color if t.type == "bar" else (t.line.color if t.line else None)
+    return c if isinstance(c, str) else None
+
+
+def direct_labels(fig, min_gap_px: float = 18):
+    """NYT-style labels at the right end of a stacked vertical bar chart instead of a legend: each series is named
+    just past the last bar, level with its segment and in its color; labels are pushed apart so they never overlap,
+    and anything in parentheses is dropped to keep them short."""
+    bars = [t for t in fig.data if t.type == "bar" and t.orientation != "h" and t.x is not None and len(t.x)]
+    named = [t for t in bars if t.showlegend is not False and t.name]
+    if not named:
+        return fig
+    xs = [x for t in bars for x, y in zip(t.x, t.y) if y is not None and y == y and y != 0]
+    if not xs:
+        return fig
+    categorical = isinstance(xs[0], str) or fig.layout.xaxis.type == "category"
+    if categorical:                                    # category axes: positions are 0, 1, 2, ... in data units
+        cats = list(dict.fromkeys(x for t in bars for x in t.x))
+        x_last = max(xs, key=cats.index)
+        x_pos = cats.index(x_last) + 0.5
+        if fig.layout.xaxis.range is None:             # keep the labels from widening the axis
+            fig.update_xaxes(range=[-0.5, len(cats) - 0.5])
+    else:
+        x_last = max(xs)
+        x_pos = x_last + 0.5
+    stack, segs = 0.0, []
+    for t in bars:                                     # stack order = trace order
+        y = dict(zip(t.x, t.y)).get(x_last)
+        y = 0.0 if y is None or y != y else float(y)
+        if y <= 0:
+            continue
+        if t in named:
+            segs.append([stack + y / 2, t.name.split(" (")[0], _trace_color(t)])
+        stack += y
+    if not segs:
+        return fig
+    yr = fig.layout.yaxis.range
+    top = float(yr[1]) if yr is not None else stack * 1.05
+    m = fig.layout.margin
+    plot_px = max((fig.layout.height or 450) - (m.t or 50) - (m.b or 10) - 40, 120)
+    gap = min_gap_px / plot_px * top
+    segs.sort(key=lambda s: s[0])                        # push apart from the bottom up, then down from the top
+    for i in range(1, len(segs)):
+        segs[i][0] = max(segs[i][0], segs[i - 1][0] + gap)
+    if segs[-1][0] > top - gap / 2:
+        segs[-1][0] = top - gap / 2
+        for i in range(len(segs) - 2, -1, -1):
+            segs[i][0] = min(segs[i][0], segs[i + 1][0] - gap)
+    for yv, name, col in segs:
+        fig.add_annotation(x=x_pos, y=yv, xref="x", yref="y", text=f"<b>{name}</b>", showarrow=False,
+                           xanchor="left", xshift=6, font=dict(size=12, color=col or INK, family=SANS))
+    room = 16 + 7 * max(len(n) for _, n, _ in segs)   # ~7px per character at 12px bold
+    fig.update_layout(showlegend=False, margin=dict(r=max((m.r or 10), room)))
+    return fig
+
+
 def _horizontal(fig) -> bool:
     """True when the categories run down the y axis (horizontal bars, dot plots with labelled rows)."""
     for t in fig.data:
@@ -314,6 +386,43 @@ hr {{ border-color: {RULE} !important; }}
 
 /* the funding-cut model control bar */
 .st-key-model_controls {{ background: {SURFACE_TINT}; border-color: {RULE} !important; border-radius: 12px; }}
+/* ---- no app chrome: the page should read like a website ---- */
+[data-testid="stAppDeployButton"], [data-testid="stMainMenu"], #MainMenu, [data-testid="stDecoration"],
+[data-testid="stStatusWidget"], [data-testid="stToolbarActions"], footer {{ display: none !important; }}
+
+/* ---- reading column: running text stays ~680px wide, charts and tables use the full width ---- */
+[data-testid="stMarkdownContainer"] > p, [data-testid="stMarkdownContainer"] > ul,
+[data-testid="stMarkdownContainer"] > ol, [data-testid="stCaptionContainer"] {{ max-width: 680px; }}
+[data-testid="stMarkdownContainer"] > p {{ font-size: 16.5px; line-height: 1.6; }}
+
+/* ---- story lede (top of the Dashboard) ---- */
+.ed-lede {{ max-width: 820px; margin: 8px 0 6px; }}
+.ed-kicker {{ font-family: {SANS}; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+              color: {ACCENT}; margin-bottom: 10px; }}
+.ed-headline {{ font-family: {SERIF}; font-size: 42px; line-height: 1.12; font-weight: 600; color: {INK};
+                letter-spacing: -0.015em; margin: 0 0 14px; }}
+.ed-dek {{ font-family: {SANS}; font-size: 19px; line-height: 1.5; color: #4A4458; margin: 0 0 26px; max-width: 700px; }}
+.ed-bignums {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid {INK};
+               border-bottom: 1px solid {RULE}; margin: 0 0 18px; }}
+.ed-bignum {{ padding: 14px 18px 16px 0; }}
+.ed-bignum + .ed-bignum {{ border-left: 1px solid {RULE}; padding-left: 18px; }}
+.ed-bignum .v {{ font-family: {SERIF}; font-size: 40px; font-weight: 600; line-height: 1.05; color: {INK}; }}
+.ed-bignum .v.hl {{ color: {ROSE}; }}
+.ed-bignum .l {{ font-size: 13px; font-weight: 600; color: {INK}; margin-top: 6px; }}
+.ed-bignum .n {{ font-size: 12.5px; color: {MUTED}; margin-top: 2px; }}
+.st-key-model_controls {{ padding: 4px 0 0 !important; }}
+@media (max-width: 720px) {{
+  .ed-headline {{ font-size: 28px; }}
+  .ed-dek {{ font-size: 16.5px; }}
+  .ed-bignums {{ grid-template-columns: 1fr; }}
+  .ed-bignum + .ed-bignum {{ border-left: none; border-top: 1px solid {RULE}; padding-left: 0; }}
+  .ed-bignum .v {{ font-size: 32px; }}
+}}
+
+/* ---- "Source:" line under every chart ---- */
+.ed-source {{ font-family: {SANS}; font-size: 12px; color: {MUTED}; margin: -10px 0 6px; max-width: 760px;
+              line-height: 1.45; }}
+.ed-source b {{ font-weight: 600; color: #4A4458; }}
 </style>
 """
 
