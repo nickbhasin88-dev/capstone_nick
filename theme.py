@@ -62,6 +62,14 @@ def tint(hex_color: str, alpha: float) -> str:
     return f"rgba({r},{g},{b},{alpha})"
 
 
+def blend(hex_color: str, alpha: float) -> str:
+    """The colour mixed with white (opaque), as rgb(): looks like tint() on white, but stays the same when drawn over
+    another colour (treemap children sit on top of their parent box)."""
+    h = hex_color.lstrip("#")
+    r, g, b = (round(int(h[i:i + 2], 16) * alpha + 255 * (1 - alpha)) for i in (0, 2, 4))
+    return f"rgb({r},{g},{b})"
+
+
 def cycle(n: int) -> list:
     """n categorical colours: the palette, then the palette at 55% for categories 7-12, then grey."""
     seq = PALETTE + [tint(c, 0.55) for c in PALETTE]
@@ -111,7 +119,9 @@ def style_fig(fig):
         fig.update_layout(title=dict(font=dict(family=SANS, size=15, color=INK), x=0, xanchor="left", xref="container",
                                      pad=dict(l=10)))
     fig.update_layout(legend_traceorder="normal")
-    fig.update_traces(marker_line_color=SURFACE, marker_line_width=2, selector=dict(type="bar"))
+    for t in fig.data:                 # 2px white gaps between stacked segments, unless a chart sets its own width
+        if t.type == "bar" and t.marker.line.width is None:
+            t.marker.line.color, t.marker.line.width = SURFACE, 2
     fig.update_xaxes(showgrid=False, gridcolor=RULE, zeroline=False, tickfont=dict(size=12, color=MUTED),
                      title_font=dict(size=12, color=MUTED))
     fig.update_yaxes(gridcolor=RULE, zeroline=False, tickfont=dict(size=12, color=MUTED),
