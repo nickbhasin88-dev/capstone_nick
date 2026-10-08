@@ -24,7 +24,7 @@ WIDE = {"width": "stretch"} if _ver >= (1, 50) else {"use_container_width": True
 # --------------------------------------------------------------------------- #
 # Settings you may want to edit
 # --------------------------------------------------------------------------- #
-ROOT = Path(__file__).resolve().parent.parent              # the repo folder (this page lives in pages/)
+ROOT = Path(__file__).resolve().parent.parent              # the repo folder (this page lives in views/)
 DATA_DIR = ROOT / "country_data"          # DAH, one file per recipient
 SPEND_DIR = ROOT / "spending_data"        # total spending, one file per ISO3
 YEAR_MIN, YEAR_MAX = 2015, 2030          # chart 1 x-axis window, fixed (future years stay blank)
@@ -278,10 +278,11 @@ country_name = crow["name"]
 
 _mac0 = load_macro(crow["iso3"]) if any(MACRO_DIR.glob("*.csv")) else None
 _gdp_bn, _gdp_yr = None, None
-if _mac0 is not None and "gdp_usd_bn" in _mac0.columns:
-    _gf = _mac0[_mac0["gdp_usd_bn"].notna() & ~_mac0["gdp_is_estimate"].astype(bool)]
+GDP_COL = "gdp_usd_bn_2023"        # constant 2023 US$, like every other dollar figure (add_constant_dollars.py)
+if _mac0 is not None and GDP_COL in _mac0.columns:
+    _gf = _mac0[_mac0[GDP_COL].notna() & ~_mac0["gdp_is_estimate"].astype(bool)]
     if len(_gf):
-        _gdp_bn, _gdp_yr = float(_gf["gdp_usd_bn"].iloc[-1]), int(_gf["year"].iloc[-1])
+        _gdp_bn, _gdp_yr = float(_gf[GDP_COL].iloc[-1]), int(_gf["year"].iloc[-1])
 _pop_m, _pop_yr = None, None          # same year as GDP (IMF's own population "actual" is the last census, often years old)
 if _mac0 is not None and "population_m" in _mac0.columns:
     _pf = _mac0[_mac0["population_m"].notna() & (_mac0["year"] <= (_gdp_yr or 2024))]
@@ -294,13 +295,15 @@ _items = [
     ("Income Group", INCOME_LABELS.get(_prof.get("income_group"), "n/a"), "World Bank income group"),
     ("US MOU", MOU_LABELS.get(_prof.get("mou_status"), _prof.get("mou_status") or "n/a"), "US bilateral health MOU, from the team's MOU / co-financing sheet"),
     (f"GDP{', ' + str(_gdp_yr) if _gdp_yr else ''}", fmt_usd(_gdp_bn * 1e3) if _gdp_bn else "n/a",
-     "Current US$, IMF World Economic Outlook"),
+     "Constant 2023 US$: IMF World Economic Outlook GDP for 2023, moved to other years with IHME's real GDP "
+     "per person (each country's own prices, 2023 exchange rates)"),
     (f"Population{', ' + str(_pop_yr) if _pop_yr else ''}",
      ((f"{_pop_m:,.1f}" if _pop_m >= 1 else f"{_pop_m:,.2f}") + "M") if _pop_m else "n/a",
      "Millions of people, IMF World Economic Outlook"),
 ]
 with hdr_left:
-    st.markdown(f"<div class='ed-country'>{html.escape(country_name)}</div>" + th.pills_html(_items),
+    st.markdown(f"<div class='ed-country'>{html.escape(country_name)}"
+                "<span class='ed-units'>All dollar figures in constant 2023 US$</span></div>" + th.pills_html(_items),
                 unsafe_allow_html=True)
 
 # =========================================================================== #
@@ -616,14 +619,14 @@ def _budget_section():
         yr4 = st.selectbox("Year", years_all, index=years_all.index(default_y), key=f"c4_year_{iso}")
     where = f"{iso} {int(yr4)}"
 
-    # ---- WEO (general government) sizes both sides; GDP turns % of GDP into current US$ ----
+    # ---- WEO (general government) sizes both sides; GDP (constant 2023 US$) turns % of GDP into dollars ----
     gdp_m, debt_pct, R_w, E_w, NL_w = None, None, None, None, None
     if mac is not None:
         _r = mac[mac["year"] == yr4]
         if len(_r):
             _r = _r.iloc[0]
             _f = lambda c: float(_r[c]) if c in _r.index and pd.notna(_r[c]) else None
-            gdp_m = _f("gdp_usd_bn") * 1e3 if _f("gdp_usd_bn") else None
+            gdp_m = _f(GDP_COL) * 1e3 if _f(GDP_COL) else None
             debt_pct, R_w, E_w, NL_w = (_f("gov_gross_debt_pct_gdp"), _f("gov_revenue_pct_gdp"),
                                         _f("gov_expenditure_pct_gdp"), _f("gov_net_lending_pct_gdp"))
     weo = R_w is not None and E_w is not None
@@ -762,7 +765,7 @@ def _budget_section():
         mix.append(f"spending mix: IMF COFOG ({g['coverage'].iloc[0].lower()})")
     size = ("Totals: IMF World Economic Outlook, general government" if weo else
             "Totals: the IMF revenue and spending files (WEO totals missing for this year)")
-    _basis = f"{size}; {'; '.join(mix)}." + (" Dollar amounts = share of GDP x GDP (current US$, IMF WEO)." if gdp_m else "")
+    _basis = f"{size}; {'; '.join(mix)}." + (" Dollar amounts = share of GDP x GDP in constant 2023 US$." if gdp_m else "")
     def _v(pct):
         return _amt(pct) if gdp_m else f"{pct:.1f}% of GDP"
     pills = []

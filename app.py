@@ -1,7 +1,7 @@
 """
 Health financing dashboard: navigation only. Run:  streamlit run app.py
 
-The pages live in pages/ (Dashboard, All Countries, Validation & Benchmarks, Methods); theme.py holds the look.
+The pages live in views/ (not pages/, which Streamlit would auto-load and bypass this navigation) (Dashboard, All Countries, Validation & Benchmarks, Methods); theme.py holds the look.
 """
 import streamlit as st
 

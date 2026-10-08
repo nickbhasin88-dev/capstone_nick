@@ -3,3 +3,9 @@ datasets/IHME_DAH_DATABASE_1990_2026_Y2026M09D18.CSV
 
 # Local virtual environment
 .venv/
+
+# Python bytecode (rebuilt automatically; never commit)
+__pycache__/
+*.pyc
+.DS_Store
+~$*

@@ -1,6 +1,6 @@
 """
 Design system for the dashboard: colors, fonts, the "editorial" Plotly template, page CSS and shared page pieces.
-Every color used by app.py, model_section.py and pages/ comes from here.
+Every color used by app.py, model_section.py and views/ comes from here.
 
     apply_page(title)            -> set_page_config + CSS + sidebar navigation (call first on every page)
     section_header(icon, title, help=None, rule=True)
@@ -216,6 +216,10 @@ hr {{ border-color: {RULE} !important; }}
 .ed-country {{ font-family: {SERIF}; font-size: 36px; font-weight: 600; line-height: 1.05; color: {INK};
                margin: 0 0 0.5rem; letter-spacing: -0.015em; }}
 
+.ed-units {{ font-family: {SANS}; font-size: 12px; font-weight: 400; color: {MUTED}; margin-left: 14px;
+             letter-spacing: 0; vertical-align: middle; }}
+@media (max-width: 720px) {{ .ed-units {{ display: block; margin: 2px 0 0; }} }}
+
 /* pills: ONE component for every pill row. Equal width and equal height in a row (grid, rows stretch); label at the
    top, value at the bottom; long labels wrap, nothing is cut off */
 .ed-pills {{ display: grid; gap: 8px; grid-auto-rows: 1fr; align-items: stretch; margin-bottom: 0 !important; }}
@@ -313,10 +317,10 @@ hr {{ border-color: {RULE} !important; }}
 </style>
 """
 
-PAGES = [("pages/1_Dashboard.py", "Dashboard", ":material/dashboard:"),
-         ("pages/2_All_Countries.py", "All Countries", ":material/travel_explore:"),
-         ("pages/3_Validation.py", "Validation & Benchmarks", ":material/fact_check:"),
-         ("pages/4_Methods.py", "Methods", ":material/menu_book:")]
+PAGES = [("views/1_Dashboard.py", "Dashboard", ":material/dashboard:"),
+         ("views/2_All_Countries.py", "All Countries", ":material/travel_explore:"),
+         ("views/3_Validation.py", "Validation & Benchmarks", ":material/fact_check:"),
+         ("views/4_Methods.py", "Methods", ":material/menu_book:")]
 
 
 def setup():
