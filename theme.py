@@ -249,11 +249,38 @@ hr {{ border-color: {RULE} !important; }}
 .ed-table .drop {{ color: {ROSE}; font-weight: 700; }}
 .ed-table-wrap {{ overflow-x: auto; }}
 
+/* "what each service loses": NYT-style table */
+.ed-nyt-wrap {{ overflow-x: auto; margin: 0.2rem 0 0.4rem; }}
+.ed-nyt {{ width: 100%; min-width: 980px; border-collapse: collapse; table-layout: fixed; font-size: 14px; color: {INK};
+           font-family: {SANS}; }}
+.ed-nyt th {{ font-size: 12px; font-weight: 600; color: {MUTED}; text-align: center; vertical-align: bottom;
+              padding: 0 8px 10px; border-bottom: 1px solid {RULE}; line-height: 1.3; }}
+.ed-nyt th:first-child {{ text-align: left; padding-left: 14px; }}
+.ed-nyt td {{ text-align: center; white-space: nowrap; padding: 14px 8px; border-bottom: 1px solid {RULE};
+              vertical-align: middle; line-height: 1.35; font-variant-numeric: tabular-nums; }}
+.ed-nyt td.svc {{ text-align: left; white-space: normal; padding-left: 12px; }}
+.ed-nyt tbody tr:not(.gap):not(.tot):hover td {{ background: {SURFACE_TINT}; }}
+.ed-nyt .sub {{ font-size: 12px; color: {MUTED}; font-weight: 400; }}
+.ed-nyt .big {{ font-size: 16px; font-weight: 600; }}
+.ed-nyt .nm {{ color: {MUTED}; font-size: 13px; }}
+.ed-nyt .dot {{ display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px;
+                vertical-align: 1px; }}
+.ed-nyt .drop {{ display: inline-block; margin-top: 3px; padding: 1px 8px; border-radius: 999px; font-size: 12px;
+                 font-weight: 700; color: {ROSE}; background: rgba(217,72,95,0.10); }}
+.ed-nyt tr.gap td {{ padding: 0; height: 8px; border-bottom: none; }}
+.ed-nyt tr.tot td {{ border-top: 2px solid {INK}; border-bottom: none; }}
+
 /* service cards (every US$1M lost) */
 .ed-card {{ background: {SURFACE_TINT}; border: 1px solid {RULE}; border-top: 4px solid; border-radius: 10px;
             padding: 14px 16px; height: 100%; }}
 .ed-card .t {{ font-family: {SERIF}; font-weight: 600; font-size: 1.25rem; color: {INK}; }}
-.ed-card .s {{ font-size: 0.82rem; color: {MUTED}; margin-bottom: 10px; }}
+.ed-cards {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: stretch; }}
+.ed-card {{ display: flex; flex-direction: column; }}
+.ed-card .s1 {{ font-size: 0.92rem; font-weight: 600; color: {INK}; white-space: nowrap; overflow-wrap: normal; }}
+.ed-card .s {{ font-size: 0.8rem; color: {MUTED}; margin-bottom: 6px; }}
+.ed-card .none {{ font-size: 0.85rem; color: {MUTED}; margin-top: 14px; line-height: 1.35; }}
+.ed-card .foot {{ margin-top: auto !important; }}
+@media (max-width: 720px) {{ .ed-cards {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }} }}
 .ed-card .big {{ font-family: {SERIF}; font-size: 30px; font-weight: 600; line-height: 1.1; color: {INK}; margin-top: 10px; }}
 .ed-card .lbl {{ font-size: 12px; color: {MUTED}; }}
 .ed-card .foot {{ font-size: 12px; color: {MUTED}; margin-top: 12px; padding-top: 8px; border-top: 1px solid {RULE}; }}
