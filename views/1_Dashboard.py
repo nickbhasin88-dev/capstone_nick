@@ -326,6 +326,7 @@ if not crow["has_spend"] or not (SPEND_DIR / f"{crow['iso3']}.csv").exists():
 else:
     sp = load_spending(crow["iso3"])
     view = st.radio("Show As", ["US$ total", "US$ per person", "Share of total (%)"], format_func=title_case,
+                    label_visibility="collapsed",
                     horizontal=True, key="c2_view")
     y0, y1 = SPEND_YEAR_MIN, SPEND_YEAR_MAX
 
@@ -367,7 +368,7 @@ else:
             )
         if y1 > SPEND_LAST_OBSERVED:
             fig2.add_vrect(x0=max(y0, SPEND_LAST_OBSERVED + 1) - 0.5, x1=y1 + 0.5, fillcolor=PROJECTION_BAND, layer="below",
-                           line_width=0, annotation_text="IHME expected (projected)", annotation_position="top left",
+                           line_width=0, annotation_text="Projected", annotation_position="top left",
                            annotation_font=dict(size=12, color=th.MUTED))
         fig2.update_layout(
             title=dict(text=th.title_sub("Health Spending by Source", f"{y0}-{y1}; paler bars are IHME projections")),
@@ -534,9 +535,10 @@ if pd.isna(crow["dah_file"]):
     st.info(f"{country_name} is not a recipient in the IHME DAH database, so there is no category breakdown to show.")
 else:
     df3 = load_country(crow["dah_file"])
-    e1, e2, e3 = st.columns([2, 2, 2])
+    e1, e2, e3 = st.columns([2, 2, 2], vertical_alignment="bottom")
     with e1:
         view3 = st.radio("Show As", ["US$ total", "Share of total (%)"], horizontal=True, key="c3b_view",
+                         label_visibility="collapsed",
                          format_func=title_case)
     with e2:
         brk = st.selectbox("Break Down", ["all"] + HFAS_WITH_PROGRAM_AREAS, key="c3b_brk",

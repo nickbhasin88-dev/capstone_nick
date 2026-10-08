@@ -238,9 +238,11 @@ def style_fig(fig):
         # left-aligned to the chart's own edge (not the plot area), so long y labels don't push the title out of view
         fig.update_layout(title=dict(font=dict(family=SANS, size=15, color=INK), x=0, xanchor="left", xref="container",
                                      pad=dict(l=10)))
-        if "<br>" in fig.layout.title.text:            # a subtitle: room for two lines above the plot
-            fig.update_layout(title=dict(y=0.985, yanchor="top", yref="container"),
-                              margin=dict(t=max(fig.layout.margin.t or 0, 74)))
+        if "<br>" in fig.layout.title.text:            # "Title<br>subtitle" -> Plotly's own title + subtitle,
+            main, sub = fig.layout.title.text.split("<br>", 1)   # which places both lines inside the chart
+            fig.update_layout(title=dict(text=main, subtitle=dict(text=sub, font=dict(family=SANS, size=12,
+                                                                                      color=MUTED))),
+                              margin=dict(t=max(fig.layout.margin.t or 0, 80)))
     if not any(getattr(t, "legendrank", None) not in (None, 1000) for t in fig.data):
         fig.update_layout(legend_traceorder="normal")      # charts that set legendrank keep their own order
     for t in fig.data:                 # 2px white gaps between stacked segments, unless a chart sets its own width
