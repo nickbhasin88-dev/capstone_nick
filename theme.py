@@ -177,6 +177,35 @@ hr {{ border-color: {RULE} !important; }}
   .st-key-hdr [data-testid="stHorizontalBlock"] {{ gap: 0.4rem; }}
 }}
 
+/* large pills: stats inside the page */
+.ed-pills.lg {{ gap: 12px; margin: 0.4rem 0 0.8rem; }}
+.ed-pills.lg .ed-pill {{ padding: 12px 16px; }}
+.ed-pills.lg .l {{ font-size: 12.5px; white-space: normal; }}
+.ed-pills.lg .v {{ font-family: {SERIF}; font-size: 28px; font-weight: 600; line-height: 1.2; margin-top: 4px; }}
+.ed-pill .n {{ display: block; font-size: 11.5px; color: {MUTED}; margin-top: 2px; }}
+@media (max-width: 720px) {{
+  .ed-pills.lg {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; overflow: visible; }}
+}}
+
+/* "what each service loses" table */
+.ed-table {{ width: 100%; border-collapse: collapse; font-size: 14px; margin: 0.3rem 0 0.4rem; }}
+.ed-table th {{ color: {MUTED}; font-weight: 600; font-size: 12.5px; text-align: left; padding: 8px 10px;
+                border-bottom: 1px solid {RULE}; vertical-align: bottom; }}
+.ed-table td {{ padding: 9px 10px; border-bottom: 1px solid {RULE}; vertical-align: top; color: {INK}; }}
+.ed-table .num {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }}
+.ed-table .cov {{ white-space: nowrap; }}
+.ed-table .drop {{ color: {ROSE}; font-weight: 700; }}
+.ed-table-wrap {{ overflow-x: auto; }}
+
+/* service cards (every US$1M lost) */
+.ed-card {{ background: {SURFACE_TINT}; border: 1px solid {RULE}; border-top: 4px solid; border-radius: 10px;
+            padding: 14px 16px; height: 100%; }}
+.ed-card .t {{ font-family: {SERIF}; font-weight: 600; font-size: 1.25rem; color: {INK}; }}
+.ed-card .s {{ font-size: 0.82rem; color: {MUTED}; margin-bottom: 10px; }}
+.ed-card .big {{ font-family: {SERIF}; font-size: 30px; font-weight: 600; line-height: 1.1; color: {INK}; margin-top: 10px; }}
+.ed-card .lbl {{ font-size: 12px; color: {MUTED}; }}
+.ed-card .foot {{ font-size: 12px; color: {MUTED}; margin-top: 12px; padding-top: 8px; border-top: 1px solid {RULE}; }}
+
 /* section headers */
 .ed-sec {{ margin-top: 56px; }}
 .ed-sec.rule {{ border-top: 1px solid {RULE}; padding-top: 40px; }}
@@ -195,8 +224,8 @@ hr {{ border-color: {RULE} !important; }}
   .ed-sec-q {{ margin-left: 0; }}
 }}
 
-/* the funding-cut model controls */
-.st-key-model_controls {{ background: {SURFACE_TINT}; }}
+/* the funding-cut model control bar */
+.st-key-model_controls {{ background: {SURFACE_TINT}; border-color: {RULE} !important; border-radius: 12px; }}
 </style>
 """
 
@@ -228,9 +257,16 @@ def section_header(icon: str, title: str, question: str, help: str | None = None
         unsafe_allow_html=True)
 
 
-def pills_html(items) -> str:
-    """items: (label, value, tooltip) -> one row of equal-width profile pills."""
+def pills_html(items, large: bool = False) -> str:
+    """items: (label, value, tooltip[, small note]) -> one row of equal-width pills. large=True: big serif values,
+    for stats inside the page (the header uses the small ones)."""
     e = html.escape
-    return ("<div class='ed-pills'>" + "".join(
-        f"<div class='ed-pill' title='{e(tip, quote=True)}'><span class='l'>{e(lbl)}</span>"
-        f"<span class='v'>{e(val)}</span></div>" for lbl, val, tip in items) + "</div>").replace("$", "&#36;")
+    cells = []
+    for it in items:
+        lbl, val, tip = it[:3]
+        note = it[3] if len(it) > 3 and it[3] else ""
+        cells.append(f"<div class='ed-pill' title='{e(tip or '', quote=True)}'><span class='l'>{e(lbl)}</span>"
+                     f"<span class='v'>{e(val)}</span>" + (f"<span class='n'>{e(note)}</span>" if note else "") + "</div>")
+    cls = "ed-pills lg" if large else "ed-pills"
+    style = f" style='grid-template-columns:repeat({len(items)}, minmax(0, 1fr))'"
+    return (f"<div class='{cls}'{style}>" + "".join(cells) + "</div>").replace("$", "&#36;")

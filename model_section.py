@@ -29,16 +29,33 @@ WIDE = {"width": "stretch"} if _ver >= (1, 50) else {"use_container_width": True
 _METRIC_ARGS = set(inspect.signature(st.metric).parameters)
 
 INK, MUTED, GRID = th.INK, th.MUTED, th.RULE
+SCATTER_LABELS = 10                  # label the 10 countries with the most deaths per 100,000
+MAP_FOCUS = dict(center=dict(lon=62, lat=4), projection_scale=1.85)     # Africa and South / Southeast Asia
 LOG_TICKS = [0.01, 0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 LOSS, BACKFILL = th.ROSE, th.TEAL
 SCEN_A, SCEN_B = th.GRAPE, th.BLUE
 BUCKET_COLORS = th.DISEASE_COLORS
+REPLACED_ALPHA = 0.4                 # "replaced by government" = the disease colour at this opacity
 FIRST_YEAR = 2026                    # year 1 after the cut
 MAIN_LINE = {"HIV": "hiv_art", "TB": "tb_ds", "Malaria": "mal_itn", "Immunization": "imm"}
 BUCKET_WORD = {"HIV": "HIV", "TB": "TB", "Malaria": "malaria", "Immunization": "immunization"}
 
-GOV_MODES = {"No backfill": "none", "Historical behaviour (estimated)": "historical",
-             "Replace a set share": "custom", "As much as fiscal space allows": "max"}
+# "Historical behaviour" is not offered: the estimated historical response is no backfilling, the same as "none"
+GOV_MODES = {"No backfill (historical norm)": "none", "Replace a set share": "custom",
+             "As much as fiscal space allows": "max"}
+SHOW_BRIEF = False                   # the Download Country Brief button (code kept for later)
+PRESET_SHORT = {
+    "Full US exit": "All US health aid ends, including WHO, Gavi and UNFPA; the US Global Fund pledge falls 23%.",
+    "America First MOUs": "US bilateral aid follows each country's 2026-2030 MOU schedule; US multilateral exits as in "
+                          "Full US Exit.",
+    "IHME 2025 preliminary estimates": "IHME's preliminary 2025 change for every donor, channel and disease, applied to "
+                                       "this country's mix.",
+    "OECD-reported 2025 aid cuts": "Each donor's 2025 aid cut (US -57%, Germany -17%, France -11%, UK -11%, Japan -6%) "
+                                   "applied to its health aid.",
+    "Global Fund & Gavi shortfalls": "All donors: Global Fund -28% and Gavi -24% (replenishment shortfalls).",
+    "Combined retreat": "Full US Exit plus the OECD-reported 2025 cuts for every other donor.",
+    "Custom": "Set the cuts yourself by donor and by channel.",
+}
 CEILINGS = {"Strong year (75th percentile growth)": "p75", "Best years (90th percentile growth)": "p90"}
 ALLOCS = {"Pro-rata to what was cut": "pro_rata", "Lives first (triage)": "lives_first"}
 
@@ -66,7 +83,7 @@ def _run(iso3, sc_key, fiscal_t, ptab_json, trend=True, n_draws=400):
 @st.cache_data(show_spinner=False, max_entries=32)
 def _dose(iso3, bucket, fiscal_t, ptab_json, trend=True):
     ptab = pd.read_json(io.StringIO(ptab_json), orient="split")
-    return hm.dose_response(iso3, bucket, hm.Fiscal(*fiscal_t), _inputs(), ptab, grid=np.linspace(0, 1, 11), n_draws=100,
+    return hm.dose_response(iso3, bucket, hm.Fiscal(*fiscal_t), _inputs(), ptab, grid=np.linspace(0, 1, 21), n_draws=100,
                             mortality_trend=trend)
 
 
@@ -95,7 +112,7 @@ def money(x: float) -> str:
         return f"{s}${a / 1e6:,.1f}M"
     if a >= 1e3:
         return f"{s}${a / 1e3:,.0f}K"
-    return f"{s}${a:,.0f}"
+    return f"{s}${a:,.2f}" if 0 < a < 10 else f"{s}${a:,.0f}"
 
 
 def num(x: float) -> str:
@@ -124,7 +141,7 @@ def _esc(text: str) -> str:
 # contain capitals or digits (acronyms, units, numbers) and a few unit words are left exactly as written.
 _SMALL = {"a", "an", "the", "and", "or", "nor", "but", "of", "in", "on", "to", "for", "per", "vs", "vs.", "by", "at",
           "as", "via", "with", "from"}
-_KEEP = {"pp", "yr", "n/a", "e.g.", "i.e."}
+_KEEP = {"pp", "pts", "yr", "n/a", "e.g.", "i.e."}
 
 
 def _tc_part(p: str, first: bool) -> str:
@@ -267,40 +284,36 @@ def _preset_options(preset, ci, iso3, country_name, key):
 
 
 def _controls(iso3, country_name, I) -> dict:
+    """Control bar at the top of Section 4: scenario | government response | Advanced (popover)."""
     ci = I["ci"]
+    ctx = st.session_state.get("model_ctx", {})
+    if st.session_state.get("m_preset") not in PRESETS:          # seed once from the other page's choice
+        st.session_state["m_preset"] = ctx.get("preset", list(PRESETS)[0])
+    if "m_trend" not in st.session_state:
+        st.session_state["m_trend"] = ctx.get("trend", scn.DEFAULT_MORTALITY_TREND)
+    if st.session_state.get("m_mode") not in GOV_MODES:          # e.g. an option from an older version of the page
+        st.session_state["m_mode"] = list(GOV_MODES)[0]
+    th_c, th_lo, th_hi = hm.theta_historical(I["reg"])
     with st.container(key="model_controls", border=True):
-        st.markdown("**Funding-Cut Model Settings**")
-        ctx = st.session_state.get("model_ctx", {})
-        if st.session_state.get("m_preset") not in PRESETS:          # seed once from the other page's choice
-            st.session_state["m_preset"] = ctx.get("preset", list(PRESETS)[0])
-        if "m_trend" not in st.session_state:
-            st.session_state["m_trend"] = ctx.get("trend", scn.DEFAULT_MORTALITY_TREND)
-        left, right = st.columns(2, gap="large")
-        with left:
-            preset = st.selectbox("Donor Scenario", list(PRESETS), key="m_preset", format_func=title_case)
-            st.caption(_esc(PRESETS[preset]))
+        c1, c2, c3 = st.columns([1.45, 1.25, 0.8], gap="medium")
+        with c1:
+            preset = st.selectbox("Donor Scenario", list(PRESETS), key="m_preset", format_func=title_case,
+                                  help=_esc(PRESETS[st.session_state["m_preset"]]))      # full description
+            st.caption(_esc(PRESET_SHORT.get(preset, PRESETS[preset])))
             opts = _preset_options(preset, ci, iso3, country_name, "m")
-            trend = st.toggle("Account for Already-Falling Death Rates", key="m_trend",
-                              help="Baseline malaria deaths and under-5 mortality keep falling at each country's "
-                                   "2010-2019 rate during the five years, so the same lost service costs fewer lives in "
-                                   "later years. Where a country has no usable trend, -0.9% a year is used (Cavalcanti "
-                                   "et al. 2025, Lancet, appendix 10.2). TB and HIV treatment effects are per patient "
-                                   "and unchanged.")
-
-        with right:
-            th_c, th_lo, th_hi = hm.theta_historical(I["reg"])
-            mode = GOV_MODES[st.radio("Government Response", list(GOV_MODES), index=0, key="m_mode",
-                                      format_func=title_case,
-                                      help="How much of the lost aid the government replaces from its own budget.")]
+        with c2:
+            mode = GOV_MODES[st.radio(
+                "Government Response", list(GOV_MODES), key="m_mode", format_func=title_case,
+                help=_esc(f"How much of the lost aid the government replaces from its own budget. No Backfill is the "
+                          f"historical norm: across 97 countries, 2001-2023, governments did not replace falling aid "
+                          f"({th_c:+.2f} per $1, 95% CI {th_lo:+.2f} to {th_hi:+.2f})."))]
             theta = 0.0
             if mode == "custom":
                 theta = st.slider("Share of Lost Aid Replaced (%)", 0, 100, 25, 5, key="m_theta") / 100
-            if mode == "historical":
-                st.caption(_esc(f"Across 97 countries (2001-2023), a $1 fall in aid per person changed government health "
-                                f"spending per person by {th_c:+.2f} (95% range {th_lo:+.2f} to {th_hi:+.2f}): no "
-                                f"evidence of backfilling, so this option replaces {max(th_c, 0):.0%}."))
-            cap = st.checkbox("Cap Replacement at Fiscal Space", value=True, key="m_cap",
-                              disabled=(mode in ("none", "max")))
+        with c3:
+            st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
+            adv = st.popover("Advanced", icon=":material/tune:", width="stretch")
+        with adv:
             ceiling = CEILINGS[st.radio("Fiscal-Space Ceiling", list(CEILINGS), key="m_effort",
                                         disabled=(mode == "none"), format_func=title_case,
                                         help="How hard can the health budget be pushed? Capacity = government health "
@@ -310,22 +323,17 @@ def _controls(iso3, country_name, I) -> dict:
                                     disabled=(mode == "none"), format_func=title_case,
                                     help="Lives first refills the services that avert the most deaths per dollar first "
                                          "(usually TB treatment, vaccines, ART) before anything else.")]
-
-        with st.expander("Model Parameters (Editable)"):
-            st.caption("Each parameter is drawn from a triangular distribution (low, central, high). "
-                       "Edit any cell to see how sensitive the answer is.")
-            ptab = st.data_editor(_default_params().reset_index(), hide_index=True, key="m_params",
-                                  disabled=["param", "label", "unit", "status", "source"],
-                                  column_config={"param": None, **{c: st.column_config.Column(c.title())
-                                                                   for c in ("label", "central", "low", "high", "unit",
-                                                                             "status", "source")}}, **WIDE)
-            ptab = ptab.set_index("param")
-
-        cmp = None
-        if st.toggle("Compare with a Second Scenario", value=False, key="m_compare"):
-            st.markdown("**Scenario B**")
-            b1, b2 = st.columns(2, gap="large")
-            with b1:
+            cap = st.checkbox("Cap Replacement at Fiscal Space", value=True, key="m_cap",
+                              disabled=(mode in ("none", "max")))
+            trend = st.toggle("Account for Already-Falling Death Rates", key="m_trend",
+                              help="Baseline malaria deaths and under-5 mortality keep falling at each country's "
+                                   "2010-2019 rate during the five years, so the same lost service costs fewer lives in "
+                                   "later years. Where a country has no usable trend, -0.9% a year is used (Cavalcanti "
+                                   "et al. 2025, Lancet, appendix 10.2). TB and HIV treatment effects are per patient "
+                                   "and unchanged.")
+            st.divider()
+            cmp = None
+            if st.toggle("Compare with a Second Scenario", value=False, key="m_compare"):
                 options_b = ["Same as Scenario A"] + scn.PRECOMPUTED_PRESETS
                 pb = st.selectbox("Donor Scenario (B)", options_b, index=0, key="mb_preset", format_func=title_case)
                 if pb == "Same as Scenario A":
@@ -333,7 +341,6 @@ def _controls(iso3, country_name, I) -> dict:
                 else:
                     preset_b = pb
                     opts_b = _preset_options(preset_b, ci, iso3, country_name, "mb")
-            with b2:
                 mode_b = GOV_MODES[st.radio("Government Response (B)", list(GOV_MODES),
                                             index=list(GOV_MODES).index("As much as fiscal space allows"), key="mb_mode",
                                             format_func=title_case)]
@@ -342,8 +349,18 @@ def _controls(iso3, country_name, I) -> dict:
                 alloc_b = ALLOCS[st.radio("Where Replacement Money Goes (B)", list(ALLOCS),
                                           index=list(ALLOCS).index("Lives first (triage)"), key="mb_alloc",
                                           format_func=title_case, disabled=(mode_b == "none"))]
-            st.caption("Scenario B uses Scenario A's fiscal-space ceiling and model parameters.")
-            cmp = {"preset": preset_b, "opts": opts_b, "fiscal_t": (mode_b, theta_b, True, alloc_b, ceiling)}
+                st.caption("Scenario B uses Scenario A's fiscal-space ceiling and model parameters.")
+                cmp = {"preset": preset_b, "opts": opts_b, "fiscal_t": (mode_b, theta_b, True, alloc_b, ceiling)}
+            st.divider()
+            st.markdown("**Model Parameters**")
+            st.caption("Each parameter is drawn from a triangular distribution (low, central, high). "
+                       "Edit any cell to see how sensitive the answer is.")
+            ptab = st.data_editor(_default_params().reset_index(), hide_index=True, key="m_params",
+                                  disabled=["param", "label", "unit", "status", "source"],
+                                  column_config={"param": None, **{c: st.column_config.Column(c.title())
+                                                                   for c in ("label", "central", "low", "high", "unit",
+                                                                             "status", "source")}}, width=900)
+            ptab = ptab.set_index("param")
 
     return {"preset": preset, "opts": opts, "fiscal_t": (mode, theta, cap, alloc, ceiling), "mode": mode,
             "ptab": ptab, "ptab_json": ptab.to_json(orient="split"), "cmp": cmp, "trend": trend}
@@ -394,7 +411,8 @@ def _country_results(iso3, country_name, ctl, sk, imf):
                         f"(net change {money(-T['gross'])})."))
 
     show = L[(L["base_usd"] > 0) | (L["net_loss_usd"] != 0)].copy()
-    cov_fig = _coverage_fig(show)
+    rows = _service_rows(show)
+    cov_fig = _coverage_fig(rows)
     path_fig = _path_fig(res)
     cards = _per_million_cards(res, ptab)
     items = _headline_items(res)
@@ -411,12 +429,13 @@ def _country_results(iso3, country_name, ctl, sk, imf):
         st.markdown(_esc(f"Government backfill of {money(T['replaced'])} a year averts about **{num(saved)} deaths over "
                          f"5 years** compared with no backfill ({money(T['replaced'] * 5 / max(saved, 1))} per death "
                          "averted)."))
-    st.download_button(
-        "Download Country Brief", icon=":material/download:",
-        data=_brief_html(country_name, preset, _resp_label(fiscal_t), items, cards,
-                         [cov_fig, path_fig]).encode("utf-8"),
-        file_name=f"{country_name.replace(' ', '_')}_funding_cut_brief.html", mime="text/html", key="m_brief",
-        help="A one-page HTML summary of this scenario. Open it in a browser and print to PDF.")
+    if SHOW_BRIEF:
+        st.download_button(
+            "Download Country Brief", icon=":material/download:",
+            data=_brief_html(country_name, preset, _resp_label(fiscal_t), items, cards,
+                             [cov_fig, path_fig]).encode("utf-8"),
+            file_name=f"{country_name.replace(' ', '_')}_funding_cut_brief.html", mime="text/html", key="m_brief",
+            help="A one-page HTML summary of this scenario. Open it in a browser and print to PDF.")
 
     # ------------------------------ per $1M ------------------------------ #
     st.subheader(_esc("Every US$1 Million Lost, by Bucket"),
@@ -440,23 +459,27 @@ def _country_results(iso3, country_name, ctl, sk, imf):
             chart(_loss_by_bucket_fig(B))
         with b:
             chart(_who_cut_fig(cl))
-        st.caption("Funders are who originally paid: a US cut to the Global Fund counts as United States (hover for "
-                   "the channels).")
+        st.caption(("The lighter part of each bar is what the government replaces. " if T["replaced"] > 0 else "")
+                   + "Donors are who originally paid, by the channel the money went through: a US cut to the Global "
+                     "Fund is 'US · Global Fund'.")
 
-    # ------------------------------ chain table ------------------------------ #
+    # ------------------------------ service table ------------------------------ #
     notes = []
     if show["capped"].any():
         notes.append("Where the aid lost would pay for more people than are covered today, the loss is capped at "
                      "current coverage.")
     notes += [f"{f[0].upper() + f[1:]}." for f in res["flags"]]
-    notes.append("HIV prevention turns money into infections averted (no deaths within 5 years); support for orphans and "
-                 "vulnerable children has no modelled effect on deaths. Program money with no reported purpose is "
-                 "spread over each bucket's known mix, and "
+    notes.append("HIV prevention turns money into infections averted (no deaths within 5 years). Program money with no "
+                 "reported purpose is spread over each bucket's known mix, and "
                  f"{float(ptab.loc['hss_kappa', 'central']):.0%} of lost systems money (labs, staff, monitoring) is "
-                 "assumed to cut services.")
-    st.subheader("The Chain, Service by Service", help=" ".join(notes))
-    st.table(_chain_table(show).set_index("Service"))
-    st.caption("Deaths ranges are 95% intervals; HIV prevention averts infections rather than deaths within five years.")
+                 "assumed to cut services. Bednets and spraying protect the same population at risk, so they share one "
+                 "row. Deaths ranges are 95% intervals.")
+    st.subheader("What Each Service Loses", help=" ".join(notes))
+    st.markdown(_service_table_html(rows), unsafe_allow_html=True)
+    ovc = show[show["line"] == "hiv_ovc"]
+    if len(ovc) and ovc["net_loss_usd"].sum() > 0:
+        st.caption(_esc(f"Excludes support for orphans and vulnerable children ({money(ovc['net_loss_usd'].sum())} a "
+                        "year lost), which has no modelled effect on deaths."))
     if cov_fig is not None:
         chart(cov_fig)
 
@@ -479,6 +502,9 @@ def _country_results(iso3, country_name, ctl, sk, imf):
         else:
             st.markdown(f"{country_name} receives no {BUCKET_WORD[bsel]} aid in the model, so cutting it changes nothing.")
         chart(_dose_fig(dr, bsel, cur_cut, B.loc[bsel]))
+        st.caption("The shaded band is the 95% uncertainty range. It widens as the cut grows because every uncertain "
+                   "input (unit costs, mortality effects) applies to more people losing services, so the absolute "
+                   "uncertainty grows with the cut.")
     with d2:
         band = res["path_band"]
         st.markdown(_esc(f"Over {FIRST_YEAR}-{FIRST_YEAR + 4} this scenario adds about **{num(T['deaths_5y'])}** "
@@ -561,7 +587,9 @@ def _per_million_cards(res, ptab) -> list:
         dpp = per_m_units / need * 100 if need and not np.isnan(need) else np.nan
         d_per = res["deaths_per_dollar"][line] * 1e6 * (1 - cont)
         out.append({"bucket": b, "color": BUCKET_COLORS[b], "service": title_case(hm.LINE_LABELS[line]),
-                    "people": f"{num(per_m_units)} {ln['unit_label']} lose the service",       # a sentence
+                    "people": f"{num(per_m_units)} {ln['unit_label']} lose the service",       # a sentence (brief)
+                    "people_n": num(per_m_units), "unit": ln["unit_label"],
+                    "cov_n": "n/a" if np.isnan(dpp) else f"{dpp:,.2f}",
                     "coverage": "n/a" if np.isnan(dpp) else f"{dpp:,.2f} Percentage Points",
                     "deaths": f"{d_per:,.0f}",
                     "foot": title_case(f"Cost {money(uc)} per {hm.UNIT_SINGULAR[line]} · "
@@ -570,101 +598,150 @@ def _per_million_cards(res, ptab) -> list:
 
 
 def _card_html(c) -> str:
-    return (f"<div style='background:{th.SURFACE_TINT};border:1px solid {th.RULE};border-top:4px solid {c['color']};"
-            f"border-radius:10px;padding:12px 14px;height:100%'>"
-            f"<div style='font-family:{th.SERIF_ATTR};font-weight:600;font-size:1.2rem'>{c['bucket']}</div>"
-            f"<div style='font-size:0.85rem;color:{th.MUTED};margin-bottom:8px'>{html.escape(c['service'])}</div>"
-            f"<div style='font-size:0.95rem;line-height:1.6'>{html.escape(c['people'])}<br>"
-            f"<b>{c['coverage']}</b> Coverage Drop<br><b>{c['deaths']}</b> Extra Deaths Over 5 Years</div>"
-            f"<div style='font-size:0.85rem;color:{th.MUTED};margin-top:8px'>{html.escape(c['foot'])}</div>"
-            f"</div>").replace("$", "&#36;")
+    """Three big numbers per bucket, with small labels; cost per person and aid per death underneath."""
+    e = html.escape
+    return (f"<div class='ed-card' style='border-top-color:{c['color']}'>"
+            f"<div class='t'>{e(c['bucket'])}</div><div class='s'>{e(c['service'])}</div>"
+            f"<div class='big'>{e(c['people_n'])}</div><div class='lbl'>People Losing the Service "
+            f"({e(c['unit'])})</div>"
+            f"<div class='big'>{e(c['cov_n'])}</div><div class='lbl'>Coverage Drop (Percentage Points)</div>"
+            f"<div class='big'>{e(c['deaths'])}</div><div class='lbl'>Extra Deaths Over 5 Years</div>"
+            f"<div class='foot'>{e(c['foot'])}</div></div>").replace("$", "&#36;")
 
 
 # --------------------------------------------------------------------------- #
 # Charts and tables
 # --------------------------------------------------------------------------- #
 def _loss_by_bucket_fig(B: pd.DataFrame):
+    """Aid lost per disease in the disease colour; the part the government replaces in the same colour at 40%."""
     bk = [b for b in hm.BUCKETS if B.loc[b, "gross_loss_usd"] > 0][::-1]
     rep = [max(B.loc[b, "replaced_usd"], 0.0) for b in bk]
     lost = [max(B.loc[b, "gross_loss_usd"] - B.loc[b, "replaced_usd"], 0.0) for b in bk]
     fig = go.Figure()
-    for name, vals, col in (("Replaced by government", rep, BACKFILL), ("Lost to services", lost, LOSS)):
+    for name, vals, alpha in (("Lost to services", lost, 1.0), ("Replaced by government", rep, REPLACED_ALPHA)):
         fig.add_trace(go.Bar(y=bk, x=vals, name=name, orientation="h",
-                             marker=dict(color=col), customdata=[money(v) for v in vals],
+                             marker=dict(color=[th.tint(BUCKET_COLORS[b], alpha) for b in bk]),
+                             customdata=[money(v) for v in vals], showlegend=False,
                              hovertemplate=f"%{{y}} · {name}: %{{customdata}} a year<extra></extra>"))
     tot = [r + l for r, l in zip(rep, lost)]
     fig.add_trace(go.Scatter(y=bk, x=tot, mode="text", text=[money(t) for t in tot], textposition="middle right",
                              textfont=dict(color=INK), showlegend=False, hoverinfo="skip"))
     fig.update_layout(barmode="stack", bargap=0.35)
-    _layout(fig, h=360, title=_title("Aid Lost per Year, by Disease"),
-            legend=dict(orientation="h", y=-0.12, x=0), margin=dict(l=10, r=70, t=50, b=10),
-            xaxis=dict(showticklabels=False, range=[0, max(tot) * 1.25]))
+    _layout(fig, h=360, title=_title("Aid Lost per Year, by Disease"), margin=dict(l=10, r=70, t=50, b=10),
+            xaxis=dict(showticklabels=False, showgrid=False, range=[0, max(tot) * 1.25]),
+            yaxis=dict(showgrid=False))
     return fig
+
+
+SRC_SHORT = {"United States": "US", "United Kingdom": "UK", "Gates Foundation": "Gates"}
+CHAN_SHORT = {"Bilateral agency": "Bilateral", "Gates direct": "Direct", "Development banks": "Dev. Banks"}
+MAX_WHO_CUT_BARS = 12
 
 
 def _who_cut_fig(cl: pd.DataFrame):
-    by_src = cl.groupby("src_grp")["loss"].sum().sort_values()
-    by_ch = cl.groupby(["src_grp", "chan_grp"])["loss"].sum()
-    hover = []
-    for s in by_src.index:
-        ch = by_ch.loc[s].sort_values(ascending=False)
-        hover.append("<br>".join(f"via {c}: {money(v)}" for c, v in ch.items()))
-    fig = go.Figure(go.Bar(y=by_src.index, x=by_src.values, orientation="h",
-                           marker=dict(color=[th.funder_color(s) for s in by_src.index]),
-                           text=[money(v) for v in by_src.values], textposition="outside", cliponaxis=False,
-                           textfont=dict(color=INK), customdata=hover,
-                           hovertemplate="<b>%{y}</b>: %{text} a year<br>%{customdata}<extra></extra>"))
-    fig.update_layout(bargap=float(np.clip(1 - 34 * len(by_src) / 280, 0.25, 0.85)))
-    _layout(fig, h=max(360, 80 + 34 * len(by_src)), title=_title("Who Cut the Money"),
-            margin=dict(l=10, r=70, t=50, b=10), xaxis=dict(showticklabels=False, range=[0, by_src.max() * 1.25]))
+    """One bar per donor x channel ('US · Bilateral'), in the funder's colour, largest at the top."""
+    d = cl.groupby(["src_grp", "chan_grp"])["loss"].sum().sort_values(ascending=False)
+    d = d[d > 0]
+    if len(d) > MAX_WHO_CUT_BARS:                   # keep the chart readable: the rest as one grey bar
+        d = pd.concat([d.iloc[:MAX_WHO_CUT_BARS - 1],
+                       pd.Series([d.iloc[MAX_WHO_CUT_BARS - 1:].sum()], index=[("All other", "")])])
+    labels = [f"{SRC_SHORT.get(s, s)} · {CHAN_SHORT.get(c, c)}" if c else s for s, c in d.index]
+    colors = [th.funder_color(s) if c else th.OTHER for s, c in d.index]
+    labels, vals, colors = labels[::-1], d.values[::-1], colors[::-1]
+    fig = go.Figure(go.Bar(y=labels, x=vals, orientation="h", marker=dict(color=colors),
+                           text=[money(v) for v in vals], textposition="outside", cliponaxis=False,
+                           textfont=dict(color=INK), hovertemplate="<b>%{y}</b>: %{text} a year<extra></extra>"))
+    fig.update_layout(bargap=float(np.clip(1 - 34 * len(d) / 280, 0.25, 0.7)))
+    _layout(fig, h=max(360, 80 + 34 * len(d)), title=_title("Who Cut the Money"),
+            margin=dict(l=10, r=80, t=50, b=10), xaxis=dict(showticklabels=False, showgrid=False,
+                                                            range=[0, float(d.max()) * 1.3]),
+            yaxis=dict(showgrid=False))
     return fig
 
 
-def _chain_table(show: pd.DataFrame) -> pd.DataFrame:
+SUM_COLS = ["base_usd", "gross_loss_usd", "replaced_usd", "net_loss_usd", "units_lost", "cov_drop_pp", "deaths_y1",
+            "deaths_5y", "deaths_5y_lo", "deaths_5y_hi"]
+
+
+def _service_rows(show: pd.DataFrame) -> pd.DataFrame:
+    """Lines as shown to readers: bednets and indoor spraying merged (same population at risk, so their coverage drops
+    add up; ranges are added, which slightly widens them), and support for orphans and vulnerable children dropped
+    (it has no modelled effect on deaths)."""
+    d = show[show["line"] != "hiv_ovc"].copy()
+    d["cost_txt"] = [f"{money(r.unit_cost)} per {hm.UNIT_SINGULAR[r.line]}" for r in d.itertuples()]
+    if {"mal_itn", "mal_irs"} <= set(d["line"]):
+        itn, irs = d[d["line"] == "mal_itn"].iloc[0], d[d["line"] == "mal_irs"].iloc[0]
+        row = itn.copy()
+        for c in SUM_COLS:
+            row[c] = np.nansum([itn[c], irs[c]])
+        row["label"] = "Bednets & spraying"
+        row["capped"] = bool(itn["capped"] or irs["capped"])
+        row["cost_txt"] = f"{money(itn['unit_cost'])} (nets), {money(irs['unit_cost'])} (spraying) per person-year"
+        d = d[~d["line"].isin(["mal_itn", "mal_irs"])]
+        d = pd.concat([d, row.to_frame().T]).sort_index()
+        for c in SUM_COLS + ["need", "cov0", "unit_cost"]:
+            d[c] = pd.to_numeric(d[c])
+    return d
+
+
+def _service_table_html(rows: pd.DataFrame) -> str:
+    """'What Each Service Loses' as an HTML table: money right-aligned, the coverage drop in rose."""
+    e = html.escape
+
     def cov_change(r):
         if pd.isna(r.need) or pd.isna(r.cov0):
             return "n/a"
         after = max(r.cov0 - r.cov_drop_pp / 100, 0)
-        d = (after - r.cov0) * 100
-        return f"{r.cov0:.0%} → {after:.0%} ({d:+.0f} pts)" if abs(d) >= 1 else f"{r.cov0:.0%} → {after:.0%} ({d:+.1f} pts)"
+        dpts = (after - r.cov0) * 100
+        pts = f"{dpts:+.0f}" if abs(dpts) >= 1 else f"{dpts:+.1f}"
+        return f"{r.cov0:.0%} → {after:.0%} <span class='drop'>({pts.replace('-', '−')} pts)</span>"
 
-    return pd.DataFrame({
-        "Service": show["label"].map(title_case).values,
-        "Aid Today (per yr)": show["base_usd"].map(money).values,
-        "Aid Lost After Backfill": show["net_loss_usd"].map(money).values,
-        "Cost per Person": [title_case(f"{money(r.unit_cost)} per {hm.UNIT_SINGULAR[r.line]}") for r in show.itertuples()],
-        "People Losing Service": show["units_lost"].map(num).values,
-        "Coverage Change": [cov_change(r) for r in show.itertuples()],
-        "Deaths, Year 1": show["deaths_y1"].map(num).values,
-        "Deaths, 5 Years (Range)": [f"{num(r.deaths_5y)} ({rng(r.deaths_5y_lo, r.deaths_5y_hi)})"
-                                    for r in show.itertuples()],
-    })
+    head = [("Service", ""), ("Aid Today (per Yr)", "num"), ("Aid Lost After Backfill", "num"), ("Cost per Person", ""),
+            ("People Losing Service", "num"), ("Coverage Change", "cov"), ("Deaths, 5 Years (Range)", "num")]
+    body = []
+    for r in rows.itertuples():
+        cells = [(e(title_case(r.label)), ""), (money(r.base_usd), "num"), (money(r.net_loss_usd), "num"),
+                 (e(title_case(r.cost_txt)), ""), (num(r.units_lost), "num"), (cov_change(r), "cov"),
+                 (f"{num(r.deaths_5y)}<br><span style='color:{th.MUTED};font-size:12px'>"
+                  f"{rng(r.deaths_5y_lo, r.deaths_5y_hi)}</span>", "num")]
+        body.append("<tr>" + "".join(f"<td class='{c}'>{v}</td>" for v, c in cells) + "</tr>")
+    return ("<div class='ed-table-wrap'><table class='ed-table'><thead><tr>"
+            + "".join(f"<th class='{c}'>{h}</th>" for h, c in head) + "</tr></thead><tbody>"
+            + "".join(body) + "</tbody></table></div>").replace("$", "&#36;")
 
 
-def _coverage_fig(show: pd.DataFrame):
-    d = show[show["need"].notna() & show["cov0"].notna() & (show["line"] != "mal_irs")].copy()
+def _coverage_fig(rows: pd.DataFrame):
+    """Coverage now (hollow) and after the cut (filled), one row per service, largest drop at the top."""
+    d = rows[rows["need"].notna() & rows["cov0"].notna()].copy()
     if d.empty:
         return None
     d["after"] = (d["cov0"] - d["cov_drop_pp"] / 100).clip(0, 1)
-    d = d.iloc[::-1]
+    d["drop"] = (d["cov0"] - d["after"]) * 100
+    d = d.sort_values("drop")                      # plotly draws the first row at the bottom
     d["label"] = d["label"].map(title_case)
+    cols = [BUCKET_COLORS[b] for b in d["bucket"]]
     fig = go.Figure()
-    for r in d.itertuples():
-        col = BUCKET_COLORS[r.bucket]
+    for r, col in zip(d.itertuples(), cols):
         fig.add_trace(go.Scatter(x=[r.after * 100, r.cov0 * 100], y=[r.label, r.label], mode="lines",
-                                 line=dict(color=col, width=2), showlegend=False, hoverinfo="skip"))
+                                 line=dict(color=col, width=4), showlegend=False, hoverinfo="skip"))
     fig.add_trace(go.Scatter(x=d["cov0"] * 100, y=d["label"], mode="markers", name="Coverage now",
-                             marker=dict(size=11, color=th.SURFACE, line=dict(color=[BUCKET_COLORS[b] for b in d["bucket"]], width=2)),
+                             marker=dict(size=16, color=th.SURFACE, line=dict(color=cols, width=3)),
                              hovertemplate="%{y}<br>now: %{x:.0f}%<extra></extra>"))
-    fig.add_trace(go.Scatter(x=d["after"] * 100, y=d["label"], mode="markers+text", name="After the cut",
-                             marker=dict(size=11, color=[BUCKET_COLORS[b] for b in d["bucket"]], line=dict(color=th.SURFACE, width=2)),
-                             text=[f"-{v:.1f} pts" if v >= 0.05 else "" for v in d["cov_drop_pp"]],
-                             # labels left of the dot, except near 0% where they would run off the chart (then above it)
-                             textposition=["middle left" if a >= 0.15 else "top center" for a in d["after"]],
-                             textfont=dict(color=MUTED, size=12),
+    fig.add_trace(go.Scatter(x=d["after"] * 100, y=d["label"], mode="markers", name="After the cut",
+                             marker=dict(size=16, color=cols, line=dict(color=th.SURFACE, width=2)),
                              hovertemplate="%{y}<br>after: %{x:.0f}%<extra></extra>"))
-    _layout(fig, h=90 + 42 * len(d), title=_title("Coverage Before and After the Cut (% of People in Need)"),
-            legend=dict(orientation="h", y=-0.15, x=0), xaxis=dict(range=[-8, 102], ticksuffix="%"))
+    for r in d.itertuples():                       # the drop, at the low end of each line
+        if r.drop < 0.05:
+            continue
+        txt = f"−{r.drop:.0f} pts" if r.drop >= 1 else f"−{r.drop:.1f} pts"
+        left = r.after >= 0.16
+        fig.add_annotation(x=r.after * 100, y=r.label, text=f"<b>{txt}</b>", showarrow=False,
+                           xanchor="right" if left else "left", xshift=-14 if left else 14,
+                           yshift=0 if left else 18, font=dict(color=th.ROSE, size=15))
+    _layout(fig, h=110 + 56 * len(d), title=_title("Coverage Before and After the Cut (% of People in Need)"),
+            legend=dict(orientation="h", y=-0.08, x=0, yanchor="top"),
+            xaxis=dict(range=[-4, 104], ticksuffix="%", showgrid=True, gridcolor=th.RULE),
+            yaxis=dict(showgrid=False))
     return fig
 
 
@@ -708,26 +785,50 @@ def _path_fig(res: dict):
     return fig
 
 
+def _fiscal_sentence(F: dict, country_name: str) -> str:
+    """One sentence from the data: how big the gap is against the health budget, and what a strong year would cover."""
+    G, ghes, cap = F["gross_loss"], F["ghes"], F["capacity"]
+    if not G or G <= 0:
+        return "No aid is lost in this scenario, so there is no gap to fill."
+    out = f"Replacing the lost aid would take a {G / ghes:.0%} increase in government health spending. " if ghes else ""
+    pts = (F["ghes_growth_top"] - max(F["ghes_growth_median"], 0)) * 100
+    year = "its best years" if F["effort"] == "p90" else "a strong year"
+    if pd.isna(pts) or pts <= 0 or not cap or cap <= 0:
+        return out + f"{country_name}'s health budget does not grow faster than usual even in {year}, so it has no room " \
+                     "to fill the gap."
+    pts_txt = f"{pts:.0f}" if pts >= 1 else f"{pts:.1f}"
+    out += (f"In {year} {country_name}'s health budget grows about {pts_txt} point{'s' if pts_txt != '1' else ''} "
+            "faster than usual, which ")
+    out += f"would cover the whole {money(G)} gap." if cap >= G else f"would cover {money(cap)} of the {money(G)} gap."
+    return out
+
+
 def _fiscal_panel(res: dict, country_name: str, imf: dict):
     F = res["fiscal"]
-    st.subheader(f"Can {country_name} Fill the Gap? Fiscal Space",
-                 help="Growth rates are real (constant 2023 US$) from IHME, 2001-2023. Interest, revenue and debt are "
-                      "World Bank WDI, latest year (IMF data from this dashboard fill gaps where available).")
+    stress = (f" High interest costs shrink it: interest takes {F['interest_pct_revenue']:.0f}% of revenue, so the "
+              f"debt-stress factor is {F['stress_factor']:.2f} (1 at 10% or less, falling to 0.25 at 40%)."
+              if not pd.isna(F["interest_pct_revenue"]) else "")
+    st.subheader(f"Can {country_name} Fill the Gap?",
+                 help=_esc("Backfill capacity = government health spending x (strong-year growth minus typical growth) "
+                           "x a debt-stress factor." + stress + " Growth rates are real (constant 2023 US$) from IHME, "
+                           "2001-2023; interest and revenue are World Bank WDI, latest year (IMF data fill gaps)."))
     rev = F["revenue"]
     if (pd.isna(rev) or not rev) and imf.get("revenue_pct_gdp") and F["gdp"]:
         rev = imf["revenue_pct_gdp"] / 100 * F["gdp"]
-    debt = F["debt_pct_gdp"] if not pd.isna(F["debt_pct_gdp"]) else imf.get("debt_pct_gdp", np.nan)
     G = F["gross_loss"]
-    _stat_grid([
-        ("Government Health Spending, 2023", money(F["ghes"]),
-         f"${F['ghes_pc']:,.0f} per person · {F['ghes_pct_gdp']:.1f}% of GDP" if not pd.isna(F["ghes_pc"]) else None, None),
-        ("Aid Loss as % of Government Health Spending", f"{G / F['ghes']:.0%}" if F["ghes"] else "n/a", None, None),
-        ("Aid Loss as % of Government Revenue", f"{G / rev:.1%}" if rev and not pd.isna(rev) else "n/a", None, None),
-        ("Interest as % of Revenue", f"{F['interest_pct_revenue']:.0f}%" if not pd.isna(F["interest_pct_revenue"]) else "n/a",
-         f"gross debt {debt:.0f}% of GDP" if not pd.isna(debt) else None, None),
+    st.markdown(th.pills_html([
+        ("Government Health Spending (2023)", money(F["ghes"]),
+         "IHME, constant 2023 US$",
+         f"${F['ghes_pc']:,.0f} per person · {F['ghes_pct_gdp']:.1f}% of GDP" if not pd.isna(F["ghes_pc"]) else ""),
+        ("Aid Lost as % of Government Health Spending", f"{G / F['ghes']:.0%}" if F["ghes"] else "n/a",
+         "Gross aid lost per year ÷ government health spending, 2023", ""),
+        ("Aid Lost as % of Government Revenue", f"{G / rev:.1%}" if rev and not pd.isna(rev) else "n/a",
+         "Gross aid lost per year ÷ total government revenue", ""),
         ("Health Share of Government Spending",
-         f"{F['ghes_pct_gov_spend']:.1f}%" if not pd.isna(F["ghes_pct_gov_spend"]) else "n/a", "Abuja target: 15%", None),
-    ], 3)
+         f"{F['ghes_pct_gov_spend']:.1f}%" if not pd.isna(F["ghes_pct_gov_spend"]) else "n/a",
+         "Government health spending ÷ all government spending", "Abuja Target: 15%"),
+    ], large=True), unsafe_allow_html=True)
+    st.markdown(_esc(_fiscal_sentence(F, country_name)))
     typical = F["ghes"] * max(F["ghes_growth_median"], 0)
     bars = [(title_case(lbl), v, c) for lbl, v, c in (
             ("Aid lost (gross, per year)", G, LOSS),
@@ -738,21 +839,10 @@ def _fiscal_panel(res: dict, country_name: str, imf: dict):
                            marker=dict(color=[b[2] for b in bars][::-1]),
                            text=[money(b[1]) for b in bars][::-1], textposition="outside", cliponaxis=False,
                            textfont=dict(color=INK), hovertemplate="%{y}: %{text}<extra></extra>"))
-    _layout(fig, h=280, title=_title("The Gap vs. What the Budget Can Absorb (US$ per Year)"),
-            xaxis=dict(showticklabels=False), margin=dict(l=10, r=80, t=50, b=10))
-    a, b = st.columns([1.3, 1])
-    with a:
-        chart(fig)
-    with b:
-        yrs = G / typical if typical > 0 else np.inf
-        st.markdown(_esc(
-            f"- **Backfill capacity** = government health spending x ({'best-year' if F['effort'] == 'p90' else 'strong-year'} "
-            f"growth {F['ghes_growth_top']:.0%} minus typical growth {max(F['ghes_growth_median'], 0):.0%}) x debt-stress "
-            f"factor {F['stress_factor']:.2f} = **{money(F['capacity'])} a year**.\n"
-            f"- Filling the whole gap would take **{'more than 10' if yrs > 10 else f'{yrs:,.1f}'} years** of the "
-            f"country's typical growth in government health spending, all of it diverted to these four programs.\n"
-            f"- The debt-stress factor shrinks capacity when interest eats more than 10% of revenue "
-            f"(to a floor of 0.25 at 40% or more)."))
+    _layout(fig, h=300, title=_title("The Gap vs. What the Budget Can Absorb (US$ per Year)"),
+            xaxis=dict(showticklabels=False, showgrid=False), yaxis=dict(showgrid=False),
+            margin=dict(l=10, r=80, t=50, b=10))
+    chart(fig)
 
 
 # --------------------------------------------------------------------------- #
@@ -786,19 +876,21 @@ def _cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
     st.caption(_esc(f"{title_case(ctl['preset'])} · {_resp_label(ctl['fiscal_t'])}"
                     + ("" if ctl["trend"] else " · Death Rates Held Constant")))
     tot = A[["gross_loss_usd", "net_loss_usd", "deaths_y1", "deaths_5y", "deaths_5y_lo", "deaths_5y_hi", "hiv_infections_5y"]].sum()
-    _stat_grid([
+    st.markdown(th.pills_html([
         (f"Aid Lost per Year, {len(A)} Countries", money(tot["gross_loss_usd"]),
-         f"net of backfill {money(tot['net_loss_usd'])}", None),
-        ("Extra Deaths, Year 1", num(tot["deaths_y1"]), None, None),
-        ("Extra Deaths Over 5 Years", num(tot["deaths_5y"]), "range " + rng(tot["deaths_5y_lo"], tot["deaths_5y_hi"]),
+         "HIV, TB, malaria and vaccine aid removed by the scenario", f"Net of Backfill {money(tot['net_loss_usd'])}"),
+        ("Extra Deaths, Year 1", num(tot["deaths_y1"]), "Deaths build up over the five years", ""),
+        ("Extra Deaths Over 5 Years", num(tot["deaths_5y"]),
          "Totals add up country results; the range adds country 2.5th and 97.5th percentiles, so it is wider than a "
-         "jointly simulated interval."),
-        ("New HIV Infections, 5 Years", num(tot["hiv_infections_5y"]), None, None),
-    ], 4)
+         "jointly simulated interval.", "Range " + rng(tot["deaths_5y_lo"], tot["deaths_5y_hi"])),
+        ("New HIV Infections, 5 Years", num(tot["hiv_infections_5y"]), "From lost HIV prevention and treatment", ""),
+    ], large=True), unsafe_allow_html=True)
     A["deaths_per_100k"] = A["deaths_5y"] / A["pop"] * 1e5
     A["loss_pct_ghes_pct"] = A["loss_pct_ghes"] * 100
 
-    chart(_world_map(A, iso3))
+    _, tcol = st.columns([5, 1])
+    world = tcol.toggle("World", value=False, key="m_map_world", help="Show the whole world instead of Africa and Asia")
+    chart(_world_map(A, iso3, world))
     st.caption("The map's colour scale stops at the 95th percentile so a few extreme countries don't wash out the rest.")
 
     c1, c2 = st.columns([1.15, 1])
@@ -807,13 +899,12 @@ def _cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
         fig = go.Figure()
         other = d[d["iso3"] != iso3]
         sz = np.sqrt(d["net_loss_usd"].clip(lower=1)) / np.sqrt(d["net_loss_usd"].max()) * 40 + 6
+        top10 = set(d.nlargest(SCATTER_LABELS, "deaths_per_100k")["iso3"])      # label only these
         fig.add_trace(go.Scatter(x=other["loss_pct_ghes_pct"], y=other["deaths_per_100k"], mode="markers+text",
-                                 text=[c if (r.deaths_per_100k > d["deaths_per_100k"].quantile(0.8) or
-                                             r.loss_pct_ghes_pct > d["loss_pct_ghes_pct"].quantile(0.85)) else ""
-                                       for c, r in zip(other["iso3"], other.itertuples())],
-                                 textposition="top center", textfont=dict(size=11, color=MUTED),
-                                 marker=dict(size=sz[d["iso3"] != iso3], color=th.tint(th.OTHER, 0.7),
-                                             line=dict(color=th.SURFACE, width=1.5)),
+                                 text=[c if c in top10 else "" for c in other["iso3"]],
+                                 textposition="top center", textfont=dict(size=11, color=INK),
+                                 marker=dict(size=sz[d["iso3"] != iso3], color=th.GRAPE, opacity=0.5,
+                                             line=dict(color=th.SURFACE, width=1)),
                                  customdata=np.c_[other["name"], other["net_loss_usd"].map(money), other["deaths_5y"].map(num)],
                                  hovertemplate="<b>%{customdata[0]}</b><br>aid loss = %{x:.0f}% of government health "
                                                "spending<br>%{y:,.0f} deaths per 100,000 over 5 years "
@@ -846,23 +937,23 @@ def _cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
         chart(fig)
     st.caption("Bubble size is net aid lost per year and dotted lines are medians: countries in the top right lose the "
                "most relative to their own health budgets and populations.")
-    out = A.drop(columns=["name"]).sort_values("deaths_5y", ascending=False)
-    st.download_button("Download All-Country Results (CSV)", out.to_csv(index=False).encode(),
-                       file_name=f"model_results_{scn.preset_slug(ctl['preset'])}.csv", mime="text/csv")
     return A
 
 
-def _world_map(A: pd.DataFrame, iso3: str):
+def _world_map(A: pd.DataFrame, iso3: str, world: bool = False):
     zmax = float(A["deaths_per_100k"].quantile(0.95))
     pct = A["loss_pct_ghes_pct"].map(lambda v: "n/a" if pd.isna(v) else f"{v:,.0f}%")
     fig = go.Figure(go.Choropleth(
         locations=A["iso3"], z=A["deaths_per_100k"], locationmode="ISO-3", zmin=0, zmax=zmax,
         colorscale=[[i / (len(th.MAP_RAMP) - 1), c] for i, c in enumerate(th.MAP_RAMP)],
-        marker_line_color=th.SURFACE, marker_line_width=0.6,
-        colorbar=dict(title=dict(text="deaths per<br>100,000", font=dict(size=12)), thickness=12, len=0.7),
+        marker_line_color=th.SURFACE, marker_line_width=0.5,
+        colorbar=dict(orientation="h", title=dict(text="Extra Deaths per 100,000 (5 Years)", side="top",
+                                                  font=dict(size=12, color=MUTED)),
+                      thickness=10, len=0.45, x=0.5, xanchor="center", y=-0.02, yanchor="top",
+                      tickfont=dict(size=11, color=MUTED), outlinewidth=0),
         customdata=np.c_[A["name"], A["gross_loss_usd"].map(money), A["deaths_5y"].map(num), pct],
-        hovertemplate="<b>%{customdata[0]}</b><br>%{z:,.0f} extra deaths per 100,000 over 5 years<br>"
-                      "extra deaths: %{customdata[2]}<br>aid lost: %{customdata[1]} a year<br>"
+        hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[2]} extra deaths over 5 years "
+                      "(%{z:,.0f} per 100,000)<br>aid lost: %{customdata[1]} a year<br>"
                       "= %{customdata[3]} of government health spending<extra></extra>"))
     sel = A[A["iso3"] == iso3]
     if len(sel):
@@ -870,8 +961,9 @@ def _world_map(A: pd.DataFrame, iso3: str):
                                     colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
                                     marker_line_color=INK, marker_line_width=2, hoverinfo="skip"))
     fig.update_geos(projection_type="natural earth", showframe=False, showcoastlines=False, showcountries=True,
-                    countrycolor=th.SURFACE, showland=True, landcolor=th.RULE, lataxis_range=[-45, 75])
-    _layout(fig, h=460, title=_title("Extra Deaths per 100,000 People Over 5 Years"), margin=dict(l=0, r=0, t=50, b=0))
+                    countrycolor=th.SURFACE, countrywidth=0.5, showland=True, landcolor=th.RULE,
+                    bgcolor=th.SURFACE, **(dict(lataxis_range=[-45, 75]) if world else MAP_FOCUS))
+    _layout(fig, h=520, title=_title("Extra Deaths per 100,000 People Over 5 Years"), margin=dict(l=0, r=0, t=50, b=60))
     return fig
 
 
