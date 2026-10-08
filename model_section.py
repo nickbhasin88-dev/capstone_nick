@@ -450,7 +450,7 @@ def scenario_bar(iso3: str, country_name: str):
         be = _break_even(iso3, sk, ctl["fiscal_t"], ctl["cut_path"])
         with ctl["outcome_slot"]:
             paths_ui.outcome_panel(country_name, ctl["shape"], response_phrase(ctl), res, base["committed"]["deaths"],
-                                   be, ctl["budget"], num, rng, round_words)
+                                   be, ctl["budget"], num, rng, round_words, after_2030_help)
     return ctl, sk
 
 
@@ -581,8 +581,10 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
         (money(T["gross"]), "Health Aid Lost Each Year",
          f"{T['gross'] / T['base']:.0%} of aid for these four diseases" if T["base"] else "", False, ""),
         (num(care) if care >= 1 else "0", "People Losing Care Each Year", breakdown or "none", False, CARE_TIP),
-        (num(d5), f"Extra Deaths, {FIRST_YEAR}-{FIRST_YEAR + 4}", f"range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}",
-         True, ""),
+        (num(d5), f"Extra Deaths, {FIRST_YEAR}-{FIRST_YEAR + 4}",
+         f"range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}"
+         + (f" · +{num(res['committed']['after_2030'])} more after 2030" if res["committed"]["after_2030"] >= 0.5
+            else ""), True, after_2030_help(res["committed"])),
     ]
     big = "".join(f"<div class='ed-bignum' title='{e(tip, quote=True)}'><div class='v{' hl' if hl else ''}'>{e(v)}</div>"
                   f"<div class='l'>{e(lbl)}</div><div class='n'>{e(note)}</div></div>" for v, lbl, note, hl, tip in nums)
@@ -723,6 +725,19 @@ def _country_results(iso3, country_name, ctl, sk, imf):
 # --------------------------------------------------------------------------- #
 # Headline, comparison, cards
 # --------------------------------------------------------------------------- #
+AFTER_2030_PARTS = {"hiv_infections": "new HIV infections", "hiv_art": "people still off HIV treatment",
+                    "imm": "children who missed vaccines", "tb": "TB spread by untreated patients"}
+
+
+def after_2030_help(C) -> str:
+    """Tooltip: what the deaths set in motion after 2030 are made of (central estimates)."""
+    parts = C.get("after_parts", {})
+    bits = [f"{AFTER_2030_PARTS[k]} {num(v)}" for k, v in sorted(parts.items(), key=lambda kv: -kv[1])
+            if k in AFTER_2030_PARTS and v >= 0.5]
+    return ("Deaths after 2030 caused by the 2026-2030 losses, assuming no new cuts after 2030"
+            + (": " + "; ".join(bits) if bits else "") + ". Range = 95% interval.")
+
+
 def _headline_items(res) -> list:
     T, B = res["totals"], res["buckets"].set_index("bucket")
     items = [
@@ -733,10 +748,9 @@ def _headline_items(res) -> list:
          f"{T['replaced'] / T['gross']:.0%} of the loss" if T["gross"] > 0 else None,
          "Set by the government response in the sidebar, limited by fiscal space."),
         ("Net Loss to Services", money(T["net"]), "per year", "Aid lost minus what the government replaces."),
-        ("Extra Deaths, Year 1", num(T["deaths_y1"]),
-         "range " + rng(res["buckets"]["deaths_y1_lo"].sum(), res["buckets"]["deaths_y1_hi"].sum()),
-         "Year 1 is lower than later years because deaths after losing treatment, bednets or vaccines build up over "
-         "time. Range = 95% interval."),
+        ("Deaths Set in Motion After 2030", num(res["committed"]["after_2030"]),
+         "range " + rng(res["committed"]["after_2030_lo"], res["committed"]["after_2030_hi"]),
+         after_2030_help(res["committed"])),
         ("Extra Deaths Over 5 Years", num(T["deaths_5y"]), "range " + rng(T["deaths_5y_lo"], T["deaths_5y_hi"]),
          "Assumes the cut is sustained for five years. Range = 95% interval."),
         ("New HIV Infections, 5 Years", num(B.loc["HIV", "infections_5y"]),
@@ -1208,10 +1222,17 @@ def cross_country(sk, ctl, iso3, names) -> pd.DataFrame:
         return A
     st.caption(_esc(f"{title_case(ctl['preset'])} · {_resp_label(ctl['fiscal_t'])}"
                     + ("" if ctl["trend"] else " · Death Rates Held Constant")))
-    tot = A[["gross_loss_usd", "net_loss_usd", "deaths_y1", "deaths_5y", "deaths_5y_lo", "deaths_5y_hi", "hiv_infections_5y"]].sum()
+    after_cols = [c for c in ("deaths_after_2030", "deaths_after_2030_lo", "deaths_after_2030_hi") if c in A]
+    tot = A[["gross_loss_usd", "net_loss_usd", "deaths_y1", "deaths_5y", "deaths_5y_lo", "deaths_5y_hi",
+             "hiv_infections_5y"] + after_cols].sum()
     st.markdown(th.pills_html([
         (f"Aid Lost per Year, {len(A)} Countries", money(tot["gross_loss_usd"]),
          "HIV, TB, malaria and vaccine aid removed by the scenario", f"Net of Backfill {money(tot['net_loss_usd'])}"),
+        ("Deaths Set in Motion After 2030", num(tot["deaths_after_2030"]),
+         "Deaths after 2030 caused by the 2026-2030 losses: new HIV infections, people still off HIV treatment, "
+         "children who missed vaccines and TB spread by untreated patients",
+         "Range " + rng(tot["deaths_after_2030_lo"], tot["deaths_after_2030_hi"]))
+        if "deaths_after_2030" in tot else
         ("Extra Deaths, Year 1", num(tot["deaths_y1"]), "Deaths build up over the five years", ""),
         ("Extra Deaths Over 5 Years", num(tot["deaths_5y"]),
          "Totals add up country results; the range adds country 2.5th and 97.5th percentiles, so it is wider than a "

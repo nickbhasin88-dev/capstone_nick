@@ -361,8 +361,8 @@ def art_cohorts(stock: np.ndarray, hazard_by_age: np.ndarray, transmission: np.n
     cohort with years-since-loss = 1; a fall returns the most recent cohorts to care first. Each cohort's excess death
     risk follows hazard_by_age (n x 5, by its own years since losing care), and it transmits HIV at `transmission` per
     person-year (half in its first year). Negative stock (aid gains) uses the hazard of the calendar year, as before.
-    Returns (deaths n x 5, infections n x 5, committed deaths after 2030 n): the cohorts still off care at the end of
-    2030 followed to the end of their own 5 years, with no new cuts after 2030."""
+    Returns (deaths n x 5, infections n x 5, deaths after 2030 n, infections after 2030 n): the cohorts still off care
+    at the end of 2030 followed to the end of their own 5 years, with no new cuts after 2030."""
     n = stock.shape[0]
     pos, neg = np.clip(stock, 0, None), np.clip(stock, None, 0)
     deaths, infections = np.zeros((n, N_YEARS)), np.zeros((n, N_YEARS))
@@ -385,11 +385,12 @@ def art_cohorts(stock: np.ndarray, hazard_by_age: np.ndarray, transmission: np.n
         prev = pos[:, t]
         deaths[:, t] += neg[:, t] * hazard_by_age[:, t]          # gains: same as the sudden-cut formula
         infections[:, t] += neg[:, t] * transmission * ART_INFECT_LAG[t]
-    after = np.zeros(n)
+    after, after_inf = np.zeros(n), np.zeros(n)
     for size, age in cohorts:                          # still off care at the end of 2030
         for a in range(age, N_YEARS + 1):
             after += size * hazard_by_age[:, a - 1]
-    return deaths, infections, after
+            after_inf += size * transmission * ART_INFECT_LAG[a - 1]
+    return deaths, infections, after, after_inf
 
 
 def malaria_levels(row, P, units, need_cov) -> dict:
@@ -592,29 +593,80 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
     dur = np.array([t - started[0] if started.size and t >= started[0] else 0 for t in years])
     mal_f = mortality_trend_factors(row, "malaria", mortality_trend)
 
+    tb_need, tb_cov = ep["need_cov"]["tb_ds"]
+    art_need, art_cov0 = ep["need_cov"]["hiv_art"]
+    u5_trend = _v(row, TREND_COLUMNS["u5"])
+    u5_trend = (FALLBACK_MORTALITY_TREND if np.isnan(u5_trend) else u5_trend) if mortality_trend else 0.0
+    IMM_COHORT = np.diff(np.r_[0.0, LAG["imm"]])       # a missed birth cohort's deaths by years since: .40 .35 .20 .05 0
+    TB_ARRIVAL = (0.5, 0.5)                            # secondary TB cases appear 1 and 2 years after the untreated year
+
     def lives(Px, U):
-        """Deaths (n x 5), infections (n x 5) and committed deaths after 2030 (n) for one set of draws."""
+        """Deaths (n x 5), infections (n x 5) and deaths set in motion after 2030 (dict of n arrays) for one set of
+        draws. After-2030 parts: people still off ART (hiv_art), deaths from new HIV infections (hiv_infections),
+        missed birth cohorts (imm) and TB spread from untreated cases (tb)."""
         nx = len(Px["uc_imm"])
         lv = per_unit_levels(row, Px, ep["art_cov"], mortality_trend)
-        d, inf = {}, {}
-        for l in ("hiv_pmtct", "hiv_prev", "hiv_ovc", "tb_ds", "tb_dr", "imm"):
+        d, inf, after = {}, {}, {}
+        for l in ("hiv_pmtct", "hiv_prev", "hiv_ovc", "tb_ds", "tb_dr"):
             lag = LAG.get(l)
             ramp = np.array([lag[k] for k in dur]) if lag is not None else np.ones(N_YEARS)
             d[l] = U[l] * lv[l] * ramp                                      # year t depends only on year t's loss
+        # vaccines: each year's missed birth cohort dies over the following years (IMM_COHORT); deaths are scaled by
+        # under-5 mortality in the year they happen. For a sudden cut this equals the original ramp exactly.
+        d["imm"] = np.zeros((nx, N_YEARS))
+        after["imm"] = np.zeros(nx)
+        for s_ in years:
+            for k in range(N_YEARS):
+                t = s_ + k
+                if t < N_YEARS:
+                    d["imm"][:, t] += U["imm"][:, s_] * IMM_COHORT[k] * lv["imm"][:, t]
+                else:                                                       # after 2030, mortality keeps its trend
+                    after["imm"] += U["imm"][:, s_] * IMM_COHORT[k] * lv["imm"][:, -1] * (1 + u5_trend) ** (t - 4)
+        # TB spread: untreated person-years cause secondary cases 1-2 years later, treated at that year's reduced
+        # coverage; cases arriving after 2030 are set in motion by the cut
+        h = _v(row, "tb_hiv_share", 0.0)
+        a_ = 0.0 if np.isnan(ep["art_cov"]) else ep["art_cov"]
+        cfr_u = (1 - h) * Px["tb_cfr_untreated_neg"] + h * Px["tb_cfr_untreated_pos"] * (1 - 0.3 * a_)
+        cfr_t = (1 - h) * Px["tb_cfr_treated_neg"] + h * Px["tb_cfr_treated_pos"] * (1 - 0.3 * a_)
+        ok_tb = not (np.isnan(tb_need) or np.isnan(tb_cov) or tb_need <= 0)
+        cov_t = [np.clip(tb_cov - U["tb_ds"][:, t] / tb_need, 0, 1) if ok_tb else np.full(nx, 0.0) for t in years]
+        after["tb"] = np.zeros(nx)
+        for s_ in years:
+            sec = (U["tb_ds"][:, s_] + U["tb_dr"][:, s_]) * Px["tb_secondary"]
+            for k, share in enumerate(TB_ARRIVAL, start=1):
+                t = s_ + k
+                c = cov_t[min(t, N_YEARS - 1)]
+                dd = sec * share * (c * cfr_t + (1 - c) * cfr_u)
+                if t < N_YEARS:
+                    d["tb_ds"][:, t] += dd
+                else:
+                    after["tb"] += dd
+        # HIV treatment cohorts
         hz = np.outer(Px["art_hazard_mult"], ART_HAZARD)
-        d["hiv_art"], inf["hiv_art"], after = art_cohorts(U["hiv_art"], hz, Px["art_transmission"])
+        d["hiv_art"], inf["hiv_art"], after["hiv_art"], inf_after = art_cohorts(U["hiv_art"], hz, Px["art_transmission"])
+        # malaria: Lives Saved Tool each year; lost vector control rebounds while the loss lasts
         mal = {k: np.zeros((nx, N_YEARS)) for k in ("mal_itn", "mal_irs", "mal_cm")}
         for t in years:
             m = malaria_levels(row, Px, {k: U[k][:, t] for k in mal}, ep["need_cov"])
             for k in mal:
-                mal[k][:, t] = m[k] * LAG[k][dur[t]] * mal_f[t]
+                rebound = (1 + Px["mal_resurgence"]) ** dur[t] if k != "mal_cm" else 1.0
+                mal[k][:, t] = m[k] * LAG[k][dur[t]] * mal_f[t] * rebound
         d.update(mal)
         inf["hiv_pmtct"] = U["hiv_pmtct"] * Px["pmtct_vt_reduction"][:, None]
         inf["hiv_prev"] = U["hiv_prev"].copy()
+        # new HIV infections (adults: from people off ART, and lost prevention) die mostly after 2030; lifetime risk
+        # weighted by treatment coverage after the cut (infant infections from PMTCT are already counted above)
+        ok_art = not (np.isnan(art_need) or np.isnan(art_cov0) or art_need <= 0)
+        cov_art = np.clip(art_cov0 - U["hiv_art"][:, -1] / art_need, 0, 1) if ok_art else np.full(nx, 0.0)
+        per_inf = cov_art * Px["hiv_inf_death_treated"] + (1 - cov_art) * Px["hiv_inf_death_untreated"]
+        new_inf = inf["hiv_art"].sum(axis=1) + inf_after + inf["hiv_prev"].sum(axis=1)
+        after["hiv_infections"] = new_inf * per_inf
         return d, inf, after
 
-    deaths, infections, after = lives(P, units)
-    deathsc, _, afterc = lives(Pc, unitsc)
+    deaths, infections, after_parts = lives(P, units)
+    deathsc, _, afterc_parts = lives(Pc, unitsc)
+    after = sum(after_parts.values())
+    afterc = {k: float(np.ravel(v)[0]) for k, v in afterc_parts.items()}
     deathsc = {l: v for l, v in deathsc.items() if l in pudc or l.startswith("mal_")}
 
     # ---- assemble (money and people are averages over the 5 years: equal to the yearly values for a sudden cut) ----
@@ -696,9 +748,10 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
            "fiscal": {**fs, "gross_loss": G, "replacement": float(R_t.mean()), "replacement_wanted": want,
                       "theta_hist": th_hist},
            "flags": ep["flags"], "deaths_per_dollar": dpd,
-           "committed": {"deaths": d5c + float(np.ravel(afterc)[0]), "deaths_lo": q(committed, 2.5),
-                         "deaths_hi": q(committed, 97.5), "after_2030": float(np.ravel(afterc)[0]),
-                         "after_2030_lo": q(after, 2.5), "after_2030_hi": q(after, 97.5)},
+           "committed": {"deaths": d5c + sum(afterc.values()), "deaths_lo": q(committed, 2.5),
+                         "deaths_hi": q(committed, 97.5), "after_2030": sum(afterc.values()),
+                         "after_2030_lo": q(after, 2.5), "after_2030_hi": q(after, 97.5),
+                         "after_parts": afterc},
            "totals": {"base": float(base.sum()), "gross": float(G_t.mean()), "replaced": float(budget_t.mean()),
                       "net": float((G_t - budget_t).mean()), "gross_full": G,
                       "gains": float(-np.clip(gross, None, 0).sum()),
@@ -798,20 +851,46 @@ def _share_history() -> pd.DataFrame:
     return _share_history.cache
 
 
+def imf_gov_spending_2023(iso3: str) -> float:
+    """Total general-government spending in 2023, US$ (IMF World Economic Outlook: expenditure % of GDP x GDP), the
+    same source as Section 3. NaN when the IMF has no 2023 figure."""
+    cache = imf_gov_spending_2023.__dict__.setdefault("cache", {})
+    if iso3 not in cache:
+        f = HERE / "macro_data" / f"{iso3}.csv"
+        v = np.nan
+        if f.exists():
+            m = pd.read_csv(f)
+            r = m[m.year == 2023]
+            if len(r):
+                pct, gdp = r["gov_expenditure_pct_gdp"].iloc[0], r["gdp_usd_bn_2023"].iloc[0]
+                if pct == pct and gdp == gdp and pct > 0 and gdp > 0:
+                    v = pct / 100 * gdp * 1e9
+        cache[iso3] = v
+    return cache[iso3]
+
+
 def health_budget(iso3: str, inputs: dict) -> dict:
-    """Health's share of government spending today (%), total government spending (US$, = government health spending
-    2023 / that share), the room to the Abuja 15% ceiling, and the fastest sustained rise in the country's history
-    (90th percentile of its 2001-2023 yearly changes in the share, percentage points)."""
+    """Health's share of government spending today (%), total government spending (US$, IMF WEO 2023; the share is
+    government health spending 2023 / that total), the room to the Abuja 15% ceiling, and the fastest sustained rise
+    in the country's history (90th percentile of its 2001-2023 yearly changes in the World Bank share, percentage
+    points). Without a usable IMF figure, total spending falls back to government health spending / the World Bank share."""
     row = inputs["ci"].loc[iso3] if iso3 in inputs["ci"].index else pd.Series(dtype=float)
-    share, ghes = _v(row, "sh_xpd_ghed_ge_zs"), _v(row, "ghes_2023")
-    gov = ghes / (share / 100) if share and share > 0 and not np.isnan(ghes) else np.nan
+    wdi, ghes = _v(row, "sh_xpd_ghed_ge_zs"), _v(row, "ghes_2023")
+    gov = imf_gov_spending_2023(iso3)
+    imf_share = ghes / gov * 100 if gov == gov and not np.isnan(ghes) else np.nan
+    # use the IMF total unless it disagrees with the World Bank share by more than 2x (e.g. Venezuela's 2023 figures)
+    if imf_share == imf_share and (np.isnan(wdi) or 0.5 <= imf_share / wdi <= 2):
+        share, source = imf_share, "IMF WEO"
+    else:
+        share, source = wdi, "World Bank"
+        gov = ghes / (wdi / 100) if wdi and wdi > 0 and not np.isnan(ghes) else np.nan
     h = _share_history()
     h = h[(h.iso3 == iso3) & h.year.between(2000, 2023)].sort_values("year")
     ch = h["share"].diff()[h["year"].diff() == 1].dropna()
     p90 = float(ch.quantile(0.9)) if len(ch) >= 5 else np.nan
     room = max(ABUJA_CEILING - share, 0.0) if not np.isnan(share) else np.nan
     return {"share_pct": share, "gov_spend_usd": gov, "ceiling_pct": ABUJA_CEILING, "room_pct": room,
-            "p90_rise_pp": p90, "ghes_usd": ghes}
+            "p90_rise_pp": p90, "ghes_usd": ghes, "gov_source": source}
 
 
 def _money_by_year(iso3, scenario, fiscal, inputs, cut_path):
@@ -875,7 +954,9 @@ def run_all(scenario, fiscal, inputs, ptab, n_draws=80, countries=None, mortalit
                "replaced_usd": t["replaced"], "net_loss_usd": t["net"], "deaths_y1": t["deaths_y1"],
                "deaths_5y": t["deaths_5y"], "deaths_5y_lo": t["deaths_5y_lo"], "deaths_5y_hi": t["deaths_5y_hi"],
                "loss_pct_ghes": t["gross"] / r["fiscal"]["ghes"] if r["fiscal"]["ghes"] else np.nan,
-               "capacity_usd": r["fiscal"]["capacity"]}
+               "capacity_usd": r["fiscal"]["capacity"], "deaths_after_2030": r["committed"]["after_2030"],
+               "deaths_after_2030_lo": r["committed"]["after_2030_lo"],
+               "deaths_after_2030_hi": r["committed"]["after_2030_hi"]}
         for _, bb in r["buckets"].iterrows():
             rec[f"deaths_5y_{bb['bucket']}"] = bb["deaths_5y"]
             rec[f"net_loss_{bb['bucket']}"] = bb["net_loss_usd"]

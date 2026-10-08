@@ -14,6 +14,9 @@ import scenarios as scn  # noqa: E402
 from make_baseline import COUNTRIES, FISCALS, N_DRAWS, snapshot  # noqa: E402
 
 I, P = hm.load_inputs(), hm.load_params()
+NEW_MECHANISMS = ["tb_secondary", "mal_resurgence"]      # added after the baseline; at 0 they switch off
+P0 = P.copy()
+P0.loc[NEW_MECHANISMS, ["central", "low", "high"]] = 0.0
 BASE = json.loads((Path(__file__).parent / "baseline_sudden.json").read_text())
 NONE = hm.Fiscal(*scn.DEFAULT_FISCAL)
 
@@ -35,7 +38,7 @@ def test_default_path_reproduces_original(key):
     iso, preset, fk = key.split("|")
     sc = scn.build_scenario(preset, scn.default_opts(preset, I["ci"]), I["ci"])
     for kw in ({}, {"cut_path": [1] * 5, "gov_add_usd": [0] * 5}):        # implicit and explicit defaults
-        got = snapshot(hm.run_country(iso, sc, hm.Fiscal(*FISCALS[fk]), I, P, n_draws=N_DRAWS, **kw))
+        got = snapshot(hm.run_country(iso, sc, hm.Fiscal(*FISCALS[fk]), I, P0, n_draws=N_DRAWS, **kw))
         exp = BASE[key]
         for l, cols in exp["lines"].items():
             for c, v in cols.items():
@@ -79,11 +82,11 @@ def test_late_cut_committed(iso):
     assert late["totals"]["deaths_5y"] < 0.5 * early["totals"]["deaths_5y"] + 1e-9
     # people off ART: the 2030 cohort is followed for its own 5 years, so it commits the same deaths as the 2026 cohort
     hiv_early = early["lines"].set_index("line").loc["hiv_art", "deaths_5y"] + 0.0
-    hiv_late = late["committed"]["after_2030"] + late["lines"].set_index("line").loc["hiv_art", "deaths_5y"]
+    hiv_late = late["committed"]["after_parts"]["hiv_art"] + late["lines"].set_index("line").loc["hiv_art", "deaths_5y"]
     assert abs(hiv_late - hiv_early) <= 1e-6 * max(1.0, hiv_early)
     # returning to care averts deaths: a cut in force 2026-2027 only, then restored, commits fewer HIV deaths
     temp = run(iso, cut_path=[1, 1, 0, 0, 0])
-    hiv_temp = temp["committed"]["after_2030"] + temp["lines"].set_index("line").loc["hiv_art", "deaths_5y"]
+    hiv_temp = temp["committed"]["after_parts"]["hiv_art"] + temp["lines"].set_index("line").loc["hiv_art", "deaths_5y"]
     assert hiv_temp <= hiv_early + 1e-6
 
 
@@ -116,3 +119,59 @@ def test_break_even_share(iso, path):
     if s > 0.01:
         r2 = run(iso, cut_path=path, gov_add_usd=hm.gov_add_from_points(0.95 * s * steps, hb["gov_spend_usd"]))
         assert r2["years"]["gap_usd"].max() > 0
+
+
+def with_param(**vals):
+    p = P.copy()
+    for k, v in vals.items():
+        p.loc[k, ["central", "low", "high"]] = v
+    return p
+
+
+def run_p(iso, ptab, **kw):
+    sc = scn.build_scenario("Full US exit", scn.default_opts("Full US exit", I["ci"]), I["ci"])
+    return hm.run_country(iso, sc, NONE, I, ptab, n_draws=N_DRAWS, **kw)
+
+
+# (g) a vaccine cut in 2030 only: most of that birth cohort's deaths come after 2030 and are counted as committed
+@pytest.mark.parametrize("iso", COUNTRIES)
+def test_late_vaccine_cut_committed(iso):
+    late = run(iso, cut_path=[0, 0, 0, 0, 1])
+    imm5 = late["lines"].set_index("line").loc["imm", "deaths_5y"]
+    after = late["committed"]["after_parts"]["imm"]
+    if imm5 > 1:
+        assert after > imm5                                 # 60% of the cohort's deaths fall after its first year
+    early = run(iso)
+    assert early["committed"]["after_parts"]["imm"] >= after - 1e-6   # a 2026 cut leaves 5 cohorts, 4 with a tail
+
+
+# (h) TB spread: more secondary cases -> more TB deaths and more committed deaths; none without a cut
+@pytest.mark.parametrize("iso", COUNTRIES)
+def test_tb_transmission(iso):
+    lo, hi = run_p(iso, with_param(tb_secondary=0.0)), run_p(iso, with_param(tb_secondary=0.8))
+    tb = lambda r: r["lines"].set_index("line").loc["tb_ds", "deaths_5y"]
+    assert tb(hi) >= tb(lo) - 1e-9 and hi["committed"]["after_parts"]["tb"] >= 0
+    assert lo["committed"]["after_parts"]["tb"] == 0
+    if tb(lo) > 1:
+        assert tb(hi) > tb(lo) and hi["committed"]["after_parts"]["tb"] > 0
+
+
+# (i) malaria rebound: vector-control deaths grow with the rebound rate, case management doesn't change
+@pytest.mark.parametrize("iso", COUNTRIES)
+def test_malaria_resurgence(iso):
+    lo, hi = run_p(iso, with_param(mal_resurgence=0.0)), run_p(iso, with_param(mal_resurgence=0.25))
+    L0, L1 = lo["lines"].set_index("line"), hi["lines"].set_index("line")
+    assert L1.loc["mal_itn", "deaths_5y"] >= L0.loc["mal_itn", "deaths_5y"] - 1e-9
+    assert close(L1.loc["mal_cm", "deaths_5y"], L0.loc["mal_cm", "deaths_5y"])
+
+
+# (j) HIV infections: deaths after 2030 rise with the death risk of a new infection, and are zero with no cut
+@pytest.mark.parametrize("iso", COUNTRIES)
+def test_hiv_infection_deaths(iso):
+    lo = run_p(iso, with_param(hiv_inf_death_untreated=0.0, hiv_inf_death_treated=0.0))
+    hi = run_p(iso, with_param(hiv_inf_death_untreated=0.9, hiv_inf_death_treated=0.2))
+    assert lo["committed"]["after_parts"]["hiv_infections"] == 0
+    assert hi["committed"]["after_parts"]["hiv_infections"] >= 0
+    if lo["lines"]["infections_5y"].sum() > 1:
+        assert hi["committed"]["after_parts"]["hiv_infections"] > 0
+    assert run(iso, cut_path=[0] * 5)["committed"]["after_parts"]["hiv_infections"] == 0

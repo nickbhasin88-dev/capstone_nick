@@ -214,7 +214,7 @@ with tabs[1]:
     | Aid at Risk (per Year) | Yearly HIV, TB, malaria and vaccine aid removed by the scenario (gross loss), out of the 2021-2023 average |
     | Replaced by Government | The government's replacement, set by the response chosen, capped by fiscal space |
     | Net Loss to Services | Aid at risk minus what is replaced |
-    | Extra Deaths, Year 1 / Over 5 Years | Central estimate (all parameters at their central values); range = 2.5th to 97.5th percentile of the Monte Carlo draws |
+    | Extra Deaths Over 5 Years; Deaths Set in Motion After 2030 | Central estimate (all parameters at their central values); range = 2.5th to 97.5th percentile of the Monte Carlo draws |
     | New HIV Infections, 5 Years | Infections from people off ART, mothers without PMTCT, and lost prevention |
     | Every US$1 Million Lost | People losing the service per $1M = $1M ÷ cost per person x (1 - continuity); coverage drop = that ÷ people in need; extra deaths = deaths per dollar x $1M x (1 - continuity); "aid per death" = $5M (five years of $1M) ÷ those deaths |
     | What Each Service Loses | Per service line: baseline aid, aid lost after replacement, cost per person, people losing the service, coverage before and after, extra deaths (range) |
@@ -399,6 +399,14 @@ with tabs[2]:
     TB burden estimation methods. Drug-resistant TB: {rng_txt('tb_dr_dcfr')} deaths averted per patient treated
     (*assumption*).
 
+    **TB spread.** Each untreated TB patient (drug-sensitive or drug-resistant) causes {rng_txt('tb_secondary')}
+    further TB cases: about 10 people infected a year by an untreated smear-positive case (Styblo 1991) x ~60% of
+    pulmonary cases smear-positive (WHO) x 5-10% of those infected developing disease (Vynnycky & Fine 1997). Half the
+    new cases appear 1 year later and half 2 years later. They are treated at that year's (reduced) TB treatment
+    coverage, so each dies with probability coverage x treated CFR + (1 - coverage) x untreated CFR (same HIV mix as
+    above). Deaths before the end of 2030 are added to TB treatment; later ones are counted as set in motion after
+    2030. Onward chains beyond these secondary cases are not modelled, so this is conservative.
+
     **Malaria** uses the Lives Saved Tool form. Coverage after the cut feeds a multiplicative death reduction:
     """)
     st.latex(r"D_1=D_0\times\frac{1-E_v C_{v,1}}{1-E_v C_{v,0}}\times\frac{1-E_c C_{c,1}}{1-E_c C_{c,0}}")
@@ -409,6 +417,11 @@ with tabs[2]:
       E_c = {rng_txt('mal_cm_eff')} for case management (Thwing et al. 2011).
     - C₀ = current coverage; C₁ = C₀ - people losing the service ÷ people in need.
     - Because the formula is multiplicative, each extra point of coverage lost costs slightly more lives.
+    - **Rebound.** Once bednets and spraying stop, malaria transmission recovers over several seasons rather than
+      returning at once to its old level (Cohen et al. 2012, *Malaria Journal* 11:122, review of 75 resurgence
+      events). Deaths from lost vector control are multiplied by (1 + r)^(years since the cut started), with r =
+      {rng_txt('mal_resurgence')} a year (*assumption*; the direction is documented, the speed varies widely). Lost
+      malaria treatment is not affected.
 
     **Routine immunization.** Future deaths averted per child immunized at under-5 mortality of 50 per 1,000 =
     {rng_txt('imm_deaths_per_child_ref')} (Gavi: 20.6M deaths averted ÷ 1.2B children; 1.7M ÷ 72M in 2024), times the
@@ -428,13 +441,26 @@ with tabs[2]:
     | Malaria treatment | 100% | 100% | 100% | 100% | 100% |
     | Vaccines (unvaccinated cohorts add up) | 40% | 75% | 95% | 100% | 100% |
 
+    **Vaccines by birth cohort.** Each year's missed birth cohort dies over the following years: 40% of its
+    under-5 deaths in the year it is missed, then 35%, 20% and 5% (the yearly increments of the vaccine row above).
+    Deaths are scaled by under-5 mortality in the year they happen. Adding up the cohorts gives exactly the vaccine
+    row above for a sudden cut. Deaths of cohorts missed in 2027-2030 that fall after 2030 are counted as set in
+    motion after 2030 (under-5 mortality keeps its trend), so a vaccine cut late in the period is not undercounted.
+
     **Already-falling death rates** (on by default). Baseline malaria deaths and under-5 mortality were falling
     before any cut, so in year y they are multiplied by (1 + trend)^(y-1). Each country's trend is its average annual
     change over 2010-2019 from a log-linear fit (at least 5 years of data), clipped to -8% to +2% a year; countries
     without data get the median; if still missing, -0.9% a year (Cavalcanti et al. 2025, Lancet, appendix 10.2). TB
     and HIV effects are per patient and unchanged.
 
-    **HIV prevention** turns money into infections averted only (no deaths within five years). **Orphans and
+    **New HIV infections.** HIV prevention turns money into infections averted, and people off ART transmit HIV
+    (see *Funding Paths*). Few of those infected die within five years, so their deaths are counted only as set in
+    motion after 2030: each new adult infection (from people off treatment, inside 2030 and later in their cohorts,
+    plus lost prevention) dies of HIV with probability ART coverage after the cut x {rng_txt('hiv_inf_death_treated')}
+    + (1 - coverage) x {rng_txt('hiv_inf_death_untreated')}. The untreated figure is lifetime HIV mortality without
+    treatment (Todd et al. 2007, *AIDS*; CASCADE: median survival ~10-11 years); the treated figure is an
+    *assumption* for excess HIV deaths over a lifetime on ART with typical interruptions. Infant infections from
+    lost PMTCT are not included here because their deaths are already counted under PMTCT. **Orphans and
     vulnerable children** support has no modelled effect on deaths.
     """)
 
@@ -467,8 +493,11 @@ with tabs[2]:
     **Gradual budget increase.** The government raises health's share of its total spending by a number of
     percentage points each year (cumulative): Steady p·t; Fast start 5p·(1 - (1 - t/5)²); Slow start 5p·(t/5)², never
     past the Abuja target of 15%. Extra money A(t) = points(t) ÷ 100 x total government spending, where total
-    government spending = government health spending (IHME, 2023) ÷ health's share of government spending (World
-    Bank WDI `SH.XPD.GHED.GE.ZS`). No other government response applies with this option.
+    government spending = general-government expenditure in 2023 (IMF World Economic Outlook: expenditure % of GDP x
+    GDP, the same source as Section 3). Health's share today = government health spending (IHME, 2023) ÷ that total.
+    If the IMF figure is missing or implies a share more than twice or less than half the World Bank's
+    (`SH.XPD.GHED.GE.ZS`; e.g. Venezuela), the World Bank share is used instead and total spending = government
+    health spending ÷ that share. No other government response applies with this option.
 
     **Which services are tracked how.**
 
@@ -476,16 +505,24 @@ with tabs[2]:
     |---|---|
     | HIV treatment (and HIV transmission from people off treatment) | **Cohorts.** When the number off ART rises, the increase is a new cohort with 1 year since losing care; when it falls, the most recent cohorts return to care first. Each cohort's death risk follows the ART hazard by its own years since losing care (1.2%, 2.8%, 3.8%, 4.5%, 5.0%), and it transmits HIV at half the full rate in its first year. |
     | Mother-to-child transmission | **Year by year.** Deaths and infections belong to the year the mother and infant miss the service. |
-    | TB, malaria (nets, spraying, treatment), routine immunization | **Year by year.** Deaths in year t depend only on the coverage lost in year t, using the same formulas as for a sudden cut (TB case fatality for that year's untreated cases; the Lives Saved Tool formula for malaria; deaths per missed child for that year's birth cohort). Each service's ramp-up (see *Timing*) is counted from when the cut started, not from the calendar year. |
+    | TB, malaria (nets, spraying, treatment) | **Year by year.** Deaths in year t depend only on the coverage lost in year t, using the same formulas as for a sudden cut (TB case fatality for that year's untreated cases; the Lives Saved Tool formula for malaria). Each service's ramp-up and the malaria rebound are counted from when the cut started, not from the calendar year. TB spread adds deaths 1-2 years after each untreated year. |
+    | Routine immunization | **Birth cohorts.** Each year's missed cohort dies over the following years (40%, 35%, 20%, 5%), including after 2030. |
 
     With a sudden cut every method gives exactly the original results (checked by automated tests for 5 countries,
     every scenario and 3 government responses).
 
     **Committed deaths.** A cut that starts late shows few deaths inside 2026-2030 simply because they happen
-    later. To avoid flattering late or delayed cuts, every cohort that loses HIV treatment during 2026-2030 is
-    followed for its own 5 years, beyond 2030 where needed, assuming no new cuts after 2030 (people still off care
-    at the end of 2030 stay off for the rest of their 5 years). **Further deaths already set in motion after 2030** =
-    those extra deaths. **Deaths avoided vs sudden cut with no response** = committed deaths (2026-2030 plus those
+    later. To avoid flattering late or delayed cuts, deaths set in motion by the 2026-2030 losses are followed past
+    2030, assuming no new cuts after 2030. **Deaths set in motion after 2030** add up four parts:
+
+    | Part | What is followed past 2030 |
+    |---|---|
+    | People off HIV treatment | every cohort that loses ART during 2026-2030, for its own 5 years (people still off care at the end of 2030 stay off for the rest of their 5 years) |
+    | New HIV infections | lifetime HIV deaths of infections caused by people off ART (including those cohorts' infections after 2030) and by lost prevention |
+    | Missed vaccines | the remaining under-5 deaths of birth cohorts missed in 2027-2030 |
+    | TB spread | secondary TB cases arriving in 2031-2032 from patients untreated in 2029-2030 |
+
+    The central estimate of each part is shown in the tooltip of the pill. **Deaths avoided vs sudden cut with no response** = committed deaths (2026-2030 plus those
     set in motion) of a sudden cut with no government response, minus committed deaths of the chosen path. For TB,
     malaria and vaccines a later cut means fewer years of lost services, which genuinely costs fewer lives.
 
@@ -520,7 +557,7 @@ with tabs[3]:
     | Global Health Spending | IHME, 1995-2023 | Government, prepaid private, out-of-pocket and aid spending: totals, per person, % of GDP | Section 1; government health spending and its growth (fiscal space) |
     | Expected Health Spending | IHME, 2024-2050 | Same variables, projected | Not used: loaded into the model's input file, but no calculation or chart uses it |
     | GDP | IHME Financing Global Health, 1960-2050 (2026) | GDP per person, constant 2023 US$ | Constant-dollar GDP; ART staff-cost scaling; regression controls |
-    | World Economic Outlook | IMF | GDP, population, general-government revenue, expenditure, net lending and gross debt (% of GDP) | Header; Section 3 totals |
+    | World Economic Outlook | IMF | GDP, population, general-government revenue, expenditure, net lending and gross debt (% of GDP) | Header; Section 3 totals; total government spending for the gradual budget increase |
     | World Revenue Longitudinal Data | IMF | Revenue by type, % of GDP | Section 3 revenue mix |
     | Government Finance Statistics (COFOG) | IMF | Spending by function, % of outlays | Section 3 spending mix |
     | World Development Indicators | World Bank, via Gapminder's open-numbers mirror | See the table below | Model inputs |
@@ -553,7 +590,7 @@ with tabs[3]:
     | `GC.REV.XGRT.GD.ZS` | Revenue excluding grants (% of GDP) | Aid lost as % of revenue |
     | `GC.DOD.TOTL.GD.ZS` | Central government debt (% of GDP) | Fiscal panel |
     | `GC.XPN.INTP.RV.ZS` | Interest payments (% of revenue) | Debt-stress factor |
-    | `SH.XPD.GHED.GE.ZS` | Government health spending (% of government spending) | Health share pill (Abuja target 15%) |
+    | `SH.XPD.GHED.GE.ZS` | Government health spending (% of government spending) | Fastest historical rise in health's share (benchmark under the sliders); fallback for health's share when IMF data are missing |
     | `SP.DYN.CDRT.IN`, `SH.MMR.DTHS` | Crude death rate; maternal deaths | Validation page |
     """)
     th.section_header("menu_book", "Published Studies Behind the Parameters")
@@ -570,6 +607,10 @@ with tabs[3]:
     - Li X et al. 2021, *Lancet* (VIMC: lifetime vs under-5 vaccine deaths averted).
     - Newell ML et al. 2004, *Lancet* (mortality of HIV-infected infants).
     - WHO Global TB Report technical appendix, Glaziou et al. (TB case fatality, Tables 4-5).
+    - Styblo K 1991, *Epidemiology of tuberculosis* (infections caused per untreated smear-positive case).
+    - Vynnycky E, Fine PEM 1997, *Epidemiology and Infection* (risk of disease after TB infection).
+    - Cohen JM et al. 2012, *Malaria Journal* 11:122 (malaria resurgence after control programs weaken).
+    - Todd J et al. 2007, *AIDS* 21 suppl 6 (survival after HIV infection without treatment in Africa).
     - Eisele TP, Larsen DA, Steketee RW 2010 and Thwing J et al. 2011 (Lives Saved Tool malaria effects).
     - UNAIDS 2025 funding-cuts brief; ten Brink D et al. 2025, *Lancet HIV* (Optima) (ART hazard calibration).
     - Cavalcanti DM et al. 2025, *Lancet* (USAID impact; mortality trend; Poisson method; rate ratios).

@@ -211,7 +211,7 @@ PATH_PHRASE = {"Sudden (default)": "With a sudden cut", "Linear phase-out": "Pha
 
 
 def outcome_panel(country_name, shape, response_phrase, res, base_committed, break_even, budget, num, rng,
-                  round_words):
+                  round_words, after_help):
     """Benchmark line, four pills, one sentence and the caption."""
     share, p90 = budget["share_pct"], budget["p90_rise_pp"]
     if share == share:
@@ -227,8 +227,7 @@ def outcome_panel(country_name, shape, response_phrase, res, base_committed, bre
          "Central estimate; range = 95% interval",
          f"Range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])}"),
         ("Further Deaths Already Set in Motion After 2030", num(max(C["after_2030"], 0.0)),
-         "People still off HIV treatment at the end of 2030, followed to the end of their own 5 years with no new cuts",
-         ""),
+         after_help(C), f"Range {rng(C['after_2030_lo'], C['after_2030_hi'])}"),
         ("Deaths Avoided vs Sudden Cut With No Response", num(max(avoided, 0)) if avoided >= -0.5 else f"−{num(-avoided)}",
          "Committed basis: deaths in 2026-2030 plus those set in motion by then", f"of {num(base_committed)}"),
         ("Break-Even Budget Increase", be, "Smallest steady yearly rise in health's share of government spending that "
