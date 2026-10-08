@@ -111,6 +111,32 @@ if us is not None:
 # --------------------------------------------------------------------------- #
 # B. Three methods for the selected country and scenario
 # --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+# Model check: donor money above the modelled service cost
+# --------------------------------------------------------------------------- #
+@st.cache_data(show_spinner=False)
+def _excess(ptab_json: str) -> pd.DataFrame:
+    import io
+    return hm.donor_cost_excess(I, pd.read_json(io.StringIO(ptab_json), orient="split"))
+
+
+th.section_header("rule", "Lines Where Donor Money Exceeds the Modelled Service Cost")
+ex = _excess(ptab_json)
+_ln = I["lines"]
+n_lines = len(_ln[_ln["line"].isin(hm.ALL_DIRECT)][["iso3", "line"]].drop_duplicates())   # country-lines with aid
+st.markdown(th.pills_html([
+    ("Country-Service Lines Affected", f"{len(ex):,}", "", f"of {n_lines:,} modelled"),
+    ("Countries With At Least One", f"{ex['iso3'].nunique() if len(ex) else 0}", "", f"of {len(names)}"),
+    (f"Lines in {country_name}", f"{(ex['iso3'] == iso3).sum() if len(ex) else 0}", "", ""),
+], large=True), unsafe_allow_html=True)
+if len(ex):
+    by_line = ex.groupby("line").size().rename(index=lambda l: hm.LINE_LABELS.get(l, l)).sort_values(ascending=False)
+    st.table(pd.DataFrame({"Service": [title_case(i) for i in by_line.index], "Countries": by_line.values})
+             .set_index("Service"))
+st.caption("In these lines, baseline donor aid ÷ cost per person is more than the people currently covered, so the "
+           "excess pays for things other than the service itself (systems, campaigns, newer products). People losing "
+           "the service are then scaled by the share of donor money lost, instead of aid lost ÷ cost per person.")
+
 th.section_header("compare_arrows", f"Three Ways to Estimate the Same Cut: {country_name}")
 st.caption(f"{title_case(preset)} · {ms._resp_label(fiscal_t)}" + ("" if trend else " · Death Rates Held Constant"))
 

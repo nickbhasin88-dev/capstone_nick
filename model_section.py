@@ -472,7 +472,7 @@ def _country_results(iso3, country_name, ctl, sk, imf):
                  "assumed to cut services. Bednets and spraying protect the same population at risk, so they share one "
                  "row. Deaths ranges are 95% intervals.")
     st.subheader("What Each Service Loses", help=" ".join(notes))
-    st.html(_service_table_html(rows))
+    st.html(_service_table_html(rows, country_name))
     ovc = show[show["line"] == "hiv_ovc"]
     if len(ovc) and ovc["net_loss_usd"].sum() > 0:
         st.caption(_esc(f"Excludes support for orphans and vulnerable children ({money(ovc['net_loss_usd'].sum())} a "
@@ -742,7 +742,16 @@ def _pts(v: float) -> str:
     return f"−{v:.1f} pts" if v < 10 else f"−{v:.0f} pts"
 
 
-def _service_table_html(rows: pd.DataFrame) -> str:
+DISEASE_WORD = {"HIV": "HIV", "TB": "TB", "Malaria": "malaria", "Immunization": "vaccine-preventable"}
+
+
+def cov_pair(c0: float, c1: float) -> str:
+    """'66% → 65%', or one decimal when coverage is below 1% ('0.2% → 0.0%')."""
+    f = "{:.1%}" if min(c0, c1) < 0.01 else "{:.0%}"
+    return f"{f.format(c0)} → {f.format(c1)}"
+
+
+def _service_table_html(rows: pd.DataFrame, country_name: str = "") -> str:
     """'What Each Service Loses': NYT-style HTML table, grouped by disease, with a Total row."""
     e = html.escape
     grey = lambda t: f"<span class='sub'>{t}</span>"
@@ -758,11 +767,20 @@ def _service_table_html(rows: pd.DataFrame) -> str:
         prev = r.bucket
         service = (f"<td class='svc' style='border-left:3px solid {col}'><span class='dot' style='background:{col}'>"
                    f"</span><b>{e(r.name)}</b><br>{grey(e(r.detail))}</td>")
-        cov = (f"{r.cov0:.0%} → {r.after:.0%}<br><span class='drop'>{_pts(r.drop)}</span>" if r.cov_ok else nm)
-        if r.line == "hiv_prev":
-            deaths = "<span class='nm'>Prevents<br>infections</span>"
-        elif not (r.deaths_5y_hi > 0) and (r.net_loss_usd > 0 or not r.cov_ok):
-            deaths = nm                    # aid is lost but the model has no deaths to count (e.g. malaria in Iraq)
+        if r.cov_ok:
+            cov = f"{cov_pair(r.cov0, r.after)}<br><span class='drop'>{_pts(r.drop)}</span>"
+        elif r.line == "hiv_prev":
+            cov = "<span class='nm'>No Single<br>Target Group</span>"
+        else:
+            cov = nm
+        if r.line == "hiv_prev":             # the only line with no death pathway inside the 5 years
+            tip = ("Prevention averts new HIV infections; their deaths mostly fall after the 5-year window, so "
+                   "they're counted in the New HIV Infections card.")
+            deaths = f"<span class='nm' title='{e(tip, quote=True)}'>See New<br>Infections</span>"
+        elif not (r.deaths_5y_hi > 0) and r.net_loss_usd > 0:
+            tip = (f"{country_name} records almost no {DISEASE_WORD[r.bucket]} deaths, so cutting this aid adds "
+                   "almost none.")
+            deaths = f"<b title='{e(tip, quote=True)}'>~0</b>"
         else:
             deaths = f"<b>{num(r.deaths_5y)}</b><br>{grey(rng(r.deaths_5y_lo, r.deaths_5y_hi))}"
         people = num(r.units_lost) if r.units_lost > 0 or r.cov_ok else nm
@@ -789,7 +807,7 @@ def _coverage_fig(rows: pd.DataFrame):
         return None
     d = d.sort_values("drop")                      # plotly draws the first row at the bottom
     labels = [f"<b>{n}</b>" for n in d["name"]]
-    text = [f"  {_pts(v)} ({c0:.0%} → {a:.0%})" for v, c0, a in zip(d["drop"], d["cov0"], d["after"])]
+    text = [f"  {_pts(v)} ({cov_pair(c0, a)})" for v, c0, a in zip(d["drop"], d["cov0"], d["after"])]
     xmax = float(d["drop"].max())
     fig = go.Figure(go.Bar(y=labels, x=_visible(list(d["drop"]), xmax * 2.0), orientation="h",
                            marker=dict(color=[BUCKET_COLORS[b] for b in d["bucket"]]), text=text,

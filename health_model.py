@@ -20,12 +20,14 @@ and the 2.5-97.5 percentile range of the Monte Carlo draws.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
+log = logging.getLogger("health_model")
 HERE = Path(__file__).parent
 MODEL_DIR = HERE / "model_data"
 PARAMS_FILE = HERE / "model_params.csv"
@@ -77,6 +79,8 @@ LAG = {
 ART_HAZARD = np.array([0.012, 0.028, 0.038, 0.045, 0.05])  # excess deaths per person-year off ART, by year since loss
 ART_INFECT_LAG = np.array([0.5, 1, 1, 1, 1])
 DR_TB_SHARE, DR_TB_COV = 0.04, 0.45
+MAL_CM_MIN_INCIDENCE = 50       # malaria cases per 1,000 at risk needed to read fever treatment as case coverage
+_EXCESS_LOGGED: set = set()     # (iso3, line) pairs already logged as "donor money exceeds the service cost"
 
 
 # --------------------------------------------------------------------------- #
@@ -204,7 +208,13 @@ def epi(row: pd.Series, P: dict) -> dict:
     pop = _v(row, "sp_pop_totl")
     inc_hiv = _v(row, "sh_hiv_incd_tl") / pop * 1000 if pop else np.nan
     itn = _v(row, "sh_mlr_nets_zs") / 100
+    # "% of under-5 fevers given antimalarials" measures coverage of malaria cases only where most fevers are malaria;
+    # where malaria is rare it is near zero for that reason, so the default coverage is used instead
     cm = _v(row, "sh_mlr_tret_zs") / 100
+    mal_inc = _v(row, "sh_mlr_incd_p3")
+    cm_low_malaria = not np.isnan(cm) and not (mal_inc >= MAL_CM_MIN_INCIDENCE)
+    if cm_low_malaria:
+        cm = np.nan
     art = _v(row, "sh_hiv_artc_zs") / 100
     pm = _v(row, "sh_hiv_pmtc_zs") / 100
     e = {
@@ -220,7 +230,10 @@ def epi(row: pd.Series, P: dict) -> dict:
     flags = []
     if np.isnan(itn):
         flags.append("bednet use not surveyed: default assumed")
-    if np.isnan(cm):
+    if cm_low_malaria:
+        flags.append("malaria is rare here, so the fever-treatment survey does not measure malaria treatment: "
+                     "default coverage assumed")
+    elif np.isnan(cm):
         flags.append("malaria treatment coverage not surveyed: default assumed")
     return {"need_cov": e, "hiv_incidence_per_1000": inc_hiv, "flags": flags, "art_cov": art}
 
@@ -228,11 +241,24 @@ def epi(row: pd.Series, P: dict) -> dict:
 UC_REF_FILE = HERE / "unit_cost_reference.csv"
 
 
+# US CPI-U annual averages (BLS series CUUR0000SA0), to bring study costs to 2023 US$ (2014 -> 2023 = 1.287, the
+# factor already applied to the TB rows of unit_cost_reference.csv)
+CPI_U = {2014: 236.736, 2018: 251.107, 2019: 255.657, 2020: 258.811, 2021: 270.970, 2022: 292.655, 2023: 304.702}
+PRICE_YEAR = 2023
+
+
+def inflate(value: float, cost_year: int) -> float:
+    """A study cost in cost_year US$ -> 2023 US$ (US CPI-U)."""
+    return value * CPI_U[PRICE_YEAR] / CPI_U[int(cost_year)]
+
+
 def _uc_ref() -> dict:
-    """Sourced unit-cost reference values (country ART studies, income-group TB costs)."""
+    """Sourced unit-cost reference values (country ART studies, income-group TB costs), in 2023 US$: each value is
+    inflated from its cost_year (ART site costs are 2018-2020 US$; TB rows are already 2023 US$)."""
     if not hasattr(_uc_ref, "cache"):
         r = pd.read_csv(UC_REF_FILE)
-        _uc_ref.cache = {(k, key): float(v) for k, key, v in zip(r["kind"], r["key"], r["value"])}
+        _uc_ref.cache = {(k, key): inflate(float(v), y)
+                         for k, key, v, y in zip(r["kind"], r["key"], r["value"], r["cost_year"])}
     return _uc_ref.cache
 
 
@@ -287,6 +313,17 @@ def mortality_trend_factors(row: pd.Series, kind: str, use: bool = True) -> np.n
     t = _v(row, TREND_COLUMNS[kind])
     t = FALLBACK_MORTALITY_TREND if np.isnan(t) else t
     return (1.0 + t) ** np.arange(N_YEARS)
+
+
+def _units_lost(net, base, unit_cost, covered):
+    """Units of service lost (before continuity): donor-funded units x share of donor money lost."""
+    net, base, unit_cost = np.asarray(net, dtype=float), np.asarray(base, dtype=float), np.asarray(unit_cost, dtype=float)
+    plain = net / unit_cost
+    if np.isnan(covered):
+        return plain
+    funded = np.minimum(covered, base / unit_cost)
+    share = np.divide(net, base, out=np.zeros_like(net * base), where=np.abs(base) > 0)
+    return np.where(base / unit_cost > covered, funded * share, plain)
 
 
 def per_unit_deaths(row: pd.Series, P: dict, art_cov: float, trend: bool = True) -> dict:
@@ -428,15 +465,26 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
 
     # ---- 3. coverage ----
     uc = unit_costs(row, P)
-    units, unitsc, capped = {}, {}, {}
+    units, unitsc, capped, excess = {}, {}, {}, {}
     for l in ALL_DIRECT:
         need, cov = ep["need_cov"].get(l, (np.nan, np.nan))
         if l in ("mal_itn", "mal_irs") and np.isnan(cov):
             cov = Pc["mal_itn_default_use"][0]
         if l == "mal_cm" and np.isnan(cov):
             cov = Pc["mal_cm_default_cov"][0]
-        u = np.asarray(net[l]) / uc[l] * (1 - P["continuity"])
-        uc0 = np.asarray(netc[l]) / ucc[l] * (1 - Pc["continuity"])
+        # people losing the service = people donor money pays for x share of that money lost. Donor money pays for
+        # min(people covered, aid / cost per person): when aid exceeds the full cost of everyone covered, the excess
+        # pays for things other than the service itself, so the loss scales proportionally instead of running past
+        # the people covered. When aid buys less than full coverage this equals net loss / cost per person.
+        covered = cov * need if (l in ep["need_cov"] and not np.isnan(need) and not np.isnan(cov)) else np.nan
+        u = _units_lost(net[l], eff_base[l], uc[l], covered) * (1 - P["continuity"])
+        uc0 = _units_lost(netc[l], effc_base[l], ucc[l], covered) * (1 - Pc["continuity"])
+        b0 = float(np.asarray(effc_base[l]).ravel()[0])
+        excess[l] = bool(not np.isnan(covered) and b0 / float(ucc[l][0]) > covered)
+        if excess[l] and (iso3, l) not in _EXCESS_LOGGED:
+            _EXCESS_LOGGED.add((iso3, l))
+            log.warning("%s %s: donor aid ($%.0f) buys %.0f units at $%.0f each, more than the %.0f people covered; "
+                        "units lost scaled proportionally", iso3, l, b0, b0 / float(ucc[l][0]), float(ucc[l][0]), covered)
         if l in ep["need_cov"] and not np.isnan(need) and not np.isnan(cov):
             hi, lo = cov * need, -(1 - cov) * need
             capped[l] = bool(uc0[0] > hi) if np.ndim(uc0) else False
@@ -496,6 +544,7 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
             "units_lost_lo": q(units[l], 2.5), "units_lost_hi": q(units[l], 97.5),
             "cov_drop_pp": float(np.asarray(unitsc[l]).ravel()[0]) / need * 100 if (need and not np.isnan(need)) else np.nan,
             "capped": capped.get(l, False),
+            "donor_exceeds_cost": excess.get(l, False),
             "deaths_y1": float(deathsc[l][0, 0]) if l in deathsc else 0.0,
             "deaths_y1_lo": q(d1, 2.5), "deaths_y1_hi": q(d1, 97.5),
             "deaths_5y": float(deathsc[l].sum()) if l in deathsc else 0.0,
@@ -603,6 +652,18 @@ def dose_response(iso3, bucket, fiscal, inputs, ptab, grid=None, n_draws=120, mo
         rows.append({"cut": g, "net_loss_usd": bb["net_loss_usd"], "deaths_5y": bb["deaths_5y"],
                      "lo": bb["deaths_5y_lo"], "hi": bb["deaths_5y_hi"], "cov_drop_pp": ln["cov_drop_pp"],
                      "cov0": ln["cov0"]})
+    return pd.DataFrame(rows)
+
+
+def donor_cost_excess(inputs, ptab) -> pd.DataFrame:
+    """Country-lines where baseline donor aid / cost per person exceeds the people currently covered (the excess
+    pays for things other than the service; units lost are scaled proportionally there)."""
+    rows = []
+    for c in [c for c in inputs["ci"].index if c in set(inputs["lines"].iso3)]:
+        L = run_country(c, Scenario(), Fiscal(), inputs, ptab, n_draws=0)["lines"]
+        for r in L[L["donor_exceeds_cost"]].itertuples():
+            rows.append({"iso3": c, "line": r.line, "aid_usd": r.base_usd, "unit_cost": r.unit_cost,
+                         "units_aid_buys": r.base_usd / r.unit_cost, "people_covered": r.cov0 * r.need})
     return pd.DataFrame(rows)
 
 

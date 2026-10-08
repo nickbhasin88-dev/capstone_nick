@@ -32,6 +32,7 @@ ptab = pd.read_json(io.StringIO(ptab_json), orient="split")
 
 PRM = hm.load_params()                       # the parameter file the model reads (central / low / high / source)
 C = PRM["central"].astype(float).to_dict()
+UC = hm._uc_ref()                            # study costs in 2023 US$ (inflated from each study's cost year)
 REG = json.loads((hm.MODEL_DIR / "regressions.json").read_text())
 TH_C, TH_LO, TH_HI = hm.theta_historical(REG)
 N_COUNTRIES = len(names)
@@ -84,7 +85,7 @@ with tabs[0]:
     covers {N_COUNTRIES} countries.
     """)
     th.section_header("payments", "Units and Currency")
-    md("""
+    md(f"""
     **Every dollar figure is in constant 2023 US dollars**, the unit IHME uses for its aid and health-spending data.
     IHME's constant dollars remove each country's own inflation and convert at 2023 exchange rates, so a country
     whose currency collapsed (for example Nigeria in 2023-24) does not appear to shrink.
@@ -96,7 +97,9 @@ with tabs[0]:
       (IHME real GDP per person in 2023 x population in 2023). IHME's GDP per person comes from its GDP file (FGH
       2026); population is the IMF's. The conversion is done by `add_constant_dollars.py`.
 
-    IHME's aid data are reported in thousands of dollars and converted to dollars. Amounts are rounded for display
+    Costs taken from studies are brought to 2023 dollars with the US consumer price index (CPI-U) from each study's
+    cost year (for example x{hm.CPI_U[2023] / hm.CPI_U[2018]:.3f} from 2018 and x{hm.CPI_U[2023] / hm.CPI_U[2014]:.3f}
+    from 2014). IHME's aid data are reported in thousands of dollars and converted to dollars. Amounts are rounded for display
     ($1.2M, $3.4B); calculations use the unrounded values.
     """)
     th.section_header("schedule", "Time Periods")
@@ -203,7 +206,7 @@ with tabs[1]:
     """)
 
     th.section_header("monitor_heart", "Section 4 Outputs")
-    md(f"""
+    md("""
     | Output | Definition |
     |---|---|
     | Aid at Risk (per Year) | Yearly HIV, TB, malaria and vaccine aid removed by the scenario (gross loss), out of the 2021-2023 average |
@@ -297,7 +300,7 @@ with tabs[2]:
     Replacement is then capped by **fiscal space**, the extra money the health budget could find in a year:
     """)
     st.latex(r"R=\min(\text{wanted},\ \text{capacity}),\qquad \text{capacity} = \text{GHES}_{2023}\times\max\!\big(0,\ g_{\text{strong}}-\max(g_{\text{typical}},0)\big)\times s")
-    md(f"""
+    md("""
     - **GHES₂₀₂₃**: government health spending in 2023 (IHME, constant 2023 US$).
     - **g_typical**: the median real annual growth of government health spending in that country, 2001-2023 (IHME).
     - **g_strong**: the 75th percentile of that growth (a strong year), or the 90th (the best years), chosen under
@@ -319,7 +322,19 @@ with tabs[2]:
     """)
 
     th.section_header("groups", "Step 3: Coverage (Who Loses a Service)")
-    st.latex(r"\text{people losing service}_{\ell}=\frac{\text{net loss}_{\ell}}{\text{cost per person}_{\ell}}\times(1-\text{continuity})")
+    md("""
+    Donor money pays for a number of people: its baseline aid divided by the cost per person, but never more than the
+    people currently covered. People losing the service are that number times the share of donor money lost:
+    """)
+    st.latex(r"\text{donor-funded}_{\ell}=\min\!\Big(\text{people covered}_{\ell},\ \frac{\text{aid now}_{\ell}}{\text{cost per person}_{\ell}}\Big)")
+    st.latex(r"\text{people losing service}_{\ell}=\text{donor-funded}_{\ell}\times\frac{\text{aid lost}_{\ell}}{\text{aid now}_{\ell}}\times(1-\text{continuity})")
+    md("""
+    When donor aid buys less than full coverage (most lines), this is simply aid lost ÷ cost per person. When donor aid
+    is more than the full cost of everyone covered (for example HIV treatment in Honduras, where donor treatment aid is
+    about twice what ART for all patients would cost), the excess is paying for things other than the service itself,
+    so the loss is scaled by the share of money lost instead of running past the people covered. The Validation page
+    counts the lines where this happens.
+    """)
     md(f"""
     - **Continuity** = {pct('continuity')}: the share of people who keep their service anyway (absorbed by government
       facilities or cheaper delivery). *Assumption.*
@@ -331,7 +346,7 @@ with tabs[2]:
 
     | Service | Formula | Central value / source |
     |---|---|---|
-    | HIV treatment | site cost x multiplier ÷ (1 - above-service share) | Site cost per patient-year: Rosen et al. 2021 for Malawi $86.50, Zambia $116.05, Lesotho $122.28, Uganda $152.49, Zimbabwe $187.04; elsewhere $95 (ARVs + labs) + $23 x (GDP per person ÷ $1,000)^{C['uc_scale_elast']:g} (staff). Above-service share {pct('asd_share')} (PEPFAR expenditure analysis) |
+    | HIV treatment | site cost x multiplier ÷ (1 - above-service share) | Site cost per patient-year (Rosen et al. 2021, 2018-2020 US$, inflated to 2023 US$ with US CPI-U): Malawi ${UC[('art_site_cost', 'MWI')]:.2f}, Zambia ${UC[('art_site_cost', 'ZMB')]:.2f}, Lesotho ${UC[('art_site_cost', 'LSO')]:.2f}, Uganda ${UC[('art_site_cost', 'UGA')]:.2f}, Zimbabwe ${UC[('art_site_cost', 'ZWE')]:.2f}; elsewhere ${UC[('art_site_default', 'arv')]:.2f} (ARVs + labs) + ${UC[('art_site_default', 'non_arv')]:.2f} x (GDP per person ÷ $1,000)^{C['uc_scale_elast']:g} (staff). Above-service share {pct('asd_share')} (PEPFAR expenditure analysis) |
     | PMTCT | per HIV+ pregnant woman | ${C['uc_pmtct']:,.0f} (*assumption*), incremental to the mother's ART |
     | HIV prevention | $ per infection averted = ${C['cpia_ref']:,.0f} x (1 ÷ incidence per 1,000)^0.5 | *Assumption*; incidence clipped to 0.05-10 per 1,000 |
     | Orphans & vulnerable children | per child-year | ${C['uc_ovc']:,.0f} (*assumption*); no mortality effect |
@@ -351,7 +366,7 @@ with tabs[2]:
     | TB treatment | TB incidence, all forms (WHO via Gapminder) | TB treatment coverage, WDI `SH.TBS.DTEC.ZS` |
     | Drug-resistant TB | 4% of TB incidence | 45% (*assumption*) |
     | Bednets / spraying | Population at risk = population x 95% in sub-Saharan Africa, 35% elsewhere | Children sleeping under nets, WDI `SH.MLR.NETS.ZS`; {C['mal_itn_default_use']:.0%} if not surveyed |
-    | Malaria testing & treatment | Malaria cases = incidence per 1,000 at risk (WDI `SH.MLR.INCD.P3`) x population at risk | Children with fever receiving antimalarials, WDI `SH.MLR.TRET.ZS`; {C['mal_cm_default_cov']:.0%} if not surveyed |
+    | Malaria testing & treatment | Malaria cases = incidence per 1,000 at risk (WDI `SH.MLR.INCD.P3`) x population at risk | Children with fever receiving antimalarials, WDI `SH.MLR.TRET.ZS`, used only where malaria incidence is at least {hm.MAL_CM_MIN_INCIDENCE} cases per 1,000 at risk; otherwise {C['mal_cm_default_cov']:.0%} (where malaria is rare, most fevers are not malaria, so the survey is near zero for that reason and does not measure coverage of malaria cases) |
     | Routine immunization | Births = crude birth rate x population (WDI) | DTP3 coverage, WDI `SH.IMM.IDPT` |
 
     Where nobody is counted as in need (for example malaria treatment in Iraq), coverage cannot be calculated and the
@@ -516,9 +531,9 @@ with tabs[4]:
     md("""
     - **Average, not marginal, costs.** Cuts usually hit the most expensive or least essential services first, and
       some cut services are cheaper than average. The model uses average costs per person.
-    - **ART costs are in 2018-2020 dollars.** The Rosen et al. site costs are not inflated to 2023 (TB and spraying
-      costs are). This understates the cost of HIV treatment by roughly a fifth, so it somewhat overstates the number
-      of people who lose treatment for a given cut.
+    - **Donor money and service cost do not always line up.** In many country-service lines donor aid is more than
+      the modelled cost of serving everyone covered (see the Validation page); the excess is assumed to pay for
+      things other than the service, which may understate or overstate what a cut does to those lines.
     - **No second-round effects.** Drug resistance, outbreaks (for example measles), health-worker layoffs and supply
       chain breakdowns are not modelled.
     - **No re-allocation by other donors** beyond the government response.
