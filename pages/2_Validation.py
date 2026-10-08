@@ -7,38 +7,39 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-import health_model as hm
-import model_section as ms
-import scenarios as scn
-from country_lists import dropdown_countries
-from model_section import chart, how_to_read, num, rng, stat, title_case, what_this_shows
-from scenarios import PRESETS
+import theme as th
 
-st.set_page_config(page_title="Validation & Benchmarks", page_icon="📊", layout="wide")
+th.apply_page("Validation & Benchmarks")
 
-METHOD_COLORS = {"Unit-Cost Model": "#5d6d7e", "Poisson Regression": "#1b6ca8", "Lancet Rate Ratios": "#c0392b"}
+import health_model as hm  # noqa: E402  (page config has to come first)
+import model_section as ms  # noqa: E402
+import scenarios as scn  # noqa: E402
+from country_lists import dropdown_countries  # noqa: E402
+from model_section import chart, num, rng, title_case  # noqa: E402
+from scenarios import PRESETS  # noqa: E402
+
+METHOD_COLORS = {"Unit-Cost Model": th.GRAPE, "Poisson Regression": th.BLUE, "Lancet Rate Ratios": th.TEAL}
 CATEGORIES = ["HIV", "TB", "Malaria", "Immunization", "Maternal"]
 CATEGORY_LABELS = {"Immunization": "Immunization / Under-5", "Maternal": "Maternal"}
 
 # --------------------------------------------------------------------------- #
-# Sidebar: country and scenario (start from the dashboard's choices)
+# Country and scenario (start from the dashboard's choices)
 # --------------------------------------------------------------------------- #
 I = ms._inputs()
 ctx = st.session_state.get("model_ctx", {})
 names = dropdown_countries()
 isos = list(names)
-with st.sidebar:
-    st.page_link("app.py", label="Dashboard", icon=":material/dashboard:")
-    st.page_link("pages/2_Validation.py", label="Validation & Benchmarks", icon=":material/fact_check:")
-    st.divider()
-    # seed once from the dashboard's choices (stable keys, so later picks always register)
-    if st.session_state.get("v_country") not in isos:
-        st.session_state["v_country"] = ctx["iso3"] if ctx.get("iso3") in isos else "KEN"
-    if st.session_state.get("v_preset") not in PRESETS:
-        st.session_state["v_preset"] = ctx.get("preset", list(PRESETS)[0])
-    iso3 = st.selectbox("Country", isos, format_func=names.get, key="v_country")
-    preset = st.selectbox("Donor Scenario", list(PRESETS), format_func=title_case, key="v_preset")
-    st.caption(PRESETS[preset].replace("$", "\\$"))
+st.title("Validation & Benchmarks")
+st.caption("How the funding-cut model on the dashboard compares with published studies, and with two other ways of "
+           "estimating the same cut.")
+# seed once from the dashboard's choices (stable keys, so later picks always register)
+if st.session_state.get("v_country") not in isos:
+    st.session_state["v_country"] = ctx["iso3"] if ctx.get("iso3") in isos else "KEN"
+if st.session_state.get("v_preset") not in PRESETS:
+    st.session_state["v_preset"] = ctx.get("preset", list(PRESETS)[0])
+pc1, pc2 = st.columns(2)
+iso3 = pc1.selectbox("Country", isos, format_func=names.get, key="v_country")
+preset = pc2.selectbox("Donor Scenario", list(PRESETS), format_func=title_case, key="v_preset")
 fiscal_t = tuple(ctx.get("fiscal_t", scn.DEFAULT_FISCAL))
 ptab_json = ctx.get("ptab_json", ms._default_params().to_json(orient="split"))
 trend = ctx.get("trend", scn.DEFAULT_MORTALITY_TREND)
@@ -46,20 +47,14 @@ opts = ctx["opts"] if preset == ctx.get("preset") and "opts" in ctx else scn.def
 country_name = names[iso3]
 st.session_state["model_ctx"] = {**ctx, "iso3": iso3, "country_name": country_name, "preset": preset, "opts": opts,
                                  "fiscal_t": fiscal_t, "ptab_json": ptab_json, "trend": trend}
-with st.sidebar:
-    st.caption(f"Government response ({ms._resp_label(fiscal_t)}), model parameters and the death-rate setting follow "
-               "the dashboard.")
-
-st.title("Validation & Benchmarks")
-st.caption("How the funding-cut model on the dashboard compares with published studies, and with two other ways of "
-           "estimating the same cut.")
+st.caption(ms._esc(PRESETS[preset]) + f" Government response ({ms._resp_label(fiscal_t)}), model parameters and the "
+           "death-rate setting follow the dashboard.")
 
 # --------------------------------------------------------------------------- #
 # A. Published estimates
 # --------------------------------------------------------------------------- #
-st.header("A. How Our Totals Compare with Published Estimates")
-what_this_shows("The model's all-country totals for each scenario, next to the best-known published estimates of what "
-                "aid cuts and aid programs do to deaths.")
+th.section_header("fact_check", "How Our Totals Compare with Published Estimates",
+                  "Are the model's all-country totals in the range of published studies?", rule=False)
 
 rows, all_country = [], {}
 for p in scn.PRECOMPUTED_PRESETS:
@@ -104,24 +99,23 @@ if us is not None:
          "Published": "About 0.017 (20.6M deaths / 1.2B children)",
          "Closest Model Figure": f"{lifetime:.3f} per child (births-weighted, today's mortality)"},
     ])
-    st.subheader("Published Estimates")
-    st.table(pub.set_index("Source"))
-    how_to_read(
+    st.subheader("Published Estimates", help=(
         "The scopes differ, so the model should come in below most of these figures. The Cavalcanti totals cover all "
         "causes of death and every USAID sector, while the model covers four diseases and only the aid that pays for "
         "HIV, TB, malaria and vaccine services. Cavalcanti, UNAIDS and Optima look at US (or USAID, or PEPFAR) money "
         "only; the 'Full US Exit' scenario is the closest match, but the model also tracks every other donor. The "
         "USAID figures are deaths averted over 21 years of programs, so they are compared per year. Gavi's figure is "
         "lifetime deaths averted per child; the model's is the same quantity at each country's current under-5 "
-        "mortality.")
+        "mortality."))
+    st.table(pub.set_index("Source"))
+    st.caption("The published studies cover more causes, sectors or years than the model, so the model should come in "
+               "below most of these figures.")
 
 # --------------------------------------------------------------------------- #
 # B. Three methods for the selected country and scenario
 # --------------------------------------------------------------------------- #
-st.divider()
-st.header(f"B. Three Ways to Estimate the Same Cut: {country_name}")
-what_this_shows("Extra deaths over five years from the same aid cut, estimated three different ways, so you can see "
-                "whether the model's answer is in the right range.")
+th.section_header("compare_arrows", f"Three Ways to Estimate the Same Cut: {country_name}",
+                  "Do three different methods give extra deaths in the same range?")
 st.caption(f"{title_case(preset)} · {ms._resp_label(fiscal_t)}" + ("" if trend else " · Death Rates Held Constant"))
 
 if iso3 not in I["ci"].index or iso3 not in set(I["lines"].iso3):
@@ -147,15 +141,15 @@ for method, vals in est.items():
     has_range = ~np.isnan(lo)
     fig.add_trace(go.Bar(
         x=[CATEGORY_LABELS.get(c, c) for c in cats], y=v, name=method,
-        marker=dict(color=METHOD_COLORS[method], line=dict(color="white", width=1.5)),
+        marker=dict(color=METHOD_COLORS[method]),
         error_y=dict(type="data", symmetric=False, array=np.where(has_range, hi - v, 0),
-                     arrayminus=np.where(has_range, v - lo, 0), color="rgba(0,0,0,0.45)", thickness=1.2,
+                     arrayminus=np.where(has_range, v - lo, 0), color=th.MUTED, thickness=1.2,
                      visible=bool(has_range.any())),
         hovertemplate=f"{method}<br>%{{x}}: %{{y:,.0f}} extra deaths over 5 years<extra></extra>"))
-fig.add_hline(y=0, line=dict(color="rgba(0,0,0,0.35)", width=1))
+fig.add_hline(y=0, line=dict(color=th.MUTED, width=1))
 fig.update_layout(barmode="group", bargap=0.25)
 ms._layout(fig, h=460, title=ms._title(f"Extra Deaths Over 5 Years by Method, {country_name}"),
-           legend=dict(orientation="h", y=1.02, x=1, xanchor="right", yanchor="bottom"),
+           legend=dict(orientation="h", y=-0.12, x=0, yanchor="top"),
            yaxis=dict(title="extra deaths over 5 years"))
 chart(fig)
 
@@ -200,7 +194,6 @@ tbl = pd.DataFrame({
     **{m: [(f"{num(vals[c][0])}" + (f" ({rng(vals[c][1], vals[c][2])})" if not np.isnan(vals[c][1]) else ""))
            if c in vals else "Not Covered" for c in CATEGORIES] for m, vals in est.items()},
 })
-st.table(tbl.set_index("Bucket"))
 notes = ["Ranges: 95% intervals (unit-cost model: parameter uncertainty; Poisson regression: the coefficient's standard "
          "error). The Lancet ratios are point estimates."]
 if len(lp):
@@ -216,13 +209,14 @@ if not pd.isna(row.get("hiv_deaths_est", np.nan)):
 notes.append("The Poisson regression applies the change in child malaria deaths proportionally to all-age malaria "
              "deaths, and its under-5 estimate covers all child health and vaccine aid, so it is compared with the "
              "immunization bucket.")
-how_to_read(" ".join(notes))
+st.subheader("Estimates by Method", help=" ".join(notes))
+st.table(tbl.set_index("Bucket"))
+st.caption("Ranges are 95% intervals; the Lancet ratios are point estimates.")
 
 # --------------------------------------------------------------------------- #
 # C. How each method works
 # --------------------------------------------------------------------------- #
-st.divider()
-st.header("C. How Each Method Works")
+th.section_header("functions", "How Each Method Works", "What does each method assume, and where can it go wrong?")
 c1, c2, c3 = st.columns(3, gap="large")
 with c1:
     st.subheader("Unit-Cost Model")
