@@ -22,8 +22,23 @@ Then open http://localhost:8501.
 | Methods | `views/4_Methods.py` | How every number is calculated, data sources, assumptions |
 
 `app.py` only sets up the navigation; the pages live in `views/` (a folder called `pages/` would make Streamlit
-bypass that navigation). `theme.py` holds every color, font and chart style. The model is `health_model.py`; the
-donor scenarios are in `scenarios.py`; Section 4 is drawn by `model_section.py`.
+bypass that navigation). `theme.py` holds every color, font and chart style.
+
+## Files
+
+| File or folder | What it is |
+|---|---|
+| `health_model.py` | The funding-cut model (no Streamlit): money -> government response -> coverage -> deaths. Import it in a notebook to run anything in batch. |
+| `model_params.csv` | Every unit cost and effect size, with low / central / high values, `sourced` or `assumption`, and the citation. |
+| `unit_cost_reference.csv` | Sourced unit costs: ART site costs (Rosen et al. 2021) and TB cost per patient by income group (Laurence et al. 2015). |
+| `scenarios.py` | Donor-scenario presets and funding-path shapes, shared by the app and `prepare_model.py`. |
+| `model_section.py`, `paths_ui.py` | Section 4 of the dashboard and the funding-path controls. |
+| `country_lists.py` | The 71 countries the dashboard covers. |
+| `model_data/` | Prebuilt model inputs (`dah_lines.csv`, `country_inputs.csv`, `ihme_trend.csv`, `panel.csv`, `regressions.json`, `country_profile.csv`) and the all-country results at default settings (`all_countries_<scenario>.csv`). |
+| `ext_data/` | WHO, UNAIDS, World Bank and UN IGME series used to build the inputs: `gho/` from the WHO Global Health Observatory (`who_inputs.py`), `wdi/`, `sg/` and `gm/` from Gapminder's mirrors. |
+| `country_data/`, `spending_data/`, `macro_data/`, `revenue_data/`, `cofog_all/` | Per-country data behind Sections 1-3 (IHME aid and spending, IMF macro, revenue and spending by function). |
+| `datasets/` | Raw source files: IHME health spending and GDP, IMF revenue (WoRLD), Gavi financial data and the team's MOU sheet. |
+| `tests/` | `python -m pytest tests`: checks the funding paths and each model mechanism. |
 
 ## Deploy to Streamlit Community Cloud
 
@@ -40,12 +55,13 @@ donor scenarios are in `scenarios.py`; Section 4 is drawn by `model_section.py`.
   ```
   python prepare_model.py --dah <IHME_DAH_DATABASE_1990_2026_*.CSV> \
       --spend datasets/IHME_HEALTH_SPENDING_1995_2023_Y2026M09D21.CSV \
-      --expected datasets/IHME_EXPECTED_HEALTH_SPENDING_2024_2050_Y2026M09D23.CSV \
       --gdp datasets/IHME_GDP_1960_2050_FGH_2026_Y2026M06D11.CSV --mou datasets/co-financing_MOU.xlsx
   ```
 
   (`--precompute-only` re-runs only the all-country results.) The IHME DAH file is too large for GitHub and is kept
   outside the repository.
+- Current WHO / UNAIDS HIV and malaria inputs (also applied by the full rebuild):
+  `python who_inputs.py --download`
 - Constant-dollar GDP and IHME government health spending as a share of GDP:
   `python add_constant_dollars.py`
 - `country_data/`, `spending_data/`, `macro_data/`, `revenue_data/` and `cofog_all/` were built by earlier

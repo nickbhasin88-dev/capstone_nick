@@ -9,3 +9,6 @@ __pycache__/
 *.pyc
 .DS_Store
 ~$*
+
+# Test cache
+.pytest_cache/

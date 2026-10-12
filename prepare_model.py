@@ -3,7 +3,6 @@ Build the inputs for the funding-shock model (Section 4 of app.py).
 
     python prepare_model.py --dah  <IHME_DAH_DATABASE_1990_2026_*.CSV>
                             --spend <IHME_HEALTH_SPENDING_1995_2023_*.CSV>
-                            --expected <IHME_EXPECTED_HEALTH_SPENDING_2024_2050_*.CSV>
                             --gdp  <IHME_GDP_1960_2050_*.CSV>
                             --mou  <co-financing_MOU.xlsx>
                             [--download]      # refresh ext_data/ from the Gapminder WDI mirror on GitHub
@@ -300,8 +299,6 @@ def main(a):
     # ---------------- spending, GDP ---------------- #
     sp = pd.read_csv(a.spend, encoding="utf-8-sig")
     sp = sp[sp.level == "Country"]
-    ex = pd.read_csv(a.expected, encoding="utf-8-sig")
-    ex = ex[ex.level == "Country"]
     gdp = pd.read_csv(a.gdp, encoding="utf-8-sig")
     gdp = gdp[gdp.level == "Country"][["iso3", "year", "gdp_usd_mean"]].rename(columns={"gdp_usd_mean": "gdp_pc"})
 
@@ -313,11 +310,6 @@ def main(a):
     ci["ghes_pc_2023"] = s23["ghes_per_cap_mean"]
     ci["ghes_pct_gdp_2023"] = s23["ghes_per_gdp_mean"] * 100
     ci["dah_share_the_2023"] = s23["dah_per_the_mean"]
-    e30 = ex[ex.year == 2030].set_index("iso3")
-    e26 = ex[ex.year == 2026].set_index("iso3")
-    ci["ghes_2026_expected"] = e26["ghes_total_mean"] * 1e3
-    ci["dah_2026_expected"] = e26["dah_total_mean"] * 1e3
-    ci["ghes_2030_expected"] = e30["ghes_total_mean"] * 1e3
     ci["gdp_pc"] = gdp[gdp.year == 2024].set_index("iso3")["gdp_pc"]
     ci["dah_all_purposes_base"] = tot
     ci["dah_nch_base"] = nch_base.reindex(ci.index).fillna(0.0)
@@ -525,7 +517,6 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--dah")
     p.add_argument("--spend")
-    p.add_argument("--expected")
     p.add_argument("--gdp")
     p.add_argument("--mou", default=None)
     p.add_argument("--download", action="store_true")
@@ -533,7 +524,7 @@ if __name__ == "__main__":
                    help="skip the rebuild and only refresh model_data/all_countries_<preset>.csv")
     args = p.parse_args()
     if not args.precompute_only:
-        missing = [f"--{k}" for k in ("dah", "spend", "expected", "gdp") if not getattr(args, k)]
+        missing = [f"--{k}" for k in ("dah", "spend", "gdp") if not getattr(args, k)]
         if missing:
             p.error(f"the full rebuild needs {', '.join(missing)} (or use --precompute-only)")
         main(args)
