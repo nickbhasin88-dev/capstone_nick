@@ -58,7 +58,8 @@ Country columns used (`country_inputs.csv`):
 | ART cost per patient-year used | `art_cost_full` (`_lo`, `_hi`, `_source`, `_year`) | 2023 US$: min(GHCC-based full cost, observed treatment spending per person on ART where valid), floored at 190.84 and gated 50-600 on the final value (`batch34_inputs.py --art-full56`; `audit/batch56_art_cost.py`) |
 | TB course costs | `tb_ds_cost`, `tb_dr_cost` (`_lo`, `_hi`, `_source`), `tb_cost_year` | US$ per treatment course, provider, 2023 US$ (`batch34_inputs.py --tb`; `audit/batch34_tb_costs.py`) |
 | RR-TB share and enrolment | `tb_rr_share`, `tb_rr_cov` (`tb_rr_source`) | WHO 2024: RR-TB incidence / all-forms incidence; RR patients started on treatment / RR incidence, capped at 1 |
-| external share of public malaria spending | `donor_share_malaria_prev` (`_source`, `_year`) | 0-1: GHED dis13_ext_usd / (dis13_ext_usd + dis13_gghed_usd), latest year; WHO-region median where missing; used for bednets and spraying |
+| intervention-specific malaria donor share | `donor_share_mal_itn`, `donor_share_mal_irs`, `donor_share_mal_cm` (`_source`) | 0-1 (Batch 5+6 item A3): E_base[l] at the central run / (coverage x need x cost_l), capped at 1 (`audit/batch56_malaria_cap.py`; `batch34_inputs.py --donor56-malaria`); the WHO-region median where a country has no IHME malaria programme-area line (none) |
+| external share of public malaria spending | `donor_share_malaria_prev` (`_source`, `_year`) | 0-1: GHED dis13_ext_usd / (dis13_ext_usd + dis13_gghed_usd), latest year; WHO-region median where missing; Batch 4b rule for bednets and spraying, kept as the fallback only |
 | external share of disease spending | `donor_share_<hiv|tb|malaria|imm>` (`_source`, `_year`) | 0-1. HIV and immunization (Batch 5+6 item A2): the external share of PUBLIC spending, GHED dis11_ext_usd / (dis11_ext_usd + dis11_gghed_usd) and hc62_ext_usd / (hc62_ext_usd + hc62_gghed_usd), latest year (`batch34_inputs.py --donor56-hiv-imm`; `audit/batch56_donor_share.py`). Malaria (all-source, kept for reference only): GHED external funding on malaria / spending on it (dis13). TB: WHO TB financing, funding received from the Global Fund, USAID and other grants / all received (2024; 2025 expected funding if missing). WHO-region median where missing (`batch34_inputs.py --donor`; `audit/batch34_donor_share.py`) |
 | split of unspecified money | `unspec_<hiv|tb|malaria>_<treatment|prevention|testing|rssh|pm>` (`_source`) | shares 0-1 summing to 1 per disease: Global Fund grant budgets by module, GC7 (`batch34_inputs.py --shares`; `audit/batch34_gf_shares.py`); WHO-region median where the country has no grant |
 | trends | `trend_u5mr`, `trend_malaria_deaths` | yearly change (shares); -0.009 if missing. `trend_u5mr`: UN IGME under-5 mortality 2010-2019. `trend_malaria_deaths`: WHO estimated malaria deaths (GHO `MALARIA_EST_DEATHS`) 2015-2024, log-linear fit (at least 5 positive years), clipped to ±5% a year (the clip is an assumption); 0 where WHO has no series (built by `malaria_inputs.py`) |
@@ -305,8 +306,11 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
 - **Donor-funded pool** (Batch 3+4, IMP-04 / L-44): pool = covered x d, with d = `donor_share_<hiv|tb|malaria|imm>`
   for the line's disease from `country_inputs.csv` (clipped to 0-1; 1 if missing). For HIV and immunization d is
   the external share of public spending (Batch 5+6 item A2: household spending on STI care and on private-sector
-  vaccination is not the service donors fund); for mal_itn and mal_irs, d = `donor_share_malaria_prev` (the external
-  share of public malaria spending; Batch 4b item 3).
+  vaccination is not the service donors fund). For mal_itn, mal_irs and mal_cm, d = `donor_share_mal_<itn|irs|cm>`
+  (Batch 5+6 item A3): the people the donor money for that intervention pays for as a share of the people covered,
+  min(1, E_base[l] / cost_l / covered) at the central run, so the pool is min(covered, E_base[l] / cost_l) and the
+  cap binds only where donor money exceeds the full cost of current coverage. If the column is missing: for mal_itn
+  and mal_irs `donor_share_malaria_prev`, else `donor_share_malaria`.
 - **Two branches:**
   - If covered is NaN: raw = n / cost.
   - Else, if tb / cost > pool (donor money would buy more than the donor-funded pool): raw = pool x n / b.

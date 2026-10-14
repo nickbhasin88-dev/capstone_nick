@@ -101,12 +101,14 @@ DR_TB_SHARE, DR_TB_COV = 0.04, 0.45     # fallbacks only: countries use WHO's RR
 # shares go to those lines by the country's mix; the testing share is treated like HIV testing-and-care money (kappa
 # of it counts toward the treatment line); the systems share joins HSS money; programme management is non-service
 UNSPEC_TAG = {"HIV": "hiv", "TB": "tb", "Malaria": "malaria"}
-# external (donor) share of the country's spending on each disease: country_inputs.csv donor_share_<tag> (IMP-04).
-# Bednets and spraying use the external share of PUBLIC malaria spending (Batch 4b item 3): campaign nets and spraying
-# are financed by donors and governments, while GHED's all-source malaria total is mostly household spending on
-# treatment, which left donor-funded nets a pool of 3% of people covered in Nigeria
+# external (donor) share of the country's spending on each disease: country_inputs.csv donor_share_<tag> (IMP-04). HIV
+# and immunization use the external share of PUBLIC spending (Batch 5+6 item A2). The malaria lines use an
+# intervention-specific share (Batch 5+6 item A3): donor money for the intervention / (people covered x the model's
+# unit cost), capped at 1, so the pool is the people the donor money for that intervention pays for (the cap is applied
+# per intervention, so the share must be that intervention's; the external share of all public malaria spending, kept
+# in donor_share_malaria_prev, is dominated by domestic case-management salaries and understated donor-funded nets)
 DONOR_SHARE_TAG = {"HIV": "hiv", "TB": "tb", "Malaria": "malaria", "Immunization": "imm"}
-DONOR_SHARE_LINE = {"mal_itn": "malaria_prev", "mal_irs": "malaria_prev"}
+DONOR_SHARE_LINE = {"mal_itn": "mal_itn", "mal_irs": "mal_irs", "mal_cm": "mal_cm"}
 UNSPEC_TREAT = {"HIV": ["hiv_art"], "TB": ["tb_ds", "tb_dr"], "Malaria": ["mal_cm"]}
 UNSPEC_PREV = {"HIV": ["hiv_prev", "hiv_pmtct"], "TB": [], "Malaria": ["mal_itn", "mal_irs"]}
 UNSPEC_TEST_TARGET = {"HIV": "hiv_art", "TB": "tb_ds", "Malaria": "mal_cm"}

@@ -416,11 +416,16 @@ with tabs[2]:
     which is the service donors fund, so including them understated the donor-funded pool (Nigeria HIV 0.18 -> 0.55;
     immunization 0.40 -> 0.63; no change where private spending is zero). TB uses WHO TB financing data, funding
     received from the Global Fund, USAID and other grants ÷ all funding received, 2024. A WHO-region median applies
-    where a country has no value (HIV 40 of 70 countries have their own value, TB 69, immunization 48). Bednets and
-    spraying use the external share of *public* malaria spending (external ÷ (external + domestic government), GHED):
-    campaign nets and spraying are financed by donors and governments, while the all-source malaria total is dominated
-    by household spending on treatment (87% of malaria spending in Nigeria), which had left donor-funded nets a pool
-    of 3% of the people covered there (Batch 4b). People losing the service are that number times the share of donor
+    where a country has no value (HIV 40 of 70 countries have their own value, TB 69, immunization 48). For malaria
+    the cap is applied per intervention, so the share is that intervention's: the people the donor money for bednets,
+    spraying or testing and treatment pays for (its baseline aid ÷ the unit cost, after the split of unspecified money)
+    as a share of the people covered, capped at 100% (Batch 5+6, item A3). Before that, bednets and spraying used the
+    external share of all *public* malaria spending (GHED; Batch 4b), which is dominated by domestic case-management
+    salaries: in Nigeria donor net money pays for 63% of the people sleeping under a net but the public-spending share
+    gave the pool 22%, and the all-source share used for treatment (3%, because 87% of Nigeria's malaria spending is
+    household spending) gave donor-funded treatment a pool of 1.1M of 38.5M treated cases although the donor money pays
+    for 3.5M. With the intervention's own share the cap binds only where donor money exceeds the full cost of current
+    coverage (9 bednet and 14 treatment lines). People losing the service are that number times the share of donor
     money lost:
     """)
     st.latex(r"\text{donor-funded}_{\ell}=\min\!\Big(\text{people covered}_{\ell}\times\text{external share}_{d(\ell)},\ \frac{\text{aid now}_{\ell}}{\text{cost per person}_{\ell}}\Big)")
@@ -459,7 +464,7 @@ with tabs[2]:
     | Orphans & vulnerable children | per child-year | ${C['uc_ovc']:,.0f} (*assumption*); no mortality effect |
     | TB treatment | country cost per course x multiplier ÷ (1 - above-service share) | Provider cost per drug-susceptible course (`tb_ds_cost` in `country_inputs.csv`, 2023 US$): Value TB facility costing (Sweeney et al., 2018 US$; intensive + continuation phase, financial bottom-up): Ethiopia $218, India $105, Kenya $150, Philippines $120; South Africa $274 (Vassall et al. 2017, GHCC). Other countries: the median of those in their income group pooled with Laurence, Griffiths & Vassall 2015 ($275 low income, $135 lower-middle, $678 upper-middle). Range: {PRM.loc['uc_tb_mult', 'low']:.2f}-{PRM.loc['uc_tb_mult', 'high']:.2f} x |
     | Drug-resistant TB | as above | Per MDR-TB course (`tb_dr_cost`): Value TB short regimen Kenya $2,818, Philippines $1,580; South Africa $9,256 (Vassall 2017; Cox 2015); others $1,568 / $2,818 / $8,028 by income group (same pooling). DR-TB need = WHO's RR-TB share of incidence (`tb_rr_share`, median 2.1%, up to 34%) and coverage = RR patients started on treatment ÷ RR incidence (`tb_rr_cov`, median 35%), replacing the global 4% and 45% |
-    | Bednets | per person-year of net use | ${C['uc_itn']:.2f} (GiveWell: $4-6 per net, 1.8 people per net, ~2 years, ~63% used) |
+    | Bednets | per person-year of net use | ${C['uc_itn']:.2f} = $5 per net delivered ÷ (1.8 people per net x 2 years of protection) ÷ 63% of nets in use (GiveWell ITN analysis: $4-6 per net, 1.8 people per net, about 2 years, about 63% used). It is a cost per person-year of *use*, the same measure as the MAP ITN-use coverage and the Lives Saved Tool effect (children sleeping under a net), so no use-to-access conversion is needed. With a 3-year net life (WHO's planning assumption) the cost is $1.47, inside the range ${PRM.loc['uc_itn', 'low']:.1f}-${PRM.loc['uc_itn', 'high']:.1f} |
     | Indoor spraying | per person-year protected | ${C['uc_irs']:.2f} (PMI Mali 2012-14, $6.08-7.40 in 2014 US$ x 1.287) |
     | Malaria testing & treatment | per case treated (diagnosis + treatment) | ${C['uc_mal_cm']:.0f} (range ${PRM.loc['uc_mal_cm', 'low']:.0f}-${PRM.loc['uc_mal_cm', 'high']:.0f}): White et al. 2011, *Malaria Journal* 10:337, median financial cost per uncomplicated case treated $5.84 + diagnosis $4.32 (2009 US$) x 1.42 (US CPI-U to 2023). ACT and RDT prices have fallen since, so current costs may be lower |
     | Routine immunization | full cost per child immunized (vaccines + delivery) | ${C['uc_imm']:.0f}: delivery $45.6 per infant (Lydon et al. 2014, 2016-20) + vaccines $41.3 (MSF The Right Shot 2015, low end), both in 2023 US$; range $38 (Brenzel 2015, Gavi-country plans) to $104 (MSF high end). Check: donor vaccine aid per immunized child has a median of $40, below the full cost, as expected when governments co-finance |

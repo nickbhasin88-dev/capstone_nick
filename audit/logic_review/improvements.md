@@ -80,8 +80,11 @@ shares). PEPFAR Expenditure Analysis per patient (DR-01) was not available. `bat
 
 ### IMP-04. Cap the donor-funded share of covered people (Do before presenting)
 
-**Status: ✅ done (Batch 3+4 item 6, 14 October 2026).** External shares from WHO GHED disease accounts (HIV, malaria,
-immunization) and WHO TB financing; `batch34_evidence.md` F.
+**Status: ✅ done (Batch 3+4 item 6, 14 October 2026; shares revised in Batch 4b item 3 and Batch 5+6 items A2-A3).**
+External shares from WHO GHED disease accounts (HIV, malaria, immunization) and WHO TB financing; `batch34_evidence.md`
+F. Batch 4b: bednets and spraying use the external share of public malaria spending. Batch 5+6: HIV and immunization
+use the external share of public spending (A2, L-51); the three malaria lines use an intervention-specific share, the
+people the donor money for that intervention pays for as a share of the people covered (A3); `batch56_evidence.md`.
 
 - **Addresses:** L-44 (red-team point 9). The proportional-cap rule treats all covered people as donor-funded in 160
   of 695 country-service lines; Tajikistan's extra TB deaths reach 108% of current TB deaths.
