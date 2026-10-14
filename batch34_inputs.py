@@ -7,6 +7,9 @@ from the evidence tables in audit/logic_review/ (which are built from the raw da
     python batch34_inputs.py --tb         # item 5 (IMP-11): TB course costs (DS, DR) and the MDR/RR share and enrolment
     python batch34_inputs.py --donor      # item 6 (IMP-04): external (donor) share of disease spending, for the cap rule
     python batch34_inputs.py --art-full   # Batch 4b item 2 (L-50): ART cost per patient-year = min(GHCC-based, observed spending), floored and gated
+    python batch34_inputs.py --art-full56 # Batch 5+6 item A1: the same with the observed-spending validity test, the Rosen-based floor and the gate on the final value
+    python batch34_inputs.py --donor56    # Batch 5+6 items A2-A3: external share of PUBLIC spending for HIV and immunization; intervention-specific donor shares for the malaria lines
+    python batch34_inputs.py --vaccines   # Batch 5+6 item V2: deaths averted per fully immunized child (VIMC) and their timing
 
 Columns written (all with a `_source` column saying whether the value is the country's own or a fallback):
   unspec_<disease>_{treatment,prevention,testing,rssh,pm}   shares of unspecified money by purpose (sum to 1)
@@ -75,6 +78,14 @@ def apply_art_full(ci: pd.DataFrame) -> pd.DataFrame:
     return ci
 
 
+def apply_art_full56(ci: pd.DataFrame) -> pd.DataFrame:
+    t = pd.read_csv(EV / "batch56_art_cost.csv").set_index("iso3").reindex(ci.index)
+    ci["art_cost_full"], ci["art_cost_full_lo"], ci["art_cost_full_hi"] = t.new_cost, t.new_lo, t.new_hi
+    ci["art_cost_full_source"] = t.new_source
+    ci["art_cost_full_year"] = 2023
+    return ci
+
+
 def apply_donor(ci: pd.DataFrame) -> pd.DataFrame:
     t = pd.read_csv(EV / "batch34_donor_share.csv").set_index("iso3").reindex(ci.index)
     for b, tag in (("HIV", "hiv"), ("TB", "tb"), ("Malaria", "malaria"), ("Malaria_prev", "malaria_prev"), ("Immunization", "imm")):
@@ -97,6 +108,8 @@ def main():
         ci, done = apply_donor(ci), done + ["donor"]
     if "--art-full" in sys.argv:
         ci, done = apply_art_full(ci), done + ["art-full"]
+    if "--art-full56" in sys.argv:
+        ci, done = apply_art_full56(ci), done + ["art-full56"]
     if not done:
         raise SystemExit(__doc__)
     ci.copy().reset_index().to_csv(CI_PATH, index=False)

@@ -195,15 +195,20 @@ cost, US$400-675, is above total HIV spending per person on ART in Kenya, Uganda
 Africa), by the money that now buys no people (systems, programme management, the non-treatment shares of
 unspecified money, half of testing and care), by continuity and the cap, and by the 23% Global Fund cut. Not tuned.
 
-**L-50 (Major; ✅ done in Batch 4b, 14 October 2026).** The ART full cost per patient-year (site cost x 1 / (1 -
-asd_share)) exceeded the country's total HIV spending per person on ART in 5 of the 15 Optima countries; the item D
-gate had been applied to the site-level value, so Kenya (644) and Uganda (675) passed it. Batch 4b: the cost used is
-now the lower of the GHCC-based full cost and observed treatment spending per person on ART (Optima Table B2 or GHED
-x the Global Fund treatment share / UNAIDS people on ART; the regional median ratio where unavailable), floored at
-first-line drugs plus a viral load test (US$57) and gated to 50-600: median US$274 (Kenya 308, Uganda 314, Mozambique
-227, Zimbabwe 129). Caveat: where the Global Fund funds little treatment (South Africa, Dominican Republic, Eswatini,
-Namibia) the Global Fund share understates the treatment share and the floor binds; PEPFAR Expenditure Analysis per
-patient (DR-01) would still settle the level. `batch4b_evidence.md` items 1-2.
+**L-50 (Major; ✅ done in Batch 4b, 14 October 2026; floor and validity rules revised in Batch 5+6 item A1).** The ART
+full cost per patient-year (site cost x 1 / (1 - asd_share)) exceeded the country's total HIV spending per person on
+ART in 5 of the 15 Optima countries; the item D gate had been applied to the site-level value, so Kenya (644) and
+Uganda (675) passed it. Batch 4b: the cost used is now the lower of the GHCC-based full cost and observed treatment
+spending per person on ART (Optima Table B2 or GHED x the Global Fund treatment share / UNAIDS people on ART; the
+regional median ratio where unavailable). Batch 5+6 (A1): observed spending counts only where the Global Fund funds
+at least 10% of total HIV spending (the module share is a proxy for the national treatment share; invalid in South
+Africa, Nigeria, Namibia, the Dominican Republic, Botswana, Guyana, the Philippines and São Tomé and Príncipe, which
+take the regional median ratio over the valid countries); the floor is the lowest measured site-level delivery cost
+(Malawi, Rosen et al. 2021, US$86.50 in 2018 US$ = US$105 in 2023 US$) x the same 1.818 above-site markup =
+US$190.84, so floor and cost are on one basis (the US$57 TLD-plus-viral-load floor was a commodity price); the
+US$50-600 gate is on the final value. Median US$216 (Kenya 308, Uganda 314, Mozambique 227, Nigeria and South Africa
+208; 13 countries at the floor). PEPFAR Expenditure Analysis per patient (DR-01) would still settle the level.
+`batch4b_evidence.md` items 1-2; `batch56_evidence.md` A1.
 
 ## Batch 4b: ART unit cost consistency, malaria and TB explanations (14 October 2026)
 
@@ -228,6 +233,15 @@ pool there. Not changed in Batch 4b (malaria scope).
 **Updated reconciliation (15 Optima countries):** the model's share of people on ART who stop under Full US Exit is
 21% (weighted) after Batch 4b (13% after Batch 3+4, 21% before it), against PEPFAR's 39% share of HIV spending and
 53% for all international funding; `batch4b_evidence.md`.
+
+## Batch 5+6: ART cost floor, input shares, malaria cap concept, vaccines, validation, SPEC reproduction (14 October 2026)
+
+Evidence: `batch56_evidence.md`; scripts `audit/batch56_*.py`; before snapshot `audit/before_batch56.csv` (local).
+Headline = all countries, Full US Exit, central, 2026-30 deaths. Before the batch: 1,695,601.
+
+| Item | Status | Commit | Headline after | What changed |
+|---|---|---|---|---|
+| A1 ART cost floor and observed-spending validity (L-50) | ✅ done | (A1 commit) | 1,666,755 (-1.7%) | Observed spending per person on ART counts only where the Global Fund funds at least 10% of HIV spending (35 of 43 countries); elsewhere the regional median ratio over the valid countries. Floor = lowest measured site delivery cost (Malawi, Rosen 2021) x the 1.818 above-site markup = US$190.84 (was US$57, a commodity price); gate on the final value. 43 countries change (median US$274 -> 216); HIV deaths 938,069 -> 909,223; people who stop ART 4.56M -> 4.42M. HIV baseline only rebuilt (42 entries) |
 
 ## Summary
 
