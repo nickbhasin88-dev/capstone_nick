@@ -408,15 +408,20 @@ with tabs[2]:
     md("""
     Donor money pays for a number of people: its baseline aid divided by the cost per person, but never more than the
     donor-funded pool, which is the people currently covered times the external (donor) share of the country's
-    spending on that disease (`donor_share_*` in `country_inputs.csv`: WHO Global Health Expenditure Database
-    external funding on HIV, malaria and immunization as a share of spending on each, latest year; WHO TB financing
-    data for TB, funding received from the Global Fund, USAID and other grants ÷ all funding received, 2024; a
-    WHO-region median where a country has no value: HIV 40 of 70 countries have their own value, TB 69, malaria 38,
-    immunization 48). Bednets and spraying use the external share of *public* malaria spending (external ÷ (external
-    + domestic government), GHED): campaign nets and spraying are financed by donors and governments, while the
-    all-source malaria total is dominated by household spending on treatment (87% of malaria spending in Nigeria),
-    which had left donor-funded nets a pool of 3% of the people covered there (Batch 4b). People losing the service
-    are that number times the share of donor money lost:
+    spending on that disease (`donor_share_*` in `country_inputs.csv`). For HIV and immunization the share is the
+    external share of *public* spending, external ÷ (external + domestic government), from the WHO Global Health
+    Expenditure Database (latest year; Batch 5+6, item A2): GHED's HIV total is "HIV/AIDS and other STDs" and its
+    private part is household spending on STI care and private clinics (67% of the total in Nigeria, 49% in Guinea,
+    44% in Senegal), and private immunization spending is private-sector vaccination (37% in Nigeria), neither of
+    which is the service donors fund, so including them understated the donor-funded pool (Nigeria HIV 0.18 -> 0.55;
+    immunization 0.40 -> 0.63; no change where private spending is zero). TB uses WHO TB financing data, funding
+    received from the Global Fund, USAID and other grants ÷ all funding received, 2024. A WHO-region median applies
+    where a country has no value (HIV 40 of 70 countries have their own value, TB 69, immunization 48). Bednets and
+    spraying use the external share of *public* malaria spending (external ÷ (external + domestic government), GHED):
+    campaign nets and spraying are financed by donors and governments, while the all-source malaria total is dominated
+    by household spending on treatment (87% of malaria spending in Nigeria), which had left donor-funded nets a pool
+    of 3% of the people covered there (Batch 4b). People losing the service are that number times the share of donor
+    money lost:
     """)
     st.latex(r"\text{donor-funded}_{\ell}=\min\!\Big(\text{people covered}_{\ell}\times\text{external share}_{d(\ell)},\ \frac{\text{aid now}_{\ell}}{\text{cost per person}_{\ell}}\Big)")
     st.latex(r"\text{people losing service}_{\ell}=\text{donor-funded}_{\ell}\times\frac{\text{aid lost}_{\ell}}{\text{aid now}_{\ell}}\times(1-\text{continuity})")

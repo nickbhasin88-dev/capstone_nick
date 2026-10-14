@@ -59,7 +59,7 @@ Country columns used (`country_inputs.csv`):
 | TB course costs | `tb_ds_cost`, `tb_dr_cost` (`_lo`, `_hi`, `_source`), `tb_cost_year` | US$ per treatment course, provider, 2023 US$ (`batch34_inputs.py --tb`; `audit/batch34_tb_costs.py`) |
 | RR-TB share and enrolment | `tb_rr_share`, `tb_rr_cov` (`tb_rr_source`) | WHO 2024: RR-TB incidence / all-forms incidence; RR patients started on treatment / RR incidence, capped at 1 |
 | external share of public malaria spending | `donor_share_malaria_prev` (`_source`, `_year`) | 0-1: GHED dis13_ext_usd / (dis13_ext_usd + dis13_gghed_usd), latest year; WHO-region median where missing; used for bednets and spraying |
-| external share of disease spending | `donor_share_<hiv|tb|malaria|imm>` (`_source`, `_year`) | 0-1: GHED external funding on the disease / spending on it (HIV dis11, malaria dis13, immunization hc62); TB: WHO TB financing, funding received from the Global Fund, USAID and other grants / all received (2024; 2025 expected funding if missing); WHO-region median where missing (`batch34_inputs.py --donor`; `audit/batch34_donor_share.py`) |
+| external share of disease spending | `donor_share_<hiv|tb|malaria|imm>` (`_source`, `_year`) | 0-1. HIV and immunization (Batch 5+6 item A2): the external share of PUBLIC spending, GHED dis11_ext_usd / (dis11_ext_usd + dis11_gghed_usd) and hc62_ext_usd / (hc62_ext_usd + hc62_gghed_usd), latest year (`batch34_inputs.py --donor56-hiv-imm`; `audit/batch56_donor_share.py`). Malaria (all-source, kept for reference only): GHED external funding on malaria / spending on it (dis13). TB: WHO TB financing, funding received from the Global Fund, USAID and other grants / all received (2024; 2025 expected funding if missing). WHO-region median where missing (`batch34_inputs.py --donor`; `audit/batch34_donor_share.py`) |
 | split of unspecified money | `unspec_<hiv|tb|malaria>_<treatment|prevention|testing|rssh|pm>` (`_source`) | shares 0-1 summing to 1 per disease: Global Fund grant budgets by module, GC7 (`batch34_inputs.py --shares`; `audit/batch34_gf_shares.py`); WHO-region median where the country has no grant |
 | trends | `trend_u5mr`, `trend_malaria_deaths` | yearly change (shares); -0.009 if missing. `trend_u5mr`: UN IGME under-5 mortality 2010-2019. `trend_malaria_deaths`: WHO estimated malaria deaths (GHO `MALARIA_EST_DEATHS`) 2015-2024, log-linear fit (at least 5 positive years), clipped to ±5% a year (the clip is an assumption); 0 where WHO has no series (built by `malaria_inputs.py`) |
 | GDP per person | `gdp_pc` | 1,000 if missing |
@@ -303,8 +303,10 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
   - For hiv_art, n = N_t[hiv_art] + N_t[hiv_care_ct], b = E_base[hiv_art] + E_base[hiv_care_ct], and
     tb = E_base[hiv_art] only.
 - **Donor-funded pool** (Batch 3+4, IMP-04 / L-44): pool = covered x d, with d = `donor_share_<hiv|tb|malaria|imm>`
-  for the line's disease from `country_inputs.csv` (clipped to 0-1; 1 if missing); for mal_itn and mal_irs,
-  d = `donor_share_malaria_prev` (the external share of public malaria spending; Batch 4b item 3).
+  for the line's disease from `country_inputs.csv` (clipped to 0-1; 1 if missing). For HIV and immunization d is
+  the external share of public spending (Batch 5+6 item A2: household spending on STI care and on private-sector
+  vaccination is not the service donors fund); for mal_itn and mal_irs, d = `donor_share_malaria_prev` (the external
+  share of public malaria spending; Batch 4b item 3).
 - **Two branches:**
   - If covered is NaN: raw = n / cost.
   - Else, if tb / cost > pool (donor money would buy more than the donor-funded pool): raw = pool x n / b.

@@ -78,3 +78,43 @@ ratio as before) and the other countries whose regional ratio did not move.
 deaths 2031-35 933,796 -> 904,798; TB, malaria and vaccines unchanged. South Africa's HIV deaths fall (cost x3.6) while
 Nigeria's rise (cost 400 -> 208) and the Americas and Asian countries rise. HIV baseline only rebuilt
 (`tests/make_baseline.py --batch34 HIV`: 42 entries, only `hiv_art` moved; no lives-first entry moved other lines).
+
+## A2. L-51: the spending share used for the HIV and immunization pools (fix applied)
+
+Script `audit/batch56_donor_share.py`, output `batch56_donor_share.csv`. The cap on the donor-funded pool (Batch 3+4
+item 6) uses the external share of the country's spending on the disease. Composition of the GHED totals, latest year
+(million current US$):
+
+| Country | HIV year | HIV total | external | domestic government | domestic private | all-source share (used before) | public share (used now) | Imm year | Imm total | external | government | private | all-source | public |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Kenya | 2019 | 825 | 555 | 206 | 65 | 0.67 | 0.73 | 2019 | 29.4 | 26.5 | 2.8 | - | 0.90 | 0.90 |
+| Nigeria | 2022 | 1,636 | 302 | 245 | 1,089 | 0.18 | 0.55 | 2022 | 658 | 261 | 154 | 243 | 0.40 | 0.63 |
+| Mozambique | 2018 | 541 | 452 | 59 | 30 | 0.84 | 0.88 | 2018 | 34.5 | 27.5 | 6.8 | 0.1 | 0.80 | 0.80 |
+| South Africa | 2019 | 3,288 | 331 | 2,958 | - | 0.10 | 0.10 | - | no GHED value: AFR median 0.64 -> 0.68 | | | | | |
+| Uganda | 2021 | 350 | 273 | 66 | 11 | 0.78 | 0.81 | 2021 | 16.8 | 5.0 | 11.8 | - | 0.30 | 0.30 |
+| India | - | no GHED value: median of model countries 0.59 -> 0.68 | | | | | | 2019 | 1,134 | 14 | 738 | 382 | 0.013 | 0.019 |
+
+Sources: WHO GHED (`datasets/WHO_GHED/GHED_data_2026-10-14.xlsx`): `dis11_usd`, `dis11_ext_usd`, `dis11_gghed_usd`,
+`dis11_pvtd_usd` (HIV/AIDS and other STDs); `hc62_*` (immunization programmes). Across the model countries: HIV data
+for 40 of 70; private share median 0.08 (IQR 0.04-0.17); public minus all-source share above 0.10 in 10 countries
+(Nigeria 0.37, Guinea 0.42, Senegal 0.22, Niger 0.15, Liberia 0.18, Togo 0.19, Central African Republic 0.30,
+Madagascar 0.24, Malawi 0.12, Tanzania 0.10). Immunization data for 48 of 70; private share median 0 (IQR 0-0.22);
+gap above 0.10 in 5 countries (Togo, Nigeria, Senegal, Madagascar, Mongolia).
+
+**Decision: fix applied (same mismatch as Batch 4b item 3, shown with numbers).** GHED's `dis11` is "HIV/AIDS and
+other STDs"; its domestic private part is household spending on STI treatment and private-sector HIV care, which is
+not the ART donors and governments finance (ART is free at public facilities in every model country). Private
+immunization spending is private-sector vaccination outside the national programme. Neither is the service the
+donor money buys, so dividing donor money by a total that includes them understates the donor-funded pool, exactly
+as household treatment spending did for nets. Both lines now use external / (external + domestic government), the
+rule bednets and spraying use since Batch 4b; nothing changes where private spending is zero (South Africa, Kenya
+immunization, Uganda immunization). Fallbacks (regional / overall median of the public share) move slightly (HIV
+median of model countries 0.59 -> 0.68; AFR immunization 0.64 -> 0.68). Labelled as before: a spending share is the
+closest external measure of the share of covered people whose service donors fund, not that share itself.
+
+**Effect** (Full US Exit, all countries, central): deaths 1,666,755 -> **1,757,745 (+5.5%)**; HIV deaths 909,223 ->
+998,535; vaccine deaths 102,735 -> 104,413; people who stop ART 4,418,867 -> 4,861,100 a year; HIV infections 3.64M ->
+3.97M; further deaths 2031-35 904,798 -> 996,769. Nigeria carries most of it: ART pool 0.18 -> 0.55 of people on
+ART, people who stop ART 184,289 -> 562,261 a year, deaths 141,057 -> 217,224. HIV and immunization baselines rebuilt
+(`tests/make_baseline.py --batch34 HIV,Immunization`: 67 entries; `hiv_art`, `hiv_pmtct` (the PMTCT line shares the
+HIV pool share) and `imm` moved; no lives-first entry moved other lines).

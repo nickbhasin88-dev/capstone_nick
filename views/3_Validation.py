@@ -137,8 +137,9 @@ if len(ex):
     st.table(pd.DataFrame({"Service": [title_case(i) for i in by_line.index], "Countries": by_line.values})
              .set_index("Service"))
 st.caption("In these lines, baseline donor aid ÷ cost per person is more than the donor-funded pool (people currently "
-           "covered x the external share of the country's spending on the disease: WHO GHED for HIV, malaria and "
-           "immunization, WHO TB financing for TB; a regional median where a country has none), so the excess pays for "
+           "covered x the external share of the country's spending on the disease: WHO GHED external share of public "
+           "spending for HIV and immunization, WHO TB financing for TB, and for malaria the people the donor money for each "
+           "intervention pays for; a regional median where a country has none), so the excess pays for "
            "things other than the service itself (systems, campaigns, newer products). People losing the service are "
            "then that pool x the share of donor money lost, instead of aid lost ÷ cost per person (logic review L-44).")
 

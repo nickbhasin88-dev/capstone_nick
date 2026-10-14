@@ -225,10 +225,11 @@ snapshot `audit/before_batch4b.csv` (local). Headline = all countries, Full US E
 **Checks after Batch 4b.** `audit/checks.py --full`: 59 checks, 76,501 rows, 0 failures, 6 known warnings; 357 tests
 pass; `--quick` 0 failures after each item.
 
-**Open finding L-51 (Minor, Medium confidence).** The donor-funded pool for HIV and immunization still uses the
-external share of all-source spending; GHED's HIV total is "HIV/AIDS and other STDs" with a private share of 67% in
-Nigeria, 49% in Guinea and 44% in Senegal, so the public-spending share (Nigeria 0.55 vs 0.18) would raise the ART
-pool there. Not changed in Batch 4b (malaria scope).
+**L-51 (Minor, Medium confidence; ✅ done in Batch 5+6 item A2).** The donor-funded pool for HIV and immunization used
+the external share of all-source spending; GHED's HIV total is "HIV/AIDS and other STDs" with a private share of 67%
+in Nigeria, 49% in Guinea and 44% in Senegal (10 of 40 countries with data have a public-minus-all-source gap above 10
+points), and private immunization spending is 37% in Nigeria (5 of 48 countries above 10 points). Batch 5+6: both
+lines use the external share of public spending, as bednets and spraying do since Batch 4b. `batch56_evidence.md` A2.
 
 **Updated reconciliation (15 Optima countries):** the model's share of people on ART who stop under Full US Exit is
 21% (weighted) after Batch 4b (13% after Batch 3+4, 21% before it), against PEPFAR's 39% share of HIV spending and
@@ -241,7 +242,8 @@ Headline = all countries, Full US Exit, central, 2026-30 deaths. Before the batc
 
 | Item | Status | Commit | Headline after | What changed |
 |---|---|---|---|---|
-| A1 ART cost floor and observed-spending validity (L-50) | ✅ done | (A1 commit) | 1,666,755 (-1.7%) | Observed spending per person on ART counts only where the Global Fund funds at least 10% of HIV spending (35 of 43 countries); elsewhere the regional median ratio over the valid countries. Floor = lowest measured site delivery cost (Malawi, Rosen 2021) x the 1.818 above-site markup = US$190.84 (was US$57, a commodity price); gate on the final value. 43 countries change (median US$274 -> 216); HIV deaths 938,069 -> 909,223; people who stop ART 4.56M -> 4.42M. HIV baseline only rebuilt (42 entries) |
+| A1 ART cost floor and observed-spending validity (L-50) | ✅ done | `a0c2082` | 1,666,755 (-1.7%) | Observed spending per person on ART counts only where the Global Fund funds at least 10% of HIV spending (35 of 43 countries); elsewhere the regional median ratio over the valid countries. Floor = lowest measured site delivery cost (Malawi, Rosen 2021) x the 1.818 above-site markup = US$190.84 (was US$57, a commodity price); gate on the final value. 43 countries change (median US$274 -> 216); HIV deaths 938,069 -> 909,223; people who stop ART 4.56M -> 4.42M. HIV baseline only rebuilt (42 entries) |
+| A2 L-51 input-share check (HIV, immunization) | ✅ done (fix applied) | (A2 commit) | 1,757,745 (+5.5%) | The HIV and immunization pools use the external share of public spending (GHED), as bednets and spraying do: the private part of GHED's "HIV/AIDS and other STDs" and immunization totals is household spending on STI care and private-sector vaccination, not the donor-funded service. Nigeria HIV share 0.18 -> 0.55 (people who stop ART 184,289 -> 562,261 a year), immunization 0.40 -> 0.63; 10 HIV and 5 immunization countries move by more than 10 points. HIV deaths 909,223 -> 998,535; vaccines 102,735 -> 104,413. HIV and immunization baselines rebuilt (67 entries; PMTCT shares the HIV pool share) |
 
 ## Summary
 
