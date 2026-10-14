@@ -21,6 +21,8 @@ Columns written (all with a `_source` column saying whether the value is the cou
   donor_share_malaria_prev                                   external share of public malaria spending (bednets, spraying; Batch 4b item 3)
   donor_share_hiv, donor_share_imm (Batch 5+6 item A2)       external share of PUBLIC spending on HIV / immunization (replaces the all-source share)
   donor_share_mal_itn, _mal_irs, _mal_cm (Batch 5+6 item A3) intervention-specific donor share = donor money for the line / (people covered x unit cost), capped at 1
+  imm_dpc, imm_dpc_lo, imm_dpc_hi, imm_dpc_lag0..lag9, imm_dpc_beyond_window, imm_q5_ratio, imm_antigens (Batch 5+6 item V2)
+                                                             deaths averted per fully immunized child (VIMC, 2015-19, x Q5 ratio) and by years since vaccination
 Called on its own after the evidence tables change; prepare_model.py (full rebuild) does not rebuild these columns.
 """
 from __future__ import annotations
@@ -107,6 +109,17 @@ def apply_donor56_malaria(ci: pd.DataFrame) -> pd.DataFrame:
     return ci
 
 
+def apply_vaccines(ci: pd.DataFrame) -> pd.DataFrame:
+    """Batch 5+6 item V2: deaths averted per fully immunized child (VIMC) and their timing by years since vaccination."""
+    t = pd.read_csv(EV / "batch56_vaccine_country.csv").set_index("iso3").reindex(ci.index)
+    cols = ["imm_dpc", "imm_dpc_lo", "imm_dpc_hi", "imm_q5_ratio", "imm_dpc_beyond_window"] + [f"imm_dpc_lag{k}" for k in range(10)]
+    for c in cols:
+        ci[c] = t[c]
+    ci["imm_antigens"], ci["imm_antigens_excluded_zero_coverage"] = t.imm_antigens, t.imm_antigens_excluded_zero_coverage
+    ci["imm_dpc_source"], ci["imm_in_vimc"] = t.imm_dpc_source, t.imm_in_vimc
+    return ci
+
+
 def apply_donor(ci: pd.DataFrame) -> pd.DataFrame:
     t = pd.read_csv(EV / "batch34_donor_share.csv").set_index("iso3").reindex(ci.index)
     for b, tag in (("HIV", "hiv"), ("TB", "tb"), ("Malaria", "malaria"), ("Malaria_prev", "malaria_prev"), ("Immunization", "imm")):
@@ -135,6 +148,8 @@ def main():
         ci, done = apply_donor56_hiv_imm(ci), done + ["donor56-hiv-imm"]
     if "--donor56-malaria" in sys.argv:
         ci, done = apply_donor56_malaria(ci), done + ["donor56-malaria"]
+    if "--vaccines" in sys.argv:
+        ci, done = apply_vaccines(ci), done + ["vaccines"]
     if not done:
         raise SystemExit(__doc__)
     ci.copy().reset_index().to_csv(CI_PATH, index=False)

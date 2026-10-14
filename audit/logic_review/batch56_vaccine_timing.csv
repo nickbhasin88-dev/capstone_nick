@@ -1,0 +1,81 @@
+disease,lag,weight_within_u5,method,weight_of_lifetime
+HepB,0,0.4146350075417218,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+HepB,1,0.20883851976397452,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+HepB,2,0.15902632094379693,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+HepB,3,0.12550740226335613,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+HepB,4,0.09199274948715074,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+HepB,5,,"NNLS on all-age deaths, lags 0-11, R2 0.975",0.0005384316650202768
+HepB,6,,"NNLS on all-age deaths, lags 0-11, R2 0.975",0.0009854942922180906
+HepB,7,,"NNLS on all-age deaths, lags 0-11, R2 0.975",0.0
+HepB,8,,"NNLS on all-age deaths, lags 0-11, R2 0.975",0.0009371127753437288
+HepB,9,,"NNLS on all-age deaths, lags 0-11, R2 0.975",0.0012981560458195478
+Hib,0,0.589347848951801,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+Hib,1,0.227085801393159,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+Hib,2,0.08542791299758572,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+Hib,3,0.04274263426794311,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+Hib,4,0.05539580238951108,"NNLS under-5, lags 0-4, R2 1.000, 2240 country-years",
+Hib,5,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Hib,6,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Hib,7,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Hib,8,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Hib,9,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+PCV,0,0.570893226945306,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+PCV,1,0.2382040875203257,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+PCV,2,0.07320028407575206,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+PCV,3,0.0842956601306848,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+PCV,4,0.033406741327931394,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+PCV,5,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+PCV,6,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+PCV,7,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+PCV,8,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+PCV,9,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rota,0,0.6411566990182329,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+Rota,1,0.358843300981767,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+Rota,2,0.0,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+Rota,3,0.0,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+Rota,4,0.0,"NNLS under-5, lags 0-4, R2 0.999, 2240 country-years",
+Rota,5,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rota,6,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rota,7,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rota,8,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rota,9,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Measles,0,0.7674901311142365,"NNLS under-5, lags 0-4, R2 0.991, 2240 country-years",
+Measles,1,0.23250986888576355,"NNLS under-5, lags 0-4, R2 0.991, 2240 country-years",
+Measles,2,0.0,"NNLS under-5, lags 0-4, R2 0.991, 2240 country-years",
+Measles,3,0.0,"NNLS under-5, lags 0-4, R2 0.991, 2240 country-years",
+Measles,4,0.0,"NNLS under-5, lags 0-4, R2 0.991, 2240 country-years",
+Measles,5,,"NNLS on all-age deaths, lags 0-11, R2 0.990",0.0
+Measles,6,,"NNLS on all-age deaths, lags 0-11, R2 0.990",0.0
+Measles,7,,"NNLS on all-age deaths, lags 0-11, R2 0.990",0.004076358323909703
+Measles,8,,"NNLS on all-age deaths, lags 0-11, R2 0.990",0.006089807700142301
+Measles,9,,"NNLS on all-age deaths, lags 0-11, R2 0.990",0.0
+Rubella,0,1.0,"NNLS under-5, lags 0-4, R2 1.000, 2128 country-years",
+Rubella,1,0.0,"NNLS under-5, lags 0-4, R2 1.000, 2128 country-years",
+Rubella,2,0.0,"NNLS under-5, lags 0-4, R2 1.000, 2128 country-years",
+Rubella,3,0.0,"NNLS under-5, lags 0-4, R2 1.000, 2128 country-years",
+Rubella,4,0.0,"NNLS under-5, lags 0-4, R2 1.000, 2128 country-years",
+Rubella,5,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rubella,6,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rubella,7,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rubella,8,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+Rubella,9,,"0 by definition: every death averted is under 5 (cohort file, under5 = all)",0.0
+YF,0,0.19563226204766315,"NNLS under-5, lags 0-4, R2 0.998, 720 country-years",
+YF,1,0.17045848493405857,"NNLS under-5, lags 0-4, R2 0.998, 720 country-years",
+YF,2,0.238761618960772,"NNLS under-5, lags 0-4, R2 0.998, 720 country-years",
+YF,3,0.19125631048361874,"NNLS under-5, lags 0-4, R2 0.998, 720 country-years",
+YF,4,0.2038913235738875,"NNLS under-5, lags 0-4, R2 0.998, 720 country-years",
+YF,5,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.66, not usable)",0.0
+YF,6,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.66, not usable)",0.0
+YF,7,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.66, not usable)",0.0
+YF,8,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.66, not usable)",0.0
+YF,9,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.66, not usable)",0.0
+MenA,0,0.0,"NNLS under-5, lags 0-4, R2 0.968, 520 country-years",
+MenA,1,0.1298821840112309,"NNLS under-5, lags 0-4, R2 0.968, 520 country-years",
+MenA,2,0.7141118787929768,"NNLS under-5, lags 0-4, R2 0.968, 520 country-years",
+MenA,3,0.1560059371957923,"NNLS under-5, lags 0-4, R2 0.968, 520 country-years",
+MenA,4,0.0,"NNLS under-5, lags 0-4, R2 0.968, 520 country-years",
+MenA,5,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.69, not usable)",0.0
+MenA,6,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.69, not usable)",0.0
+MenA,7,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.69, not usable)",0.0
+MenA,8,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.69, not usable)",0.0
+MenA,9,,"assumption: deaths at age 5+ counted as lifetime deaths beyond the window (all-age NNLS fit R2 0.69, not usable)",0.0
