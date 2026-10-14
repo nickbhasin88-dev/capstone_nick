@@ -580,12 +580,32 @@ with tabs[2]:
     """)
     st.table(_u5_share_table())
     md(f"""
-    **Routine immunization.** Future deaths averted per child immunized at under-5 mortality of 50 per 1,000 =
-    {rng_txt('imm_deaths_per_child_ref')} (Gavi: 20.6M deaths averted ÷ 1.2B children; 1.7M ÷ 72M in 2024), times the
-    share that would occur before age 5, {rng_txt('imm_u5_share')} (Li et al. 2021: hepatitis B and HPV deaths come in
-    adulthood), scaled by the country's under-5 mortality:
+    **Routine immunization.** Deaths averted per fully immunized child, by country, from the Vaccine Impact Modelling
+    Consortium estimates (Toor et al. 2021, *eLife* 10:e67635, supplementary data; Batch 5+6 of the logic review,
+    items V1-V2). For each routine infant antigen the country uses (WUENIC 2025 coverage above zero: hepatitis B,
+    Hib, pneumococcal, rotavirus, measles, rubella, yellow fever and meningitis A where in the schedule), deaths
+    averted per vaccinated child = VIMC deaths averted by year of vaccination ÷ vaccinated children (WHO/UNICEF
+    coverage x UN WPP 2024 surviving infants), averaged over the vaccination years 2015-2019 (the years VIMC based on
+    reported coverage); for measles, meningitis A and yellow fever the lowest of the five years is used because the
+    VIMC files do not separate campaigns from routine doses (campaigns inflate the mean by 10% for measles and yellow
+    fever and 3.9x for meningitis A). The values are summed over the antigens and multiplied by the ratio of the
+    country's WPP under-5 mortality (Q5) in 2026-2030 to 2015-2019 (*adjustment*, so they reflect current child
+    mortality: 0.84 in Kenya, 0.81 in Nigeria, 0.62 in India). Each country-antigen value is checked against Toor et
+    al. 2021 Table 3 (deaths averted per 1,000 fully vaccinated persons: measles 6.5, hepatitis B 7.7, Hib 2.4, PCV
+    2.3, yellow fever 2.1, meningitis A 1.0, rotavirus 0.8, rubella 0.3); values outside 0.1-10x take the WHO-region
+    median (38 of 620), as do the four dashboard countries VIMC does not cover (Botswana, Dominican Republic, Libya,
+    Mauritius). Result: median {C['imm_dpc'] if False else '0.025'} deaths per fully immunized child over a lifetime
+    across the dashboard countries (Kenya 0.021, Nigeria 0.059, Mozambique 0.030, South Africa 0.021, Uganda 0.027,
+    India 0.012), of which about two thirds fall within ten years of vaccination (the rest are adult hepatitis B,
+    meningitis A and yellow fever deaths, outside the model's window). Uncertainty: the VIMC 95% credible intervals,
+    through {rng_txt('imm_dpc_mult')}. **Not covered:** DTP (pertussis, tetanus, diphtheria), polio and BCG are not
+    in the VIMC estimates and no citable deaths-averted-per-child value by country or region was found (Shattock et
+    al. 2024, *Lancet*, report totals by pathogen and region only), so vaccine deaths exclude them and are a
+    conservative floor; HPV is an adolescent vaccine outside the infant schedule and the cost per child, and Japanese
+    encephalitis has no WUENIC antigen. The earlier rule (Gavi's 0.020 deaths averted per child x 0.65 before age 5 x
+    clip(U5MR / 50, 0.3, 2.5)) is kept as the sensitivity switch `imm_legacy_u5mr_scaling` (off).
     """)
-    st.latex(r"\text{deaths per child}=0.020\times0.65\times\operatorname{clip}\!\Big(\frac{\text{U5MR}}{50},\,0.3,\,2.5\Big)")
+    st.latex(r"\text{deaths per child}_{c}=\frac{Q5_{c,\,2026\text{-}30}}{Q5_{c,\,2015\text{-}19}}\sum_{a\in\text{antigens}_c}\ \overline{\left(\frac{\text{VIMC deaths averted}_{c,a,y}}{\text{coverage}_{c,a,y}\times\text{surviving infants}_{c,y}}\right)}_{y=2015..2019}")
     md("""
     **Timing.** Deaths build up over the five years. The share of the full yearly effect reached in years 1-5:
 
@@ -598,16 +618,28 @@ with tabs[2]:
     | Malaria treatment | 100% | 100% | 100% | 100% | 100% |
     | Vaccines (unvaccinated cohorts add up) | 40% | 75% | 95% | 100% | 100% |
 
-    **Vaccines by birth cohort.** Each year's missed birth cohort dies over the following years: 40% of its
-    under-5 deaths in the year it is missed, then 35%, 20% and 5% (the yearly increments of the vaccine row above).
-    Deaths are scaled by under-5 mortality in the year they happen. Adding up the cohorts gives exactly the vaccine
-    row above for a sudden cut. Deaths of cohorts missed in 2027-2030 that fall in 2031-2034 are counted in *Further
-    deaths, 2031-2035* (under-5 mortality keeps its trend), so a vaccine cut late in the period is not undercounted.
+    **Vaccines by birth cohort.** Each year's missed birth cohort dies over the following years, by the VIMC timing
+    for each pathogen: the distribution of deaths averted by years since vaccination, fitted by non-negative least
+    squares to the VIMC calendar-year and birth-cohort series (2000-2019, all 112 VIMC countries). Of the under-5
+    deaths averted, measles has 77% in the vaccination year and 23% the year after; rotavirus 64% / 36%; Hib and PCV
+    57-59% / 23-24% / 7-9% / 4-8% / 3-6% over years 0-4; rubella 100% in year 0 (congenital rubella); hepatitis B
+    42% / 21% / 16% / 13% / 9%; meningitis A 0% / 13% / 71% / 16% / 0%; yellow fever about 20% a year. The under-5
+    share of each pathogen's lifetime deaths averted is the country's own (VIMC cohort file: 100% for Hib, PCV,
+    rotavirus and rubella, 94% measles, 15% meningitis A, 8% yellow fever, 1.5% hepatitis B). Deaths in years 5-9
+    after vaccination are counted where the fit identifies them (measles 1%, hepatitis B 0.4% of lifetime deaths);
+    for meningitis A and yellow fever the deaths after age 5 are left outside the window (*assumption*, conservative).
+    The vaccine row in the timing table above is therefore no longer a fixed ramp: for a sudden cut the deaths in
+    year t are the children missed in each year up to t times the per-child deaths at the matching lag. Deaths of
+    cohorts missed in 2026-2030 that fall in 2031-2035 are counted in *Further deaths, 2031-2035*; lifetime deaths
+    after 2035 (mostly adult hepatitis B) are not counted anywhere.
 
     **Already-changing death rates** (on by default). Baseline deaths are multiplied in year y by (1 + trend)^(y-1).
-    - **Under-5 mortality** (vaccines): the country's average annual change over 2010-2019 from a log-linear fit (at
-      least 5 years of data), clipped to -8% to +2% a year; countries without data get the median; if still missing,
-      -0.9% a year (Cavalcanti et al. 2025, Lancet, appendix 10.2). Under-5 mortality kept falling after 2019.
+    - **Under-5 mortality** (vaccines): the VIMC per-child values already carry the country's 2026-2030 child
+      mortality (the WPP Q5 ratio above), so no further trend is applied to vaccine deaths and the switch does not
+      change them. Under the legacy vaccine rule (sensitivity switch) the earlier trend applies: the country's
+      average annual change over 2010-2019 from a log-linear fit (at least 5 years of data), clipped to -8% to +2% a
+      year; countries without data get the median; if still missing, -0.9% a year (Cavalcanti et al. 2025, Lancet,
+      appendix 10.2).
     - **Malaria**: malaria has not kept falling. WHO's World Malaria Report 2025: "Between 2015 and 2024, malaria case
       incidence increased by 8.5%; in 2024 there were an estimated 610,000 malaria deaths, 12,000 more than in 2023,
       with Ethiopia among the largest increases." So each country's trend is the annual change in WHO's estimated
@@ -678,7 +710,7 @@ with tabs[2]:
     | HIV treatment (and HIV transmission from people off treatment) | **Cohorts.** When the number who stop ART rises, the increase is a new cohort with 1 year since stopping; when it falls, the most recent cohorts return to care first. Each cohort's death risk follows the ART hazard by its own years since stopping (1.3%, 2.5%, 3.7%, 4.9%, 6.0%, then up to 7.3%), and it transmits HIV at half the full rate in its first year; the people it infects transmit in turn (one further generation). |
     | Mother-to-child transmission | **Year by year.** Deaths and infections belong to the year the mother and infant miss the service. |
     | TB, malaria (nets, spraying, treatment) | **Year by year.** Deaths in year t depend only on the coverage lost in year t, using the same formulas as for a sudden cut (TB case fatality for that year's untreated cases; the Lives Saved Tool formula for malaria). Each service's ramp-up and the malaria rebound are counted from when the cut started, not from the calendar year. TB spread adds deaths 1-2 years after each untreated year. |
-    | Routine immunization | **Birth cohorts.** Each year's missed cohort dies over the following years (40%, 35%, 20%, 5%), including after 2030. |
+    | Routine immunization | **Birth cohorts.** Each year's missed cohort dies over the following years by the VIMC timing for each pathogen (see *Vaccines by birth cohort*), including after 2030. |
 
     With a sudden cut every method gives exactly the original results (checked by automated tests for 5 countries,
     every scenario and 3 government responses).
@@ -692,7 +724,7 @@ with tabs[2]:
     |---|---|
     | People off HIV treatment | people still off ART at the end of 2030 return to care at {rng_txt('art_reengage')} a year (indirect evidence from people who disengaged while services ran: 42% resumed within 3 years in Cape Town, Kranzer et al. 2010; half returned by 2.5 years in Khayelitsha, Kaplan et al. 2017; 68% returned within 12 months in Zambia, Mody et al. 2026); until they return they keep their excess death risk by years since stopping (rising to 7.3% a year by year 8) |
     | New HIV infections | deaths in 2031-2035 of adults infected in 2026-2035 by people off ART, or because prevention was lost in 2026-2030 (timing as in *New HIV infections* above) |
-    | Missed vaccines | the remaining under-5 deaths of birth cohorts missed in 2027-2030 |
+    | Missed vaccines | the deaths of birth cohorts missed in 2026-2030 that fall in 2031-2035 (VIMC timing by years since vaccination); lifetime deaths after 2035 are not counted |
     | TB spread | secondary TB cases arriving in 2031-2032 from patients untreated in 2029-2030 |
 
     The central estimate of each part is shown in the tooltip of the pill. **Deaths avoided vs sudden cut with no response** = committed deaths (2026-2030 plus those

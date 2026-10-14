@@ -14,7 +14,7 @@ A country-level model for HIV, TB, malaria and immunization:
                the coverage drop (percentage points), never more than the people currently covered.
   4. LIVES     people losing a service x the mortality effect of that service, using country epidemiology:
                ART interruption hazards, WHO TB case-fatality ratios, Lives Saved Tool equations for malaria,
-               Gavi/VIMC deaths averted per child immunised (scaled to under-5 mortality).
+               VIMC deaths averted per fully immunized child by country and years since vaccination (Batch 5+6).
 
 Every uncertain parameter is drawn from a triangular(low, central, high) distribution; results report the median
 and the 2.5-97.5 percentile range of the Monte Carlo draws.
@@ -95,6 +95,11 @@ ART_INFECT_LAG = np.array([0.5, 1, 1, 1, 1])
 POST_YEARS = 5                  # deaths set in motion are counted in 2031-2035, with funding back from 2031
 HIV_WEIBULL_SHAPE = 2.25        # survival after HIV infection without ART (Todd et al. 2007; UNAIDS Spectrum)
 ART_MULT_UP = 0.38              # uc_art_mult high (1.38) minus 1: maps the draw's upper half onto art_cost_full_hi (Batch 4b)
+# Batch 5+6 (V2, L-42 / L-18): deaths averted per fully immunized child by years since vaccination (country_inputs.csv
+# imm_dpc_lag0..lag9, from VIMC estimates; audit/batch56_vaccines.py). imm_dpc_mult's low (0.56) and high (1.64) map
+# the draw onto the country's VIMC lo / hi values (imm_dpc_lo, imm_dpc_hi), the same way uc_art_mult does for ART
+IMM_LAGS = 10
+IMM_MULT_LO, IMM_MULT_HI = 0.56, 1.64
 DR_TB_SHARE, DR_TB_COV = 0.04, 0.45     # fallbacks only: countries use WHO's RR-TB share and enrolment (IMP-11)
 # how unspecified money (IHME program area not reported) is split by purpose (Batch 3+4, L-43): the country's Global
 # Fund module shares in country_inputs.csv (unspec_<disease>_<purpose>; batch34_inputs.py). Treatment and prevention
@@ -551,13 +556,43 @@ def per_unit_levels(row: pd.Series, P: dict, art_cov: float, trend: bool = True)
     }
 
 
+def imm_legacy(row: pd.Series, P: dict) -> bool:
+    """True when the vaccine pathway uses the pre-Batch-5+6 rule (imm_deaths_per_child_ref x imm_u5_share x
+    clip(U5MR / 50, 0.3, 2.5), cohort weights 0.40 / 0.35 / 0.20 / 0.05): the sensitivity switch
+    imm_legacy_u5mr_scaling = 1, or a country row without the VIMC columns."""
+    if float(np.ravel(P.get("imm_legacy_u5mr_scaling", np.zeros(1)))[0]) >= 0.5:
+        return True
+    return np.isnan(_v(row, "imm_dpc")) or np.isnan(_v(row, "imm_dpc_lag0"))
+
+
+def imm_per_child(row: pd.Series, P: dict) -> np.ndarray:
+    """Deaths averted per fully immunized child by years since vaccination, k = 0..9 (arrays n x 10; Batch 5+6 V2):
+    country_inputs.csv imm_dpc_lag0..lag9 (VIMC deaths averted per vaccinated child, 2015-2019, summed over the routine
+    antigens the country uses, x the WPP Q5 2026-30 / 2015-19 ratio, spread by the fitted timing per pathogen;
+    audit/batch56_vaccines.py), scaled by the draw of imm_dpc_mult: below 1 toward the country's VIMC low value
+    (imm_dpc_lo / imm_dpc at the parameter's low, 0.56), above 1 toward its high value (at 1.64).
+    Feeds: vaccine deaths 2026-2030 and 2031-2035, the lives-first ranking, the Validation per-child comparison."""
+    lag = np.array([_v(row, f"imm_dpc_lag{k}", 0.0) for k in range(IMM_LAGS)])
+    tot = _v(row, "imm_dpc", float(lag.sum()))
+    lo_r = _v(row, "imm_dpc_lo", tot) / tot if tot > 0 else 1.0
+    hi_r = _v(row, "imm_dpc_hi", tot) / tot if tot > 0 else 1.0
+    m = np.asarray(P["imm_dpc_mult"], dtype=float)
+    scale = np.where(m < 1.0, 1.0 - (1.0 - m) / (1.0 - IMM_MULT_LO) * (1.0 - lo_r),
+                     1.0 + (m - 1.0) / (IMM_MULT_HI - 1.0) * (hi_r - 1.0))
+    return np.outer(scale, lag)
+
+
 def per_unit_deaths(row: pd.Series, P: dict, art_cov: float, trend: bool = True) -> dict:
     """Deaths per unit of service lost, by year 1..5 of a cut in force since year 1 (arrays n x 5). Malaria is
-    handled separately (LiST). = per_unit_levels x LAG, plus the ART hazard ramp.
+    handled separately (LiST). = per_unit_levels x LAG, plus the ART hazard ramp; vaccines (unless legacy) = the
+    cumulative sum of the per-child deaths by years since vaccination (a child missed in year 1 of a sudden cut adds
+    its lag-k deaths in year k + 1).
     Feeds: the 'lives first' ranking and per-line deaths."""
     lv = per_unit_levels(row, P, art_cov, trend)
     out = {l: v * (LAG[l] if LAG.get(l) is not None else 1.0) for l, v in lv.items()}
     out["hiv_art"] = hiv_art_params(row, P)[0][:, :N_YEARS]
+    if not imm_legacy(row, P):
+        out["imm"] = np.cumsum(imm_per_child(row, P)[:, :N_YEARS], axis=1)
     return out
 
 
@@ -1027,17 +1062,30 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
             lag = LAG.get(l)
             ramp = np.array([lag[k] for k in dur]) if lag is not None else np.ones(N_YEARS)
             d[l] = U[l] * lv[l] * ramp                                      # year t depends only on year t's loss
-        # vaccines: each year's missed birth cohort dies over the following years (IMM_COHORT); deaths are scaled by
-        # under-5 mortality in the year they happen. For a sudden cut this equals the original ramp exactly.
+        # vaccines: each year's missed birth cohort dies over the following years. Batch 5+6 (V2): by the VIMC
+        # deaths averted per fully immunized child by years since vaccination (imm_per_child, lags 0-9; the 2026-2030
+        # mortality level is already in the value, so no calendar trend applies); deaths falling in 2031-2035 count as
+        # further deaths, those beyond 2035 (lags past the window) are not counted. Legacy rule (sensitivity switch):
+        # IMM_COHORT weights x the under-5-mortality level of the year they happen (trend continues after 2030)
         d["imm"] = np.zeros((nx, N_YEARS))
         after["imm"] = np.zeros(nx)
-        for s_ in years:
-            for k in range(N_YEARS):
-                t = s_ + k
-                if t < N_YEARS:
-                    d["imm"][:, t] += U["imm"][:, s_] * IMM_COHORT[k] * lv["imm"][:, t]
-                else:                                                       # after 2030, mortality keeps its trend
-                    after["imm"] += U["imm"][:, s_] * IMM_COHORT[k] * lv["imm"][:, -1] * (1 + u5_trend) ** (t - 4)
+        if imm_legacy(row, Px):
+            for s_ in years:
+                for k in range(N_YEARS):
+                    t = s_ + k
+                    if t < N_YEARS:
+                        d["imm"][:, t] += U["imm"][:, s_] * IMM_COHORT[k] * lv["imm"][:, t]
+                    else:                                                   # after 2030, mortality keeps its trend
+                        after["imm"] += U["imm"][:, s_] * IMM_COHORT[k] * lv["imm"][:, -1] * (1 + u5_trend) ** (t - 4)
+        else:
+            w_imm = imm_per_child(row, Px)
+            for s_ in years:
+                for k in range(IMM_LAGS):
+                    t = s_ + k
+                    if t < N_YEARS:
+                        d["imm"][:, t] += U["imm"][:, s_] * w_imm[:, k]
+                    elif t < N_YEARS + POST_YEARS:
+                        after["imm"] += U["imm"][:, s_] * w_imm[:, k]
         # TB spread: untreated person-years cause secondary cases 1-2 years later, treated at that year's reduced
         # coverage; cases arriving after 2030 are set in motion by the cut
         h = _v(row, "tb_hiv_share", 0.0)

@@ -281,3 +281,50 @@ these, the part falling within ten years of vaccination is Kenya 0.0143, Nigeria
 Africa 0.0161, Uganda 0.0191, India 0.0096; the rest (HepB, MenA, YF adult deaths) is lifetime deaths beyond the
 window. For comparison the previous rule (0.020 x 0.65 x clip(U5MR / 50)) gave Kenya 0.0101, Nigeria 0.0301,
 Mozambique 0.0154, South Africa 0.0091, Uganda 0.0127, India 0.0069. Lo / central median 0.56, hi / central 1.64.
+
+## V2. Vaccines implemented (one commit)
+
+**Rule.** Deaths per fully immunized child lost = the country's `imm_dpc` (item V1: sum over the routine antigens the
+country uses of the adjusted VIMC deaths averted per vaccinated child), spread over years since vaccination by
+`imm_dpc_lag0..lag9` (item V1 step 7). For each vaccination-year cohort s = 2026..2030, deaths in year s + k count in
+2026-2030 while s + k <= 2030 and in further deaths 2031-2035 while s + k <= 2035; the lifetime remainder
+(`imm_dpc_beyond_window`, mostly adult hepatitis B) is not counted anywhere (`health_model.imm_per_child`,
+`lives()`). No calendar mortality trend applies to vaccines (the Q5 2026-30 ratio is in the value), so the
+"already-changing death rates" switch no longer moves vaccine deaths. Countries not in VIMC take the regional median
+per antigen (V1). `uc_imm` is unchanged. **Monte Carlo:** `imm_dpc_mult` (central 1, low 0.56, high 1.64 = the
+medians over the model countries of the VIMC low / central and high / central ratios) maps linearly onto each
+country's own `imm_dpc_lo` and `imm_dpc_hi`, as `uc_art_mult` does for the ART cost, so the central run stays inside
+the displayed range. **Legacy:** `imm_legacy_u5mr_scaling` = 1 (default 0, constant) restores the previous rule
+(0.020 x 0.65 x clip(U5MR / 50), weights 0.40 / 0.35 / 0.20 / 0.05, under-5 trend); `imm_deaths_per_child_ref` and
+`imm_u5_share` are relabelled as legacy parameters. The two new parameters are appended at the end of
+`model_params.csv` so the other parameters' draws do not shift. Lives-first ranking and the Poisson cross-check use the
+cumulative per-child deaths over years 1-5 (`per_unit_deaths`). The dashboard's Routine Immunization row and the
+Methods and Validation pages state that vaccine deaths exclude DTP, polio and BCG and are a conservative floor.
+
+**Effect** (Full US Exit, central, all countries): vaccine deaths 2026-30 104,413 -> **187,945 (+80%)**; the vaccine
+part of further deaths 2031-35 21,424 -> 15,243 (the VIMC timing puts 64-100% of under-5 deaths in the first two
+years after vaccination, against 40% / 35% / 20% / 5% before, so less spills past 2030); headline 1,843,873 ->
+**1,927,405 (+4.5%)**; further deaths 996,769 -> 990,588. Immunization baseline rebuilt (`tests/make_baseline.py
+--batch34 Immunization`: 73 entries, `imm` in all of them; 13 Kenya and Mozambique lives-first entries also moved
+`hiv_art`, `hiv_care_ct`, `tb_dr` and the malaria lines through the refill order, because vaccines' deaths per
+dollar rose). `--quick`: 0 failures, 6 known warnings.
+
+## V3. Vaccine check (before = commit `7f07d6b`, after item A3; after = item V2)
+
+Vaccine deaths 2026-2030 and the vaccine part of further deaths 2031-2035 (central, no response, sudden cut), all
+countries (`audit/logic_review/batch56_vaccine_check.py` run in a worktree at `7f07d6b` and in the working tree;
+full before/after by preset and country in `batch56_before_after.md`):
+
+| Preset | Vaccine deaths 2026-30 before -> after | Vaccine further deaths 2031-35 before -> after | All-disease deaths before -> after |
+|---|---|---|---|
+| Full US Exit | 104,413 -> 187,945 (+80%) | 21,424 -> 15,243 | 1,843,873 -> 1,927,405 (+4.5%) |
+| America First MOUs (16 countries) | 46,508 -> 81,556 (+75%) | 9,870 -> 6,675 | 328,910 -> 363,958 (+10.7%) |
+| IHME 2025 preliminary estimates | 13,316 -> 22,489 (+69%) | 2,674 -> 1,742 | 1,423,360 -> 1,432,533 (+0.6%) |
+| Total-Aid Cuts (OECD) | 104,120 -> 187,058 (+80%) | 21,357 -> 15,125 | 1,676,407 -> 1,759,346 (+4.9%) |
+| Global Fund & Gavi shortfalls | 93,934 -> 170,248 (+81%) | 19,271 -> 13,722 | 654,584 -> 730,898 (+11.7%) |
+| Combined retreat | 137,346 -> 247,416 (+80%) | 28,178 -> 20,023 | 2,019,609 -> 2,129,679 (+5.4%) |
+
+Six focus countries, Full US Exit: Kenya 966 -> 1,630 (further 197 -> 123); Nigeria 27,469 -> 43,543 (5,887 ->
+3,375); Mozambique 4,065 -> 7,280 (796 -> 562); South Africa 9 -> 20 (2 -> 2); Uganda 3,181 -> 5,970 (613 -> 444);
+India 305 -> 542 (56 -> 42). Against the batch start (`178733c`): vaccine deaths 102,735 -> 187,945 (+83%; A2 added
+1.6 points, V2 the rest).

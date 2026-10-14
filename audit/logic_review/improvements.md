@@ -215,6 +215,11 @@ batch's scope, which was treatment costs). `batch34_evidence.md` E.
 
 ### IMP-15. Vaccine pathway by antigen (Nice to have)
 
+**Status: ◐ partly done (Batch 5+6 items V1-V2, 14 October 2026).** Deaths averted per fully immunized child are now
+VIMC values by country, summed over the antigens the country uses, with VIMC timing by years since vaccination
+(`batch56_evidence.md` V1-V3). Not done: a cost per child by antigen (Gavi country financial data) and WUENIC coverage
+per antigen as the unit; the unit is still a full-schedule child at `uc_imm`; DTP, polio and BCG remain excluded.
+
 - **Addresses:** L-18, L-19, L-42.
 - **What to do:**
   - Donor (Gavi) money buys specific vaccines. Use Gavi country financial data (on disk) for price per child by

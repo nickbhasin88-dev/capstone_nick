@@ -53,7 +53,8 @@ Country columns used (`country_inputs.csv`):
 | bednet use, spraying, treatment coverage | `mal_itn_cov`, `mal_irs_cov`, `mal_cm_cov` | shares 0-1 (not percentages); NaN = see section 5 |
 | births | `births` | |
 | DTP3 % | `sh_imm_idpt` | |
-| U5MR | `sh_dyn_mort` | 50 if missing |
+| U5MR | `sh_dyn_mort` | 50 if missing (legacy vaccine rule only) |
+| deaths averted per fully immunized child | `imm_dpc` (`_lo`, `_hi`), `imm_dpc_lag0` .. `imm_dpc_lag9`, `imm_dpc_beyond_window`, `imm_q5_ratio`, `imm_antigens`, `imm_dpc_source` | Batch 5+6 V2: VIMC deaths averted per vaccinated child (Toor et al. 2021, supplementary data) summed over the routine antigens the country uses, x the WPP Q5 2026-30 / 2015-19 ratio; `_lag<k>` = the part falling k years after vaccination (`audit/batch56_vaccines.py`; `batch34_inputs.py --vaccines`); if missing, the legacy rule applies |
 | ART site cost | `art_site_cost` (`_lo`, `_hi`, `_source`, `_year`) | US$ per patient-year at site level, 2023 US$ (`batch34_inputs.py --art`; `audit/batch34_art_costs.py`) |
 | ART cost per patient-year used | `art_cost_full` (`_lo`, `_hi`, `_source`, `_year`) | 2023 US$: min(GHCC-based full cost, observed treatment spending per person on ART where valid), floored at 190.84 and gated 50-600 on the final value (`batch34_inputs.py --art-full56`; `audit/batch56_art_cost.py`) |
 | TB course costs | `tb_ds_cost`, `tb_dr_cost` (`_lo`, `_hi`, `_source`), `tb_cost_year` | US$ per treatment course, provider, 2023 US$ (`batch34_inputs.py --tb`; `audit/batch34_tb_costs.py`) |
@@ -102,7 +103,7 @@ Country columns used (`country_inputs.csv`):
 | mal_itn | 0.5 | 1 | 1 | 1 | 1 |
 | mal_irs | 0.8 | 1 | 1 | 1 | 1 |
 | mal_cm | 1 | 1 | 1 | 1 | 1 |
-| imm (cumulative) | 0.4 | 0.75 | 0.95 | 1 | 1 |
+| imm (cumulative; legacy vaccine rule only) | 0.4 | 0.75 | 0.95 | 1 | 1 |
 
 ## 2. Scenario cuts
 
@@ -375,14 +376,23 @@ trends are indexed by calendar t.
   units_tb_ds, tb_dr for cases from units_tb_dr; Batch 3+4) in that year (no LAG). Arrivals in 2031-2032 count in
   further deaths (part "tb").
 
-**Vaccines.** (After 2030 the level is level_4 x the trend, without a new clip: a country on the 0.3 floor can fall
-below it.)
-- Each year s's lost children die over the following years with weights w = (0.40, 0.35, 0.20, 0.05) for k = 0..3
-  (k = 0 is the same year).
-- Deaths in year t <= 4 = sum over s <= t of units_imm,s x w_(t-s) x level_t.
-- For t >= 5 (2031 onward): units_imm,s x w_(t-s) x level_4 x (1 + u5trend)^(t-4). Here u5trend = trend_u5mr
-  (-0.009 if missing) when the switch is on, else 0, and these deaths count in further deaths (part "imm").
-- For a sudden cut this equals units x level_t x (0.4, 0.75, 0.95, 1, 1).
+**Vaccines** (Batch 5+6, item V2; `imm_legacy_u5mr_scaling` = 0).
+- Per-child deaths by years since vaccination, k = 0..9: dpc_k = `imm_dpc_lag<k>` (country_inputs.csv; sum over the
+  antigens the country uses of VIMC deaths averted per vaccinated child x the Q5 2026-30 / 2015-19 ratio x the
+  pathogen's timing weights; `audit/batch56_vaccines.py`), scaled by the draw: with m = imm_dpc_mult, lo =
+  `imm_dpc_lo` / `imm_dpc`, hi = `imm_dpc_hi` / `imm_dpc`, factor = 1 - (1 - m) (1 - lo) / (1 - 0.56) if m < 1,
+  else 1 + (m - 1) (hi - 1) / (1.64 - 1). No mortality trend applies (the Q5 ratio is already in the value, and the
+  "already-changing death rates" switch does not change vaccine deaths).
+- Deaths in year t <= 4 = sum over s <= t of units_imm,s x dpc_(t-s) x factor.
+- For 5 <= s + k <= 9 (2031-2035): units_imm,s x dpc_k x factor counts in further deaths (part "imm"); lags that fall
+  after 2035 and the lifetime remainder (`imm_dpc_beyond_window`) are not counted.
+- Lives-first ranking (section 4): dpd[imm] = (sum over t = 0..4 of the cumulative sum of dpc_0..dpc_t) / cost_imm.
+- **Legacy rule** (imm_legacy_u5mr_scaling = 1, or a row without `imm_dpc`): level_t = imm_deaths_per_child_ref x
+  imm_u5_share x clip(U5MR x f_u5,t / 50, 0.3, 2.5); each year s's lost children die with weights w = (0.40, 0.35,
+  0.20, 0.05) for k = 0..3; deaths in year t <= 4 = sum over s <= t of units_imm,s x w_(t-s) x level_t; for t >= 5:
+  units_imm,s x w_(t-s) x level_4 x (1 + u5trend)^(t-4), u5trend = trend_u5mr (-0.009 if missing) when the switch
+  is on, else 0 (after 2030 the level is level_4 x the trend without a new clip). For a sudden cut this equals units
+  x level_t x (0.4, 0.75, 0.95, 1, 1).
 
 **HIV treatment** (cohorts; Batch 2, L-01 / L-41):
 - **Inputs** (hiv_art_params): hazard h[a] = art_hazard_mult x ART_HAZARD[a], a = 1..10 (H = 10); transmission

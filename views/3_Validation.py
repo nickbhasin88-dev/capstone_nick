@@ -97,7 +97,7 @@ if us is not None:
         {"Source": "Gavi",
          "What It Measures": "Future deaths averted per child immunised, since 2000",
          "Published": "About 0.017 (20.6M deaths / 1.2B children)",
-         "Closest Model Figure": f"{lifetime:.3f} per child (births-weighted, today's mortality)"},
+         "Closest Model Figure": f"{lifetime:.3f} per fully immunized child over a lifetime (VIMC, Toor et al. 2021, by country and antigen; births-weighted; excludes DTP, polio and BCG)"},
     ])
     st.subheader("Published Estimates", help=(
         "The scopes differ, so the model should come in below most of these figures. The Cavalcanti totals cover all "
