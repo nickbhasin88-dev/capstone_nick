@@ -328,3 +328,34 @@ Six focus countries, Full US Exit: Kenya 966 -> 1,630 (further 197 -> 123); Nige
 3,375); Mozambique 4,065 -> 7,280 (796 -> 562); South Africa 9 -> 20 (2 -> 2); Uganda 3,181 -> 5,970 (613 -> 444);
 India 305 -> 542 (56 -> 42). Against the batch start (`178733c`): vaccine deaths 102,735 -> 187,945 (+83%; A2 added
 1.6 points, V2 the rest).
+
+**First full check** (after item V3, commit `c53a969`): `audit/checks.py --full`, 59 checks, 76,501 rows, **0 failures,
+6 known warnings** (Section 1 vs Section 2 DAH, 2-5% in small countries); 14 min 53 s. `--quick` had 0 failures after
+each model item (A1, A2, A3, V2). Tests: 352 pass, 5 fail: `tests/test_paths.py::test_late_vaccine_cut_committed`
+for every test country asserts that for a vaccine cut in 2030 only "60% of the cohort's deaths fall after its first
+year", the pre-batch cohort weights (0.40 / 0.35 / 0.20 / 0.05); with the VIMC timing 64-100% of a cohort's under-5
+deaths fall in the first two years, so the assertion fails by design. The test was not edited (rule: never edit tests
+to make them pass) and the failure is recorded here and in `MODEL_CHANGELOG.md` for the user to decide.
+
+## VAL2. Independent reproduction from SPEC.md (no model change)
+
+A separate agent rewrote `audit/logic_review/reproduction/repro.py` from `docs/SPEC.md` (sections 0-7 and the §6
+return-to-care range) and the four data files it names only, without reading any model code, for Kenya, Nigeria,
+India, Honduras and Mozambique and the four cases (Full US Exit sudden / no response; Full US Exit with a 25%
+replacement capped at fiscal capacity; OECD cuts; Full US Exit with a linear phase-out). It now follows every current
+rule: unspecified money split by Global Fund module shares and systems money not converted (Batch 3+4), the ART
+cohort hazard by years since stopping with second-generation infections (Batch 2), country ART and TB costs
+(Batch 3+4, 4b, A1), the donor-funded pool with per-disease public-spending shares (A2) and per-intervention malaria
+shares (A3), the World Malaria Report under-5 regional share, and the VIMC vaccine pathway with timing by years since
+vaccination (V2). Compared with the dashboard's own numbers (`audit/after_batch56.csv`, `audit/snapshot_numbers.py`
+at the end of the batch) by `compare.py`: **1,980 of 1,980 cells within 0.5%, largest difference 0.0000%** (central
+values: totals, further deaths, every line's money, units, coverage, deaths and infections, bucket deaths).
+
+The agent listed 23 places where the SPEC was silent or ambiguous (`reproduction/notes.md`, section a). None changed a
+number (each reading matched the model), so none is a model bug; the SPEC was clarified where it was silent: the
+donor group name behind "US" (§2); TB spread uses the same arrival-year coverage for secondary cases from drug-resistant
+patients (§6); ART covered is NaN only if ART % or PLHIV is missing, with nothing subtracted when the PMTCT inputs
+are missing (§5); the proportional branch returns 0 when the line's baseline money is 0 (§5); first = 0 when no row is
+cut, "any row" meaning any row of the country (§6); the unit-cost fallbacks from `unit_cost_reference.csv` carry the
+same multiplier and markup (§5). The others are already determined by the text or concern parts the four cases do not
+exercise (lives-first allocation, gradual budget increase, the MOU and IHME presets, cards, draws). No new finding.
