@@ -239,3 +239,20 @@ download), so affected countries can be filtered. Affected countries:
 
 A filter control on the All Countries page itself was not added (the columns are in the page's download file and
 in the inputs); that is UI work outside this item's scope. Headline unchanged; 357 tests pass.
+
+## Item 15. L-38 / IMP-12: rebuilding the Sections 1-3 per-country files
+
+`build_sections.py` (new). `python build_sections.py --verify` rebuilds into a temporary folder and compares every
+numeric cell with the committed file (relative difference, tolerance 0.5%):
+
+| Folder | Source on disk | Rule | Result |
+|---|---|---|---|
+| `country_data/` (71 files + `_index.csv`) | `datasets/IHME_DAH_DATABASE_1990_2026_Y2026M09D18.CSV` | rows for the recipient with `elim_ch == 0`; programme-area `_dah_23` columns; IHME's "-" (empty area) stored as 0 | 71 of 71 within 0.5%; worst 0.0000% |
+| `spending_data/` (71 files + `_index.csv`) | `datasets/IHME_HEALTH_SPENDING_1995_2023_Y2026M09D21.CSV`, `datasets/IHME_EXPECTED_HEALTH_SPENDING_2024_2050_Y2026M09D23.CSV` | 1995-2023 actual (`projected = 0`) then 2024-2050 expected (`projected = 1`); eleven mean columns; `ghes_per_gdp_mean` empty for projected years | 71 of 71 within 0.5%; worst 0.0000% |
+| `macro_data/<ISO3>.csv` | not on disk | BLOCKED: needs the full IMF WEO country series (nominal GDP in US$ and local currency, revenue, expenditure, gross debt, population, 1980-2031); only the general-government balance indicators (GGR_NGDP, GGXCNL_NGDP, GGXONLB_NGDP) are in `datasets/IMF_WEO_Oct2026_GG_balances_2026-10-13.csv` | left as committed |
+| `revenue_data/<ISO3>.csv` | partly on disk | BLOCKED: the committed files carry a label, group and coverage (general government) for each revenue line; the WoRLD download in `datasets/` is central-government by series code and has neither the code-to-label/group mapping nor the general-government totals | left as committed |
+| `cofog_all/` | not on disk | BLOCKED: no COFOG (government spending by function) dataset is in `datasets/` or `ext_data/` | left as committed |
+
+No model input is read from the three blocked folders except `macro_data/` (the WEO GDP growth used by the
+`budget_growth` sensitivity, item 10, and the GDP series behind Section 2 charts), so the headline is unaffected.
+The committed files were not changed by this item (the script was run into a temporary folder only).

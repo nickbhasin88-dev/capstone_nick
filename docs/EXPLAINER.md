@@ -659,7 +659,8 @@ Direction: the way the headline would most likely move if the item were resolved
   implemented); the debt-stress thresholds are labelled assumptions with ranges. Direction: Government Response
   options only (L-29, labelling half closed in Batch 7).
 - The PMTCT cost review figures could not be verified. Direction: Unclear (L-32).
-- Sections 1 to 3 per-country files cannot be rebuilt from scripts in the repository. Direction: none (L-38).
+- Of the Sections 1 to 3 per-country files, the macro, revenue and spending-by-function folders cannot be rebuilt
+  from files on disk (the aid and health-spending folders now can, Batch 7). Direction: none (L-38).
 - India's TB systems and unspecified money follows its own line mix toward drug-resistant TB. Direction: Lower for
   India (L-39).
 - The Gavi -15% default is an estimate. Direction: Global Fund & Gavi Shortfalls preset only (L-09).
@@ -689,7 +690,10 @@ nominal GDP; at the full rate the preset falls from 534,944 to 419,439 deaths an
 unchanged). L-24 (births): the immunization need follows WPP 2024 projected births for each year 2026 to 2030
 (vaccine deaths +0.2%); people living with HIV and TB and malaria incidence stay at the latest year because no
 projection is on disk. L-15: the TB timing rules are labelled as assumptions on the Methods page. L-07, L-21, L-22, L-23: the malaria
-input caveats are per-country flag columns (31, 36, 56 and 26 countries).
+input caveats are per-country flag columns (31, 36, 56 and 26 countries). L-38: `build_sections.py` rebuilds the
+aid and health-spending per-country files from the IHME datasets and reproduces all 71 of each within 0.5%; the
+macro, revenue and spending-by-function files stay as committed because their inputs (full WEO series, the IMF
+revenue code mapping, COFOG data) are not on disk.
 
 ---
 

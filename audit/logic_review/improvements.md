@@ -189,6 +189,9 @@ batch's scope, which was treatment costs). `batch34_evidence.md` E.
   - Archive the exact downloaded series with dates (a `datasets/manifest.csv` with URL, date and checksum).
   - Download WDI from the World Bank API, not the open-numbers mirror.
   - Restore or rewrite the scripts that built `country_data/`, `spending_data/`, `revenue_data/` and `cofog_all/`.
+    **Batch 7 item 15:** `build_sections.py` rebuilds `country_data/` and `spending_data/` (71 of 71 files each within
+    0.5%); `macro_data/`, `revenue_data/` and `cofog_all/` remain BLOCKED (full WEO series, WoRLD code mapping and
+    general-government totals, COFOG data are not on disk).
 - **Effort:** medium. **Risk:** none for results.
 
 ### IMP-13. Country-level Global Fund GC8 vs GC7 allocations for the Global Fund & Gavi preset (Do before presenting)

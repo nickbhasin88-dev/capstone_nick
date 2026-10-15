@@ -109,7 +109,9 @@ Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
 | L-24 births (item 12) | immunization need = latest-year births (crude birth rate x population) held through 2030 | need in year t = WPP 2024 projected births for 2026 + t (`births_2026` .. `births_2030`, all 70 countries; median +1.7% over the period); displayed need = the five-year mean; PLHIV and TB and malaria incidence still held at the latest year (no projection on disk); PMTCT uses UNAIDS pregnancies, not births (births enter only Iraq's and Jordan's derived fallback) | `datasets/WPP2024/WPP2024_Demographic_Indicators_Medium.csv` | `67163c8` |
 | L-15 TB timing (item 13) | case fatality in the year of loss; secondary cases at 1 and 2 years, undocumented | Methods note: both are labelled assumptions about timing (WHO methods: untreated TB lasts about three years; Vynnycky and Fine 1997: most progression within two to five years); no rule change | WHO TB burden estimation methods; Vynnycky & Fine 1997 (already cited for `tb_secondary`) | `72e562d` |
 | Malaria input flags (item 14) | caveats L-07, L-21, L-22, L-23 recorded in text only | four boolean columns in `country_inputs.csv` and in the All Countries files: `flag_itn_default` (31 countries), `flag_irs_household` (36), `flag_irs_implied` (56), `flag_map_who_gap` (26); no rule change | `audit/batch7_flags.py`; `batch7_evidence.md` item 14 | `f1f1ca7` |
+| Section 1-3 files rebuildable (item 15) | no build scripts in the repository (L-38 / IMP-12) | `build_sections.py` rebuilds `country_data/` (IHME DAH rows per recipient, `elim_ch == 0`) and `spending_data/` (IHME spending 1995-2023 plus expected 2024-2050); `--verify` reproduces 71 of 71 files in each within 0.5% (worst 0.0000%). `macro_data/`, `revenue_data/`, `cofog_all/` BLOCKED: inputs not on disk (listed in `batch7_evidence.md` item 15) | `build_sections.py --verify` | `ced445d` |
 ### Closed in Batch 7
+- L-38 / IMP-12 (partly): `country_data/` and `spending_data/` rebuild from `build_sections.py` within 0.5%; `macro_data/`, `revenue_data/`, `cofog_all/` stay as committed (BLOCKED: full WEO series, WoRLD code mapping and general-government totals, COFOG data not on disk).
 - L-07, L-21, L-22, L-23 (malaria input caveats): flagged per country (no rule change); affected countries listed in `batch7_evidence.md` item 14.
 - L-15 (TB timing): closed as a label; no rule change.
 - L-24 (births half): closed; headline 1,927,847 -> 1,928,289 (+0.02%), vaccine deaths 188,412 -> 188,853. PLHIV and incidence remain held at the latest year.
@@ -147,7 +149,7 @@ Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
 - **L-15**: TB case fatality is placed in the year of loss; secondary cases all arrive in 1-2 years.
 - **L-29, L-31, L-34, L-35**: fiscal-capacity and MOU presentation details (not cumulative capacity; untagged WEO vintage; mixed interest definitions; nominal MOU amounts).
 - **L-32**: `uc_pmtct` 250 review figures not verified.
-- **L-38 / IMP-12**: Sections 1-3 per-country files cannot be rebuilt from scripts in the repository.
+- **L-38 / IMP-12 (remaining part)**: `macro_data/`, `revenue_data/` and `cofog_all/` cannot be rebuilt from files on disk (Batch 7 item 15 rebuilt `country_data/` and `spending_data/`).
 - **L-39**: India's TB systems and unspecified money follows its own line mix toward DR-TB.
 - **L-09**: Gavi -15% default is an estimate (preset only).
 - **Red-team flags in Batch 3+4**: TB deaths +91% from the lower course costs (item 5) remain in the model; the WHO budget-per-patient cross-check (Validation section 2) shows the course cost at 0.47 of programme budgets at the median.

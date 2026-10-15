@@ -80,6 +80,10 @@ python malaria_inputs.py
 # 2. IMF WEO fiscal balances (downloaded from the IMF API) -> macro_data/weo_fiscal/
 python fiscal_inputs.py --download
 
+# 2b. Sections 1-3 per-country files -> country_data/ and spending_data/ (macro_data/, revenue_data/, cofog_all/
+#     cannot be rebuilt from the files on disk; see build_sections.py's docstring)
+python build_sections.py --country-data --spending-data   # or --verify to compare with the committed files
+
 # 3. Model inputs, regressions and precomputed results -> model_data/
 #    (add --download to refresh ext_data/ from the World Bank / Gapminder mirrors and WHO GHO first)
 python prepare_model.py \
