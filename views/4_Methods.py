@@ -497,6 +497,14 @@ with tabs[2]:
 
     Where nobody is counted as in need (for example malaria treatment in Iraq), coverage cannot be calculated and the
     dashboard shows "Not Modelled".
+
+    **Malaria input flags** (Batch 7, item 14; columns in `country_inputs.csv` and in the All Countries download):
+    `flag_itn_default` (31 countries: bednet use is the 50% default because MAP has no estimate and no household
+    survey since 2015 exists; logic review L-07), `flag_irs_household` (36: spraying coverage is MAP's share of
+    households sprayed, applied to people at risk; L-21), `flag_irs_implied` (56: spraying coverage is the people donor
+    spraying money pays for, because MAP shows none or less than the money buys; L-22) and `flag_map_who_gap` (26:
+    MAP clinical cases differ from the WHO estimate by more than 30%; L-23). The rules are unchanged; the flags make the
+    affected countries filterable.
     """)
 
     th.section_header("favorite", "Step 4: Lives (Extra Deaths)")

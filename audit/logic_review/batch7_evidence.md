@@ -211,3 +211,31 @@ No WHO basis for the two-year window was found in the evidence files: `model_par
 model's own simplification; WHO's burden-estimation methods describe untreated TB as lasting about three years. The
 Methods page now states both as labelled timing assumptions with their direction (five-year TB deaths somewhat high,
 2031-2035 somewhat low). No rule change; headline unchanged.
+
+## Item 14. L-07, L-21, L-22, L-23: per-country flags (no rule change)
+
+`audit/batch7_flags.py` writes `batch7_flags.csv`; `batch34_inputs.py --flags` copies the four booleans into
+`country_inputs.csv`, and `health_model.run_all` carries them into the All Countries files (and so the page's
+download), so affected countries can be filtered. Affected countries:
+
+- `flag_itn_default` (L-07; bednet use is the 50% default: no MAP estimate and no household survey since 2015), 31:
+  Azerbaijan, Bangladesh, Belize, Bolivia, Botswana, Dominican Republic, Egypt, Fiji, Guatemala, Honduras, Indonesia,
+  Iraq, Jamaica, Jordan, Kyrgyzstan, Cambodia, Libya, Lesotho, Moldova, Mongolia, Mauritius, Namibia, Nicaragua, Nepal,
+  Philippines, El Salvador, Eswatini, Tajikistan, Venezuela, Viet Nam, South Africa (malaria deaths are small or zero
+  in most of these; the default matters little to the headline).
+- `flag_irs_household` (L-21; MAP spraying coverage is a share of households, applied to people at risk), 36: Angola,
+  Burundi, Benin, Burkina Faso, Botswana, Central African Republic, Côte d'Ivoire, Cameroon, DR Congo, Djibouti,
+  Ethiopia, Ghana, Guinea, Gambia, Kenya, Liberia, Madagascar, Mali, Mozambique, Malawi, Namibia, Niger, Nigeria,
+  Rwanda, Senegal, Sierra Leone, Somalia, South Sudan, São Tomé and Príncipe, Eswatini, Togo, Tanzania, Uganda, South
+  Africa, Zambia, Zimbabwe.
+- `flag_irs_implied` (L-22; spraying coverage is what donor spraying money pays for, MAP showing none or less), 56:
+  every malaria country except Burundi, Ethiopia, Kenya, Madagascar, Malawi, Mozambique, Namibia, Rwanda, Senegal,
+  Uganda, South Africa, Zambia, Eswatini and Gambia; among the five largest malaria countries Nigeria, DR Congo, Niger
+  and Tanzania are flagged (MAP shows 0 to 1% and the donor money implies 1 to 2%).
+- `flag_map_who_gap` (L-23; MAP clinical cases differ from the WHO estimate by more than 30%), 26: Bangladesh,
+  Bolivia, Botswana, Djibouti, Dominican Republic, Ethiopia, Guatemala, Guyana, Haiti, Indonesia, Cambodia, Laos,
+  Madagascar, Mali, Namibia, Nicaragua, Nepal, Pakistan, Philippines, Papua New Guinea, Rwanda, Senegal, Eswatini,
+  Venezuela, South Africa, Zimbabwe.
+
+A filter control on the All Countries page itself was not added (the columns are in the page's download file and
+in the inputs); that is UI work outside this item's scope. Headline unchanged; 357 tests pass.

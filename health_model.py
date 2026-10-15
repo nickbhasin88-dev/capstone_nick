@@ -1592,6 +1592,9 @@ def run_all(scenario, fiscal, inputs, ptab, n_draws=80, countries=None, mortalit
             rec[f"deaths_5y_{bb['bucket']}"] = bb["deaths_5y"]
             rec[f"net_loss_{bb['bucket']}"] = bb["net_loss_usd"]
         rec["hiv_infections_5y"] = float(r["buckets"].set_index("bucket").loc["HIV", "infections_5y"])
+        # Batch 7 item 14: malaria-input caveat flags (L-07, L-21, L-22, L-23), so affected countries can be filtered
+        for c in ("flag_itn_default", "flag_irs_household", "flag_irs_implied", "flag_map_who_gap"):
+            rec[c] = bool(row.get(c, False)) if row.get(c, False) == row.get(c, False) else False
         recs.append(rec)
     out = pd.DataFrame(recs)
     # draw-by-draw totals over all countries: the All Countries range is their 2.5th-97.5th percentile (IMP-10)

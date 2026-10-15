@@ -645,9 +645,10 @@ Direction: the way the headline would most likely move if the item were resolved
 - The OECD preset applies total-aid cuts to health aid. Direction: Unclear (L-28 / IMP-14).
 - 70 countries receive 71.5% of country-coded aid; Myanmar, Sudan, Afghanistan, Chad, Yemen and Ukraine are missing.
   Direction: Higher for the all-country total (L-03 / IMP-23).
-- Bednet use defaults to 50% where no MAP or recent survey exists; IRS household share is applied to people; IRS is
-  implied from donor spending where MAP shows none; MAP and WHO case counts differ (Pakistan). Direction: Unclear
-  (L-07, L-21, L-22, L-23).
+- Bednet use defaults to 50% where no MAP or recent survey exists (31 countries); IRS household share is applied to
+  people (36); IRS is implied from donor spending where MAP shows none (56); MAP and WHO case counts differ by more
+  than 30% (26, including Pakistan). Each is now a per-country flag in the inputs and the All Countries download
+  (Batch 7). Direction: Unclear (L-07, L-21, L-22, L-23).
 - People living with HIV and TB and malaria incidence are held at the latest year through 2030 (no projection on
   disk); births now follow WPP projections (Batch 7). Direction: Higher where need grows (L-24 / IMP-17, partly done).
 - The Lancet rate-ratio method on the Validation page still uses a GBD-2019 HIV death share. Direction: Validation
@@ -687,7 +688,8 @@ nominal GDP; at the full rate the preset falls from 534,944 to 419,439 deaths an
 1.06 points a year. L-09: the Gavi -15% default is labelled as our estimate, applying to its preset only (value
 unchanged). L-24 (births): the immunization need follows WPP 2024 projected births for each year 2026 to 2030
 (vaccine deaths +0.2%); people living with HIV and TB and malaria incidence stay at the latest year because no
-projection is on disk. L-15: the TB timing rules are labelled as assumptions on the Methods page.
+projection is on disk. L-15: the TB timing rules are labelled as assumptions on the Methods page. L-07, L-21, L-22, L-23: the malaria
+input caveats are per-country flag columns (31, 36, 56 and 26 countries).
 
 ---
 
