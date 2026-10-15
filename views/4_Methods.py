@@ -480,8 +480,8 @@ with tabs[2]:
 
     | Service | People in need | Current coverage |
     |---|---|---|
-    | HIV treatment | People living with HIV, all ages, 2025 (UNAIDS/WHO, GHO `HIV_0000000001`) | ART coverage, 2025 (UNAIDS/WHO, GHO `HIV_ARTCOVERAGE`) |
-    | PMTCT | Pregnant women living with HIV, 2025 = women receiving ARVs (GHO `HIV_0000000016`) ÷ PMTCT coverage (GHO `HIV_0000000020`, which the GHO catalogue names "number of pregnant women living with HIV" but which holds coverage in %); where coverage is top-coded at 100%, the larger of that and births x prevalence x 1.15 | PMTCT coverage, 2025 (UNAIDS/WHO) |
+    | HIV treatment | People living with HIV, all ages, 2025 (UNAIDS AIDSinfo 2026 estimates, read directly from the UNAIDS file since Batch 7; WHO GHO `HIV_0000000001` where UNAIDS has no value) | ART coverage, 2025 (UNAIDS AIDSinfo 2026 estimates; GHO `HIV_ARTCOVERAGE` as the fallback) |
+    | PMTCT | Pregnant women needing ARV for PMTCT, 2025 (UNAIDS AIDSinfo 2026 estimates, 69 countries); elsewhere women receiving ARVs (GHO `HIV_0000000016`) ÷ PMTCT coverage (GHO `HIV_0000000020`), or births x prevalence x 1.15 where coverage is top-coded | PMTCT coverage, 2025 (UNAIDS AIDSinfo 2026 estimates; GHO as the fallback) |
     | TB treatment | TB incidence, all forms, 2024 (WHO Global TB Report, via Gapminder) | TB treatment coverage, 2024, WDI `SH.TBS.DTEC.ZS` (WHO) |
     | Drug-resistant TB | WHO's RR-TB share of incidence, 2024 (`tb_rr_share`; median 2.1%; 4% where WHO has none) | RR-TB patients started on treatment ÷ RR-TB incidence, 2024 (`tb_rr_cov`; median 35%; 45% where WHO has none) |
     | Bednets | Population at risk, 2024 = WHO estimated cases ÷ incidence per 1,000 at risk (GHO `MALARIA_EST_CASES`, `MALARIA_EST_INCIDENCE`) | ITN use (share of people sleeping under a net), 2025, Malaria Atlas Project (31 African countries); elsewhere a household survey of children under 5 sleeping under a net (WDI `SH.MLR.NETS.ZS`) only if from 2015 or later; otherwise {C['mal_itn_default_use']:.0%} (*assumption*) |

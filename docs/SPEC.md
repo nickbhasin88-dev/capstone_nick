@@ -34,11 +34,11 @@ Country columns used (`country_inputs.csv`):
 
 | Symbol | Column | Notes |
 |---|---|---|
-| PLHIV | `plhiv` | people living with HIV |
-| ART % | `sh_hiv_artc_zs` | |
-| PMTCT % | `sh_hiv_pmtc_zs` | if missing, ART % is used |
-| HIV+ pregnancies | `hiv_pos_pregnancies` | |
-| new HIV infections | `sh_hiv_incd_tl` | number a year |
+| PLHIV | `plhiv` (`_year`, `_source`) | people living with HIV, all ages: UNAIDS AIDSinfo 2026 estimates, 2025 (`unaids_inputs.py`, Batch 7 item 4); WHO GHO or the derived value where UNAIDS has none |
+| ART % | `sh_hiv_artc_zs` (`_year`, `_source`) | UNAIDS 2026 estimates, all ages, 2025; GHO / WDI where missing |
+| PMTCT % | `sh_hiv_pmtc_zs` (`_year`, `_source`) | UNAIDS 2026 estimates (coverage of pregnant women receiving ARV), 2025; GHO where missing; if missing altogether, ART % is used |
+| HIV+ pregnancies | `hiv_pos_pregnancies` (`_year`, `_source`) | UNAIDS 2026 estimates, pregnant women needing ARV for PMTCT, 2025; the GHO-derived value where missing |
+| new HIV infections | `sh_hiv_incd_tl` (`_year`, `_source`) | number a year: UNAIDS 2026 estimates, all ages, 2025; the WDI mirror (2024) where missing |
 | HIV transmission rate per unsuppressed person | `art_transmission_rate` (`_lo`, `_hi`, `_year`, `_source`) | UNAIDS new infections / (PLHIV - suppressed), latest year with all three (`hiv_transmission_inputs.py`); WHO-region median of the dashboard countries where missing |
 | population | `sp_pop_totl` | |
 | TB incidence | `all_forms_of_tb_incidence_estimated` | number a year (not `sh_tbs_incd`, which is per 100,000) |

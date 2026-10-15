@@ -281,7 +281,8 @@ people on ART with PEPFAR's figure.
 **In plain words.** The people who lose a service, divided by everyone who needs it, is the drop in coverage.
 
 **Need and coverage by service** (People in Need and Coverage Before columns): ART: people living with HIV and ART
-coverage (UNAIDS 2025); PMTCT: HIV-positive pregnancies and PMTCT coverage; TB: WHO TB incidence and the case
+coverage (UNAIDS AIDSinfo 2026 estimates for 2025, read directly from the UNAIDS file since Batch 7); PMTCT:
+HIV-positive pregnancies (women needing ARV) and PMTCT coverage (same file); TB: WHO TB incidence and the case
 detection rate (capped at 100%); drug-resistant TB: WHO's rifampicin-resistant share of incidence and enrolment;
 bednets and spraying: population at risk (WHO) and Malaria Atlas Project (MAP) 2025 net use and household spraying
 coverage; malaria treatment: MAP clinical cases and effective treatment per 100 cases; immunization: births and DTP3
@@ -559,7 +560,7 @@ methods compared for Kenya.
 | Value TB patient-level costs | Sweeney et al. | 2018 | Facility cost per TB course, five countries | 2018 US$ | 2d |
 | Rosen et al. 2021 (AMBIT synthesis) | Gates Open Research 5:177 | 2018-2020 | ART site costs, five countries | 2018-2020 US$ | 2d |
 | Optima HIV appendix (ten Brink et al. 2025) | Lancet HIV | most recent GAM year | Total HIV spending by source (Table B2); progression and death rates (Tables A1-A2); scenario outcomes (Table C2) | US$, rates, counts | 2d, 2f, 2i |
-| UNAIDS AIDSinfo 2026 estimates | UNAIDS | 2025 | People on ART, new infections, PLHIV, suppressed viral load | counts | 2d, 2f, 2i |
+| UNAIDS AIDSinfo 2026 estimates | UNAIDS | 2025 | PLHIV, ART and PMTCT coverage, women needing ARV, new infections, AIDS deaths, suppressed viral load, people on ART | counts | 2d, 2e, 2f, 2i |
 | VIMC estimates (Toor et al. 2021) | Vaccine Impact Modelling Consortium | vaccination years 2015-2019; calendar years 2000-2019 | Deaths averted by year of vaccination, calendar year and birth cohort, 10 pathogens, 112 countries | counts | 2f |
 | WUENIC 2025 revision | WHO / UNICEF | 2015-2019, 2025 | Coverage by antigen; DTP3 and MCV1 model inputs | % | 2e, 2f |
 | World Population Prospects 2024 | UN DESA | 2015-2030 | Surviving infants, births, under-5 mortality, population | thousands (x 1,000); per 1,000 | 2f, Section 4 of slides |
@@ -668,7 +669,10 @@ country-disease lines use a WHO-region median because the country has no Global 
 lines where donor money would buy more than the donor-funded pool are listed in `audit/logic_review/batch7_evidence.md`.
 The headline chain in the changelog was re-run at each batch's own commit and corrected (before Batch 1: 1,969,304;
 Batch 2 raised HIV deaths by 9%). L-17: DTP3 coverage now comes from WUENIC 2025 directly (30 countries moved by
-more than 2 points; vaccine deaths +0.2%).
+more than 2 points; vaccine deaths +0.2%). IMP-24: the HIV inputs (people living with HIV, ART and PMTCT coverage,
+HIV-positive pregnancies, new infections) are read from the UNAIDS 2026 file directly, with WHO GHO as the fallback;
+the only HIV series still taken from the World Bank mirror is adult prevalence, used in a fallback and in the
+Validation-page regressions.
 
 ---
 

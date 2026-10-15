@@ -33,6 +33,14 @@ def wuenic_latest(path: Path = WUENIC_FILE) -> pd.DataFrame:
     return pd.DataFrame(out)
 
 
+def wuenic_series(antigen: str, path: Path = WUENIC_FILE) -> pd.DataFrame:
+    """Full country-year series for one antigen (iso3, year, value), for the regression panel."""
+    w = pd.read_excel(path, "country", usecols=["iso3c", "vaccine", "year", "coverage"]).dropna(subset=["coverage"])
+    d = w[w.vaccine == antigen].rename(columns={"iso3c": "iso3", "coverage": "value"})[["iso3", "year", "value"]]
+    d["year"] = d["year"].astype(int)
+    return d.sort_values(["iso3", "year"]).reset_index(drop=True)
+
+
 def apply(ci: pd.DataFrame) -> pd.DataFrame:
     ci = ci.copy()
     t = wuenic_latest().reindex(ci.index)

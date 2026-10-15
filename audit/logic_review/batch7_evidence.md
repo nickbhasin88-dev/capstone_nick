@@ -70,3 +70,28 @@ own 2024 value as well.
 
 Effect: immunization baseline refreshed (22 entries, `imm` only); headline **1,927,405 -> 1,927,871 (+0.02%)**;
 vaccine deaths 187,945 -> 188,412; no other disease moved. 357 tests pass.
+
+## Item 4. IMP-24: the UNAIDS and WUENIC files as the direct sources
+
+**Immunization.** Item 3 made WUENIC the source of DTP3 and MCV1 in `country_inputs.csv`; this item also feeds the
+coverage regression's DTP3 history from WUENIC (`immunization_inputs.wuenic_series`, 8,340 country-years 1980-2025)
+and removes `sh_imm_idpt` and `sh_imm_meas` from the WDI download list. The committed `regressions.json` was built
+with the mirror series and changes only at the next full `prepare_model.py` rebuild (Validation page only).
+
+**HIV.** `unaids_inputs.py` reads the UNAIDS 2026 file (Area Level 2, latest year, 2025) for every HIV input the
+model uses: people living with HIV (66 of 71 countries; new / old ratio median 1.000, none outside 0.9-1.1, the GHO
+values were the same estimates), ART coverage (66; 1.001), PMTCT coverage (69; 2 countries outside 0.9-1.1),
+HIV-positive pregnancies = women needing ARV for PMTCT (69; 14 outside 0.9-1.1, because the GHO-derived value divided
+women on ARVs by rounded coverage), new HIV infections (64; median ratio 0.936, 43 outside 0.9-1.1: UNAIDS 2025
+estimates against the WDI mirror's 2024 vintage), and AIDS-related deaths (65, a new column `hiv_deaths_unaids` for
+item 5). Countries without a UNAIDS value keep the GHO or derived value and its source label (Côte d'Ivoire,
+Guatemala, Iraq, Jordan, Nicaragua for PLHIV and ART; Venezuela and Libya for infections).
+
+**Still from the World Bank mirror:** adult HIV prevalence (`sh_dyn_aids_zs`), used only in the pregnancy fallback for
+countries without a UNAIDS value and in the regression panel. Not BLOCKED (the UNAIDS file has prevalence), simply
+out of the model's path; left as is.
+
+**Effect.** HIV and TB baselines refreshed (74 entries: `hiv_art`, `hiv_pmtct`, `hiv_prev`; and `tb_ds` in 54 entries
+because ART coverage enters the HIV-positive TB case fatality). Headline **1,927,871 -> 1,927,847 (-0.001%)**; HIV
+998,535 -> 998,517; TB 463,973 -> 463,966; HIV infections 3,966,261 -> 3,936,613 (the lower UNAIDS 2025 incidence
+raises the cost per infection averted on the prevention line). 357 tests pass.

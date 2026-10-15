@@ -124,8 +124,7 @@ BUCKET_TOTAL_COL = {"HIV": "hiv_dah_23", "TB": "tb_dah_23", "Malaria": "mal_dah_
 # Only these lists are downloaded (download_ext). Series no longer used are kept in ext_data/reference/ and are not in
 # these lists, so a download never puts them back in ext_data/wdi/ or ext_data/sg/.
 WDI = ["sh_dyn_aids_zs", "sh_hiv_artc_zs", "sh_hiv_incd_tl", "sh_hiv_0014", "sh_hiv_pmtc_zs", "sh_tbs_incd",
-       "sh_tbs_dtec_zs", "sh_tbs_cure_zs", "sh_mlr_incd_p3", "sh_mlr_nets_zs", "sh_mlr_tret_zs", "sh_imm_idpt",
-       "sh_imm_meas", "sh_dyn_mort", "sh_dth_mort", "sp_dyn_cbrt_in", "sp_pop_totl", "sp_pop_1564_to", "sp_pop_0014_to",
+       "sh_tbs_dtec_zs", "sh_tbs_cure_zs", "sh_mlr_incd_p3", "sh_mlr_nets_zs", "sh_mlr_tret_zs", "sh_dyn_mort", "sh_dth_mort", "sp_dyn_cbrt_in", "sp_pop_totl", "sp_pop_1564_to", "sp_pop_0014_to",
        "gc_rev_xgrt_gd_zs", "gc_dod_totl_gd_zs", "gc_xpn_intp_rv_zs", "gc_xpn_totl_gd_zs", "sh_xpd_ghed_ge_zs",
        "sh_uhc_sci"]
 SG = ["people_living_with_hiv_number_all_ages", "all_forms_of_tb_incidence_estimated",
@@ -459,6 +458,8 @@ def main(a):
     ci = hiv_transmission_inputs.apply(ci)
     import immunization_inputs           # L-17 / IMP-24: WUENIC 2025 coverage replaces the WDI mirror (DTP3, MCV1)
     ci = immunization_inputs.apply(ci)
+    import unaids_inputs                 # IMP-24 / L-11: UNAIDS 2026 file is the primary source of the HIV inputs
+    ci = unaids_inputs.apply(ci)
     ci.loc[DASHBOARD_ISO3].reset_index().to_csv(OUT / "country_inputs.csv", index=False)
     print(f"  country_inputs: {len(DASHBOARD_ISO3)} dashboard countries ({len(ISO3)} built for the regressions)")
 
@@ -494,8 +495,10 @@ def main(a):
     spp = sp[sp.iso3.isin(ISO3)][["iso3", "year", "ghes_per_cap_mean", "dah_per_cap_mean", "the_per_cap_mean"]]
     pan = pan.merge(spp, on=["iso3", "year"], how="outer").merge(gdp, on=["iso3", "year"], how="left")
     for n in ["sp_pop_totl", "sp_pop_1564_to", "sh_dyn_aids_zs", "sh_hiv_0014", "sh_hiv_artc_zs", "sh_tbs_dtec_zs",
-              "sh_imm_idpt", "sp_dyn_cbrt_in", "sh_mlr_incd_p3", "sh_dyn_mort", "all_forms_of_tb_incidence_estimated"]:
+              "sp_dyn_cbrt_in", "sh_mlr_incd_p3", "sh_dyn_mort", "all_forms_of_tb_incidence_estimated"]:
         pan = pan.merge(read_ext(n).rename(columns={"value": n}), on=["iso3", "year"], how="left")
+    import immunization_inputs           # IMP-24: DTP3 history for the coverage regression from WUENIC, not the WDI mirror
+    pan = pan.merge(immunization_inputs.wuenic_series("dtp3").rename(columns={"value": "sh_imm_idpt"}), on=["iso3", "year"], how="left")
     deaths = {"tb_deaths": tb_deaths_series(), "u5_deaths": series("sh_dth_mort"),
               "mal_child_deaths": series("malaria_deaths_in_children_1_59_months_total_deaths")}
     for n, d in deaths.items():

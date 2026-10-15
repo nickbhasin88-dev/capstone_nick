@@ -316,6 +316,8 @@ studies with their scopes. `hiv_deaths_est` (L-11) is still used by the Lancet r
 
 ### IMP-24. Direct downloads from WUENIC and UNAIDS (Nice to have)
 
+**Status: ✅ done for the model inputs (Batch 7 items 3-4, 15 October 2026).** `immunization_inputs.py` and `unaids_inputs.py` read the files on disk; GHO and the WDI mirror remain as fallbacks and for adult prevalence and the committed regressions (`batch7_evidence.md`).
+
 - **Addresses:** L-17, L-11. **Effort:** small. **Data:** DR-05, DR-06.
 
 ## The 10 most valuable, in order
