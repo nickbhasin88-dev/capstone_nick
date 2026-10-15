@@ -93,8 +93,8 @@ Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
 
 | Change | Old | New | Source | Commit |
 |---|---|---|---|---|
-| L-43 status reconciled (item 1) | listed open in the findings table; done in the changelog | done, with stated gap: 34 of 210 country-disease lines use a WHO-region median for the split of unspecified money; the capped lines are listed in `batch7_evidence.md` | no model change | (item 1 commit) |
-| Headline chain corrected (item 2) | 2,017,000 (rounded) -> 2,055,422 -> 2,055,422 -> ... | 1,969,304 -> 1,945,605 -> 1,965,386 -> 2,055,422 -> 1,379,963 -> 1,695,601 -> 1,927,405, each re-run at its own commit | `batch7_evidence.md` item 2 | (item 2 commit) |
+| L-43 status reconciled (item 1) | listed open in the findings table; done in the changelog | done, with stated gap: 34 of 210 country-disease lines use a WHO-region median for the split of unspecified money; the capped lines are listed in `batch7_evidence.md` | no model change | `f772662` |
+| Headline chain corrected (item 2) | 2,017,000 (rounded) -> 2,055,422 -> 2,055,422 -> ... | 1,969,304 -> 1,945,605 -> 1,965,386 -> 2,055,422 -> 1,379,963 -> 1,695,601 -> 1,927,405, each re-run at its own commit | `batch7_evidence.md` item 2 | `5742b44` |
 
 ### Closed in Batch 7
 
