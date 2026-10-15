@@ -9,7 +9,8 @@ quantity and the value carries a stated range. Full evidence: `batch2_evidence.m
 Headline (all countries, Full US Exit, central, deaths 2026-2030) at each boundary, each re-run at its own commit
 with its own inputs (Batch 7 item 2): before Batch 1 1,969,304 -> after Batch 1 1,945,605 -> after the malaria
 under-5 share 1,965,386 -> after Batch 2 2,055,422 (HIV 1,006,114 -> 1,096,151) -> after Batch 3+4 1,379,963 ->
-after Batch 4b 1,695,601 -> after Batch 5+6 1,927,405.
+after Batch 4b 1,695,601 -> after Batch 5+6 1,927,405 -> after Batch 7 1,928,289 (+0.05%; WUENIC DTP3 +0.02%,
+UNAIDS inputs -0.001%, WPP births +0.02%; no item moved it by more than 0.5%).
 
 ## Batch 1: "Do now" items (14 October 2026)
 
@@ -89,7 +90,9 @@ after Batch 4b 1,695,601 -> after Batch 5+6 1,927,405.
 
 ## Batch 7: closing the small open items (15 October 2026)
 
-Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
+Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405; after item 16 1,928,289 (+0.05%): HIV 998,517,
+TB 463,966, malaria 276,952, vaccines 188,853, HIV infections 3,936,613, further deaths 2031-35 988,791. Items that moved
+it: 3 (+0.02%), 4 (-0.001%), 12 (+0.02%); none above 0.5%.
 
 | Change | Old | New | Source | Commit |
 |---|---|---|---|---|

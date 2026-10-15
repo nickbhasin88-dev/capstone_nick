@@ -50,14 +50,14 @@ countries lose US$3.96 billion of aid a year (38% of US$10.34 billion) and the m
 
 | Output (dashboard label) | Central | Range Across Parameter Values |
 |---|---|---|
-| Extra Deaths Over 5 Years (2026 to 2030) | 1,927,405 | 1,462,315 to 2,597,871 |
-| of which HIV | 998,535 | 693,955 to 1,646,133 |
-| of which TB | 463,973 | 288,314 to 611,489 |
+| Extra Deaths Over 5 Years (2026 to 2030) | 1,928,289 | 1,464,108 to 2,599,999 |
+| of which HIV | 998,517 | 693,230 to 1,646,777 |
+| of which TB | 463,966 | 288,309 to 611,483 |
 | of which Malaria | 276,952 | 141,485 to 314,157 |
-| of which Immunization | 187,945 | 137,884 to 347,943 |
-| New HIV Infections, 5 Years | 3,966,261 | 2,495,176 to 5,789,244 (sum of country percentiles, see Section 2h) |
-| People who stop ART, per year (full-cost equivalents) | 4,861,100 | 3,400,339 to 6,494,427 (sum of country percentiles) |
-| Further Deaths, 2031-2035 (Assumption-Driven) | 990,588 | 560,282 to 1,761,411 |
+| of which Immunization | 188,853 | 138,628 to 353,156 |
+| New HIV Infections, 5 Years | 3,936,613 | 2,475,974 to 5,761,482 (sum of country percentiles, see Section 2h) |
+| People who stop ART, per year (full-cost equivalents) | 4,863,492 | 3,402,555 to 6,499,415 (sum of country percentiles) |
+| Further Deaths, 2031-2035 (Assumption-Driven) | 988,791 | 558,057 to 1,761,321 |
 
 The per-disease ranges are computed the same way as the total's range (percentiles of the all-country total in each
 of the 400 draws); the dashboard itself displays the range only for the all-disease total.
@@ -418,8 +418,8 @@ more years, to the end of 2035, assuming funding is back from 2031. They are rep
 **Four parts.** People still off ART (returning at 35% a year, keeping their risk by years since stopping);
 deaths in 2031 to 2035 of adults infected with HIV in 2026 to 2035 by people off ART or because prevention was lost;
 missed vaccine cohorts' deaths falling in 2031 to 2035; secondary TB cases arriving in 2031 and 2032. Under US
-Bilateral Exit + Multilateral Withdrawals: 990,588 further deaths (560,282 to 1,761,411), of which people off ART
-694,084, new HIV infections 261,764, TB spread 19,498, missed vaccines 15,243. The dashboard also shows the range
+Bilateral Exit + Multilateral Withdrawals: 988,791 further deaths (558,057 to 1,761,321), of which people off ART
+694,425, new HIV infections 259,545, TB spread 19,498, missed vaccines 15,323. The dashboard also shows the range
 across the return-to-care assumption alone (`art_reengage` at 0.68 and 0.17).
 
 ### 2h. Uncertainty
@@ -497,9 +497,9 @@ yearly net loss by service and the people it buys:
 
 | Service | Net Aid Lost per year | Cost per Person | People Losing Service, per Year | Pool rule |
 |---|---|---|---|---|
-| HIV Treatment (ART) | US$103.1 million (+ half of US$67.6 million Testing & Care) | US$308 | 377,732 people who stop ART | donor share 0.73 x 1,326,509 on ART outside PMTCT = 968,000; donor money buys 420,000; not binding |
+| HIV Treatment (ART) | US$103.1 million (+ half of US$67.6 million Testing & Care) | US$308 | 377,732 people who stop ART | donor share 0.73 x 1,312,292 on ART outside PMTCT = 957,000; donor money buys 420,000; not binding |
 | Prevention Of Mother-To-Child Transmission | US$5.0 million | US$250 | 14,803 women | donor money exceeds the pool (0.73 x 38,491); pool x share lost |
-| HIV Prevention | US$27.3 million | US$8,399 per infection averted | 2,768 infections averted lost | none |
+| HIV Prevention | US$27.3 million | US$10,062 per infection averted | 2,310 infections averted lost | none |
 | Orphans & Vulnerable Children | US$6.6 million | US$100 | 56,392 children | none; no deaths |
 | TB Case Finding & Treatment | US$2.9 million | US$273 | 9,178 patients | not binding |
 | Drug-Resistant TB | US$0.24 million | US$5,124 | 40 patients | not binding |
@@ -512,26 +512,26 @@ Each figure is already reduced by continuity (15%). The Numbers hero shows Treat
 377,732, PMTCT 14,803, TB 9,218, malaria treatment 313,590) and Prevention Lost Each Year 4,387,592 (bednets, spraying,
 vaccines).
 
-**Step 5, Coverage Change** (Coverage Before to After in the table): ART 91.0% minus 25.2 points (people who stop ART
-/ 1.5 million people living with HIV); PMTCT 91.0% minus 35.0 points; TB detection 81% minus 7.8 points;
+**Step 5, Coverage Change** (Coverage Before to After in the table): ART 91.2% minus 25.5 points (people who stop ART
+/ 1.48 million people living with HIV); PMTCT 91.1% minus 35.0 points; TB detection 81% minus 7.8 points;
 drug-resistant TB 47% minus 4.1 points; net use 43.7% minus 7.4 points; spraying 2.7% minus 0.3 points; malaria
-treatment 57.9% minus 8.2 points; DTP3 91% minus 1.6 points.
+treatment 57.9% minus 8.2 points; DTP3 88% minus 1.6 points.
 
 **Step 6, Deaths And Infections** (Extra Deaths Over 5 Years and the table's Extra Deaths column):
 
 | Disease | Extra Deaths Over 5 Years | Range | How |
 |---|---|---|---|
-| HIV | 78,776 | 48,701 to 138,351 | ART 70,927 (377,732 people x hazards 1.3 to 6.0% a year, plus deaths from the infections they cause); PMTCT 7,661 (14,803 x 0.25 x 0.45 x 5 years with a 60% first-year ramp); prevention 189 |
-| TB | 19,872 | 11,814 to 26,848 | 9,178 patients a year x case fatality difference (HIV share of TB patients 21%, ART 91%) plus 0.4 secondary cases each |
+| HIV | 78,750 | 48,691 to 138,342 | ART 70,931 (377,732 people x hazards 1.3 to 6.0% a year, plus deaths from the infections they cause); PMTCT 7,661 (14,803 x 0.25 x 0.45 x 5 years with a 60% first-year ramp); prevention 158 |
+| TB | 19,867 | 11,812 to 26,843 | 9,178 patients a year x case fatality difference (HIV share of TB patients 21%, ART 91%) plus 0.4 secondary cases each |
 | Malaria | 12,580 | 5,304 to 13,351 | bednets 3,194, spraying 83, treatment 9,303 from 11,656 baseline deaths, under-5 share 75% |
 | Immunization | 1,630 | 1,147 to 3,822 | 24,728 children a year x 0.0209 deaths per child over a lifetime, of which 0.0143 within ten years and 73% of that in the year missed |
-| All four | **112,858** | **75,243 to 170,040** | year 1: 10,945; years 1 to 5: 10,945, 18,059, 23,112, 28,030, 32,711 (Extra Deaths Each Year chart) |
+| All four | **112,827** | **75,222 to 170,029** | year 1: 10,945; years 1 to 5: 10,945, 18,057, 23,108, 28,022, 32,696 (Extra Deaths Each Year chart) |
 
-New HIV Infections, 5 Years: **164,310** (95,817 to 242,030): 131,969 from people off ART (including their onward
-transmission), 13,838 from lost prevention, 18,504 infant infections from lost PMTCT.
+New HIV Infections, 5 Years: **162,024** (94,462 to 240,064): 131,969 from people off ART (including their onward
+transmission), 11,551 from lost prevention, 18,504 infant infections from lost PMTCT.
 
-**Step 7, Further Deaths, 2031-2035 (Assumption-Driven):** 63,606 (29,700 to 126,782): people still off ART 53,934,
-their and prevention's new infections 8,750, TB spread 799, missed vaccines 123; 29,498 to 98,003 across the
+**Step 7, Further Deaths, 2031-2035 (Assumption-Driven):** 63,460 (29,576 to 126,674): people still off ART 53,934,
+their and prevention's new infections 8,605, TB spread 799, missed vaccines 123; 29,359 to 97,853 across the
 return-to-care assumption.
 
 **Per US$1 million** (What Every US$1 Million Cut Does, by Disease cards): HIV 290 extra deaths over five years for a
@@ -540,7 +540,7 @@ immunization 644 (US$8,000).
 
 **Where Kenya appears.** Dashboard page: Section 4, How Aid Cuts Translate into Coverage and Lives in Kenya (The
 Numbers; the US$1 million cards; Where the Money Is Lost; What Each Service Loses; How the Damage Scales; Can Kenya
-Fill the Gap?). All Countries page: Kenya's row (deaths 112,858, 200 per 100,000 people). Validation page: the three
+Fill the Gap?). All Countries page: Kenya's row (deaths 112,827, 200 per 100,000 people). Validation page: the three
 methods compared for Kenya.
 
 ---
@@ -728,7 +728,7 @@ value and are left out, and deaths after 2035 are not counted.
 
 **Why do TB deaths depend so much on cost per course?** People untreated = lost money / cost per course, and each
 untreated patient carries a 40-point difference in case fatality; halving the cost doubles the patients and the
-deaths. With the older income-group costs TB deaths would be 265,626 instead of 463,973.
+deaths. With the older income-group costs TB deaths would be 265,626 instead of 463,966.
 
 **How do you know your malaria numbers are right?** Nobody can know that; we check them. Excess malaria deaths are a
 median 6% of the World Malaria Report's current deaths (at most 28%, Zambia); coverage, cases and deaths come from MAP
@@ -740,9 +740,9 @@ parameters drawn from their ranges. It is not a confidence interval: uncertainty
 structure is larger and not included.
 
 **What happens if governments replace some of the money?** Under US Bilateral Exit + Multilateral Withdrawals, all
-countries: No Government Replacement 1,927,405 deaths; Replace a Set Share at 25% (pro-rata) 1,577,269 (18% fewer);
-the same with the hypothetical best case (triage) 970,184 (50% fewer); As Much as Fiscal Space Allows 1,199,160 (38%
-fewer); Gradual Budget Increase (Steady, 0.5 points a year) 535,501 (72% fewer).
+countries: No Government Replacement 1,928,289 deaths; Replace a Set Share at 25% (pro-rata) 1,577,677 (18% fewer);
+the same with the hypothetical best case (triage) 970,553 (50% fewer); As Much as Fiscal Space Allows 1,197,742 (38%
+fewer); Gradual Budget Increase (Steady, 0.5 points a year) 535,064 (72% fewer).
 
 **Why use 2021-2023 aid instead of 2025?** IHME has no recipient-country detail after 2023; 2021 to 2023 is the latest
 three-year window with the breakdown the model needs. The IHME 2025 Preliminary Estimates preset applies IHME's 2025
@@ -771,7 +771,7 @@ Optima's coverage-drop approach gives 2.6 times the model's HIV deaths over the 
 Deaths, 2031-2035 (Assumption-Driven) is shown separately.
 
 **Why does the IHME 2025 preset give so few vaccine deaths?** IHME's 2025 preliminary data show Gavi-channel money
-little changed, so that preset cuts almost no immunization aid (22,489 vaccine deaths against 187,945 under the US
+little changed, so that preset cuts almost no immunization aid (22,838 vaccine deaths against 188,853 under the US
 exit).
 
 ---

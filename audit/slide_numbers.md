@@ -1,6 +1,6 @@
 # Slide Numbers
 
-Every number below is from the current `tomato` model (commit `5bcd8d1`, model unchanged since `4dcd7ae`), computed
+Every number below is from the current `tomato` model (commit `e67e85f`, after Batch 7, 15 October 2026), computed
 from the precomputed All Countries files (`model_data/all_countries_<preset>.csv` and `_draws.csv`) and fresh
 `health_model.run_country` runs with the dashboard defaults. They match `docs/EXPLAINER.md`.
 
@@ -20,18 +20,18 @@ Preset US Bilateral Exit + Multilateral Withdrawals (internal key `Full US exit`
 
 | Output | Slide | Exact | Range (2.5th to 97.5th percentile) |
 |---|---|---|---|
-| All-disease deaths 2026-2030 (Extra Deaths Over 5 Years) | 1.93 million | 1,927,405 | 1,462,315 to 2,597,871 |
-| HIV deaths | 999,000 | 998,535 | 693,955 to 1,646,133 (a) |
-| TB deaths | 464,000 | 463,973 | 288,314 to 611,489 (a) |
+| All-disease deaths 2026-2030 (Extra Deaths Over 5 Years) | 1.93 million | 1,928,289 | 1,464,108 to 2,599,999 |
+| HIV deaths | 999,000 | 998,517 | 693,230 to 1,646,777 (a) |
+| TB deaths | 464,000 | 463,966 | 288,309 to 611,483 (a) |
 | Malaria deaths | 277,000 | 276,952 | 141,485 to 314,157 (a) |
-| Vaccine deaths (Immunization) | 188,000 | 187,945 | 137,884 to 347,943 (a) |
-| New HIV Infections, 5 Years | 3.97 million | 3,966,261 | 2,495,176 to 5,789,244 (b) |
-| People who stop ART per year (full-cost equivalents) | 4.86 million | 4,861,100 | 3,400,339 to 6,494,427 (b) |
-| Further Deaths, 2031-2035 (Assumption-Driven) | 991,000 | 990,588 | 560,282 to 1,761,411 |
-| of which people still off ART | 694,000 | 694,084 | |
-| of which new HIV infections | 262,000 | 261,764 | |
+| Vaccine deaths (Immunization) | 189,000 | 188,853 | 138,628 to 353,156 (a) |
+| New HIV Infections, 5 Years | 3.94 million | 3,936,613 | 2,475,974 to 5,761,482 (b) |
+| People who stop ART per year (full-cost equivalents) | 4.86 million | 4,863,492 | 3,402,555 to 6,499,415 (b) |
+| Further Deaths, 2031-2035 (Assumption-Driven) | 989,000 | 988,791 | 558,057 to 1,761,321 |
+| of which people still off ART | 693,000 | 694,425 | |
+| of which new HIV infections | 260,000 | 259,545 | |
 | of which TB spread | 19,500 | 19,498 | |
-| of which missed vaccines | 15,200 | 15,243 | |
+| of which missed vaccines | 15,300 | 15,323 | |
 | Aid lost per year (Aid at Risk) | US$3.96 billion | US$3,957,252,047 | not drawn (input) |
 | Baseline aid per year | US$10.3 billion | US$10,344,582,000 | not drawn (input) |
 
@@ -47,12 +47,12 @@ Replacement, Sudden (default), 2026-2030. Aid lost per year in constant 2023 US$
 
 | Donor Scenario (dashboard label) | Deaths, slide | Deaths, exact | Range | Aid lost per year | HIV | TB | Malaria | Vaccines | Further Deaths 2031-35 | HIV infections |
 |---|---|---|---|---|---|---|---|---|---|---|
-| US Bilateral Exit + Multilateral Withdrawals | 1.93 million | 1,927,405 | 1,462,315 to 2,597,871 | US$3,957 million | 998,535 | 463,973 | 276,952 | 187,945 | 990,588 | 3,966,261 |
-| America First MOUs (16 countries) | 364,000 | 363,958 | 276,937 to 481,750 | US$699 million | 141,082 | 80,606 | 60,715 | 81,556 | 218,446 | 604,859 |
-| IHME 2025 Preliminary Estimates | 1.43 million | 1,432,533 | 1,052,941 to 1,839,175 | US$2,887 million | 585,277 | 615,010 | 209,756 | 22,489 | 564,232 | 2,334,422 |
-| Total-Aid Cuts (OECD) Applied to Health Aid | 1.76 million | 1,759,346 | 1,312,839 to 2,234,823 | US$3,242 million | 657,815 | 623,593 | 290,879 | 187,058 | 655,108 | 2,626,298 |
-| Global Fund & Gavi Shortfalls (Gavi -15%, Global Fund -20%) | 731,000 | 730,898 | 544,712 to 926,907 | US$1,022 million | 86,388 | 347,181 | 127,082 | 170,248 | 101,469 | 341,663 |
-| Combined Retreat | 2.13 million | 2,129,679 | 1,613,874 to 2,822,813 | US$4,233 million | 1,020,751 | 552,294 | 309,218 | 247,416 | 1,019,855 | 4,053,398 |
+| US Bilateral Exit + Multilateral Withdrawals | 1.93 million | 1,928,289 | 1,464,108 to 2,599,999 | US$3,957 million | 998,517 | 463,966 | 276,952 | 188,853 | 988,791 | 3,936,613 |
+| America First MOUs (16 countries) | 365,000 | 364,893 | 277,432 to 482,885 | US$699 million | 141,340 | 80,604 | 60,715 | 82,235 | 218,419 | 603,134 |
+| IHME 2025 Preliminary Estimates | 1.43 million | 1,432,531 | 1,053,620 to 1,841,909 | US$2,887 million | 584,944 | 614,992 | 209,756 | 22,838 | 563,215 | 2,314,147 |
+| Total-Aid Cuts (OECD) Applied to Health Aid | 1.76 million | 1,760,137 | 1,314,369 to 2,236,359 | US$3,242 million | 657,648 | 623,577 | 290,879 | 188,033 | 653,988 | 2,605,168 |
+| Global Fund & Gavi Shortfalls (Gavi -15%, Global Fund -20%) | 731,000 | 731,380 | 545,254 to 930,421 | US$1,022 million | 86,231 | 347,169 | 127,082 | 170,899 | 101,389 | 337,780 |
+| Combined Retreat | 2.13 million | 2,130,765 | 1,616,025 to 2,825,831 | US$4,233 million | 1,020,690 | 552,284 | 309,218 | 248,573 | 1,018,030 | 4,022,663 |
 
 ## c. Top 10 Countries Under Full US Exit
 
@@ -60,29 +60,29 @@ Population: UN World Population Prospects 2024, medium variant, 1 July 2024.
 
 | Rank | Country | Deaths 2026-30, slide | Exact | Range | Population 2024 | Deaths per 100,000 |
 |---|---|---|---|---|---|---|
-| 1 | Nigeria | 267,000 | 267,208 | 193,806 to 353,426 | 232,679,478 | 114.8 |
-| 2 | Mozambique | 179,000 | 179,231 | 131,218 to 264,019 | 34,631,766 | 517.5 |
-| 3 | South Africa | 129,000 | 129,089 | 103,289 to 186,626 | 64,007,187 | 201.7 |
-| 4 | Tanzania | 116,000 | 115,811 | 85,470 to 164,256 | 68,560,157 | 168.9 |
-| 5 | Kenya | 113,000 | 112,858 | 75,243 to 170,040 | 56,432,944 | 200.0 |
-| 6 | Uganda | 110,000 | 110,283 | 73,342 to 166,045 | 50,015,092 | 220.5 |
-| 7 | DR Congo | 106,000 | 105,790 | 81,376 to 145,248 | 109,276,265 | 96.8 |
-| 8 | Zambia | 89,000 | 88,997 | 68,273 to 125,418 | 21,314,956 | 417.5 |
-| 9 | Malawi | 80,000 | 79,960 | 58,391 to 126,335 | 21,655,286 | 369.2 |
-| 10 | Ethiopia | 70,900 | 70,867 | 53,680 to 99,913 | 132,059,767 | 53.7 |
+| 1 | Nigeria | 267,000 | 267,231 | 193,821 to 351,055 | 232,679,478 | 114.8 |
+| 2 | Mozambique | 179,000 | 179,236 | 131,263 to 264,017 | 34,631,766 | 517.5 |
+| 3 | South Africa | 128,000 | 128,455 | 102,786 to 185,685 | 64,007,187 | 200.7 |
+| 4 | Tanzania | 116,000 | 115,834 | 85,468 to 164,309 | 68,560,157 | 168.9 |
+| 5 | Kenya | 113,000 | 112,827 | 75,222 to 170,029 | 56,432,944 | 199.9 |
+| 6 | Uganda | 111,000 | 110,746 | 73,662 to 166,611 | 50,015,092 | 221.4 |
+| 7 | DR Congo | 106,000 | 105,780 | 81,489 to 147,762 | 109,276,265 | 96.8 |
+| 8 | Zambia | 89,400 | 89,423 | 68,615 to 126,100 | 21,314,956 | 419.5 |
+| 9 | Malawi | 80,000 | 80,036 | 58,467 to 126,477 | 21,655,286 | 369.6 |
+| 10 | Ethiopia | 70,900 | 70,859 | 53,675 to 99,908 | 132,059,767 | 53.7 |
 
 | Rank | Country | Deaths per 100,000 (2026-30) | Deaths, exact | Population 2024 |
 |---|---|---|---|---|
-| 1 | Eswatini | 1,588.5 | 19,742 | 1,242,822 |
-| 2 | Lesotho | 1,111.3 | 25,975 | 2,337,423 |
-| 3 | Namibia | 568.3 | 17,219 | 3,030,131 |
-| 4 | Mozambique | 517.5 | 179,231 | 34,631,766 |
-| 5 | Botswana | 487.6 | 12,293 | 2,521,139 |
-| 6 | Zimbabwe | 418.3 | 69,581 | 16,634,373 |
-| 7 | Zambia | 417.5 | 88,997 | 21,314,956 |
-| 8 | Malawi | 369.2 | 79,960 | 21,655,286 |
-| 9 | Uganda | 220.5 | 110,283 | 50,015,092 |
-| 10 | South Africa | 201.7 | 129,089 | 64,007,187 |
+| 1 | Eswatini | 1,588.5 | 19,670 | 1,242,822 |
+| 2 | Lesotho | 1,122.3 | 26,237 | 2,337,423 |
+| 3 | Namibia | 564.3 | 17,104 | 3,030,131 |
+| 4 | Mozambique | 517.5 | 179,236 | 34,631,766 |
+| 5 | Botswana | 484.7 | 12,220 | 2,521,139 |
+| 6 | Zimbabwe | 418.4 | 69,607 | 16,634,373 |
+| 7 | Zambia | 419.5 | 89,423 | 21,314,956 |
+| 8 | Malawi | 369.6 | 80,036 | 21,655,286 |
+| 9 | Uganda | 221.4 | 110,746 | 50,015,092 |
+| 10 | South Africa | 200.7 | 128,455 | 64,007,187 |
 
 ## d. Government Response Options (Full US Exit, All Countries)
 
@@ -93,11 +93,11 @@ run (ranges are not precomputed for the response options).
 
 | Government Response | Deaths 2026-30, slide | Exact | Replaced per year (2023 US$) | Deaths averted vs No Government Replacement | Share averted |
 |---|---|---|---|---|---|
-| No Government Replacement (default) | 1.93 million | 1,927,405 | 0 | 0 | 0% |
-| Replace a Set Share, 25%, pro-rata | 1.58 million | 1,577,269 | US$671 million | 350,136 | 18.2% |
-| Replace a Set Share, 25%, hypothetical best case (triage) | 970,000 | 970,184 | US$671 million | 957,221 | 49.7% |
-| As Much as Fiscal Space Allows, pro-rata | 1.20 million | 1,199,160 | US$1,483 million | 728,245 | 37.8% |
-| Gradual Budget Increase, Steady, 0.5 points a year | 536,000 | 535,501 | US$2,398 million | 1,391,904 | 72.2% |
+| No Government Replacement (default) | 1.93 million | 1,928,289 | 0 | 0 | 0% |
+| Replace a Set Share, 25%, pro-rata | 1.58 million | 1,577,677 | US$671 million | 350,136 | 18.2% |
+| Replace a Set Share, 25%, hypothetical best case (triage) | 971,000 | 970,553 | US$671 million | 957,221 | 49.7% |
+| As Much as Fiscal Space Allows, pro-rata | 1.20 million | 1,197,742 | US$1,487 million | 728,245 | 37.8% |
+| Gradual Budget Increase, Steady, 0.5 points a year | 535,000 | 535,064 | US$2,398 million | 1,391,904 | 72.2% |
 
 ## e. Kenya Walkthrough (Full US Exit, Default Settings)
 
@@ -124,14 +124,14 @@ central with range):
 
 | Service | Slide | Exact | Range | Coverage Before to After (dashboard Coverage column) |
 |---|---|---|---|---|
-| HIV Treatment (ART), people who stop ART | 378,000 | 377,732 | 222,290 to 538,810 | 91.0% to 65.8% (-25.2 points of people living with HIV) |
-| Prevention Of Mother-To-Child Transmission, women | 14,800 | 14,803 | 10,007 to 16,377 | 91.0% to 56.0% (-35.0 points) |
+| HIV Treatment (ART), people who stop ART | 378,000 | 377,732 | 222,290 to 538,810 | 91.2% to 65.7% (-25.5 points of people living with HIV) |
+| Prevention Of Mother-To-Child Transmission, women | 14,800 | 14,803 | 10,007 to 16,377 | 91.1% to 56.0% (-35.0 points) |
 | TB Case Finding & Treatment, patients | 9,180 | 9,178 | 5,991 to 12,272 | 81.0% to 73.2% (-7.8 points) |
 | Drug-Resistant TB, patients | 40 | 40 | 26 to 53 | 47.2% to 43.1% (-4.1 points) |
 | Bednets & Other Vector Control, person-years of net use | 4.19 million | 4,185,036 | 2,743,894 to 4,630,529 | 43.7% to 36.3% (-7.4 points) |
 | Indoor Residual Spraying, people | 178,000 | 177,828 | 148,325 to 197,705 | 2.7% to 2.4% (-0.3 points) |
 | Malaria Testing & Treatment, cases | 314,000 | 313,590 | 108,869 to 337,859 | 57.9% to 49.8% (-8.2 points) |
-| Routine Immunization, children | 24,700 | 24,728 | 21,402 to 47,769 | 91.0% to 89.4% (-1.6 points) |
+| Routine Immunization, children | 24,700 | 24,728 | 21,402 to 47,769 | 88.0% to 86.4% (-1.6 points) |
 
 Hero pills: Treatment Lost Each Year 715,343 (ART, PMTCT, TB, malaria treatment); Prevention Lost Each Year 4,387,592
 (bednets, spraying, vaccines).
@@ -141,16 +141,16 @@ Deaths Each Year chart):
 
 | Disease | Slide | Exact | Range |
 |---|---|---|---|
-| HIV | 78,800 | 78,776 | 48,701 to 138,351 |
-| TB | 19,900 | 19,872 | 11,814 to 26,848 |
+| HIV | 78,700 | 78,750 | 48,691 to 138,342 |
+| TB | 19,900 | 19,867 | 11,812 to 26,843 |
 | Malaria | 12,600 | 12,580 | 5,304 to 13,351 |
 | Immunization | 1,630 | 1,630 | 1,147 to 3,822 |
-| All four | 113,000 | 112,858 | 75,243 to 170,040 |
+| All four | 113,000 | 112,827 | 75,222 to 170,029 |
 
-Deaths by year 2026 to 2030: 10,945; 18,059; 23,112; 28,030; 32,711. Further Deaths, 2031-2035
-(Assumption-Driven): 63,606 (29,700 to 126,782; 29,498 to 98,003 across the return-to-care assumption).
+Deaths by year 2026 to 2030: 10,945; 18,057; 23,108; 28,022; 32,696. Further Deaths, 2031-2035
+(Assumption-Driven): 63,460 (29,576 to 126,674; 29,359 to 97,853 across the return-to-care assumption).
 
-**HIV infections** (New HIV Infections, 5 Years): 164,000 (exact 164,310; 95,817 to 242,030).
+**HIV infections** (New HIV Infections, 5 Years): 162,000 (exact 162,024; 94,462 to 240,064).
 
 **Deaths per US$1 million of aid lost** (What Every US$1 Million Cut Does, by Disease cards; a US$1 million-a-year cut
 to that disease for five years): HIV 290 deaths (about US$17,000 of aid per life lost), TB 2,560 (US$2,000), Malaria
@@ -190,9 +190,9 @@ Full US Exit, central; ratios are model / benchmark (band 0.5 to 2); from `audit
 
 | Case | Setting | Result | Current model |
 |---|---|---|---|
-| Old TB costs | `tb_ds_cost` and `tb_dr_cost` set to missing so the Laurence et al. 2015 income-group values apply (DS US$332 / 351 / 1,081; DR 1,568 / 8,125 / 6,800) | TB deaths 265,626 (slide 266,000); all-disease 1,729,058 | TB 463,973; all-disease 1,927,405 |
-| Legacy ART parameters | `hiv_legacy_art_params` = 1 (hazards 1.2-5.0%, transmission 0.04 for every country, 50% a year return to care, no second generation) | HIV deaths 917,132 (slide 917,000); HIV infections 1,413,929 (1.41 million); Further Deaths 2031-35 446,454; all-disease 1,846,002 | HIV 998,535; infections 3,966,261; Further Deaths 990,588 |
-| Old vaccine method | `imm_legacy_u5mr_scaling` = 1 (0.020 x 0.65 x clip(U5MR / 50, 0.3, 2.5); cohort weights 0.40 / 0.35 / 0.20 / 0.05) | Vaccine deaths 104,413 (slide 104,000); all-disease 1,843,873 | Vaccines 187,945; all-disease 1,927,405 |
+| Old TB costs | `tb_ds_cost` and `tb_dr_cost` set to missing so the Laurence et al. 2015 income-group values apply (DS US$332 / 351 / 1,081; DR 1,568 / 8,125 / 6,800) | TB deaths 265,626 (slide 266,000); all-disease 1,729,058 | TB 463,966; all-disease 1,928,289 |
+| Legacy ART parameters | `hiv_legacy_art_params` = 1 (hazards 1.2-5.0%, transmission 0.04 for every country, 50% a year return to care, no second generation) | HIV deaths 917,132 (slide 917,000); HIV infections 1,413,929 (1.41 million); Further Deaths 2031-35 446,454; all-disease 1,846,002 | HIV 998,517; infections 3,936,613; Further Deaths 988,791 |
+| Old vaccine method | `imm_legacy_u5mr_scaling` = 1 (0.020 x 0.65 x clip(U5MR / 50, 0.3, 2.5); cohort weights 0.40 / 0.35 / 0.20 / 0.05) | Vaccine deaths 104,413 (slide 104,000); all-disease 1,843,873 | Vaccines 188,853; all-disease 1,928,289 |
 
 ## i. Coverage Of The Model
 

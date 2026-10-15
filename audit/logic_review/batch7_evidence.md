@@ -272,3 +272,29 @@ Action: `uc_pmtct` status `sourced` -> `unverified`; source prefixed "UNVERIFIED
 range 150-450 unchanged; the Methods assumptions tab now lists unverified review figures in their own table. The
 test `test_pmtct_cost` asserted the status word and was updated for the label (value and range assertions kept).
 Headline unchanged (label only).
+
+## Headline log (all countries, Full US Exit, central, deaths 2026-2030)
+
+| After | All | HIV | TB | Malaria | Vaccines | HIV infections | Further deaths 2031-35 |
+|---|---|---|---|---|---|---|---|
+| start (`95cc16a`) | 1,927,405 | 998,535 | 463,973 | 276,952 | 187,945 | 3,966,261 | 990,588 |
+| item 3 (WUENIC DTP3) | 1,927,871 (+0.02%) | 998,535 | 463,973 | 276,952 | 188,412 | 3,966,261 | 990,624 |
+| item 4 (UNAIDS inputs) | 1,927,847 (-0.001%) | 998,517 | 463,966 | 276,952 | 188,412 | 3,936,613 | 988,747 |
+| item 7 (interest definition) | 1,927,847 | 998,517 | 463,966 | 276,952 | 188,412 | 3,936,613 | 988,747 |
+| item 12 (WPP births) | 1,928,289 (+0.02%) | 998,517 | 463,966 | 276,952 | 188,853 | 3,936,613 | 988,791 |
+| item 16 (end of batch) | 1,928,289 | 998,517 | 463,966 | 276,952 | 188,853 | 3,936,613 | 988,791 |
+
+Items 1, 2, 5, 6, 8, 9, 10, 11, 13, 14, 15 and 16 change no default result. Batch total: +884 deaths (+0.05%);
+no item moved the headline by more than 0.5%. HIV infections fell 0.7% because UNAIDS 2026 incidence replaced the
+GHO/WDI values (item 4).
+
+## Close-out: displayed numbers refreshed
+
+`audit/slide_numbers.md` and `docs/EXPLAINER.md` (Sections 2, 3 and 6) were recomputed from the post-Batch-7
+precomputed files and fresh `run_country` runs (same method as before the batch; 400 draws, seed 7). Changes are
+small: headline 1,927,405 -> 1,928,289; range 1,464,108 to 2,599,999; vaccine deaths 188,853 (slide 189,000); HIV
+infections 3,936,613 (slide 3.94 million); further deaths 988,791 (slide 989,000); Kenya 112,827 deaths (ART coverage
+now 91.2% from UNAIDS 2026, people living with HIV 1.48 million, DTP3 88% from WUENIC 2025, HIV prevention line
+2,310 infections averted lost at US$10,062 each because UNAIDS incidence for Kenya is 13,936 against the earlier
+20,000). Top-10 ranks unchanged; the two per-100,000 tables move by under 1% except Lesotho (1,111 -> 1,122).
+`audit/checks.py --quick` after the final precompute: no failures (14,700 rows).
