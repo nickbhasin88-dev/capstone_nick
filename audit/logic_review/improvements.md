@@ -267,6 +267,11 @@ was not available. `batch34_evidence.md` G.
 
 ### IMP-19. Validation page: like-for-like benchmarks with stated acceptance bands (Do before presenting)
 
+**Status: ✅ done (Batch 5+6 item VAL1, 14 October 2026).** `audit/logic_review/validation.md` and the Validation
+section of the Methods page: acceptance band 0.5-2x stated first; HIV vs Optima Table C2 by country; people on ART vs
+UNAIDS; TB vs WHO deaths, notifications and budgets; malaria vs WMR 2025 deaths; vaccines vs Toor Table 3; context
+studies with their scopes. `hiv_deaths_est` (L-11) is still used by the Lancet rate-ratio method on the Validation page.
+
 - **Addresses:** L-47, L-11.
 - **What to do:**
   - Compare Full US Exit HIV with Optima scenario 5 (PEPFAR ends; about 2.9M) and with UNAIDS.

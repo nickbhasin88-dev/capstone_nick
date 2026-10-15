@@ -918,3 +918,36 @@ with tabs[6]:
     ctl = {"preset": preset, "ptab": ptab, "ptab_json": ptab_json, "fiscal_t": fiscal_t, "trend": trend}
     A = ms._all_country_results(sk, ctl)
     ms._published_estimates(A[A["gross_loss_usd"] > 0], I, ptab)
+    th.section_header("rule", "Validation Against External Benchmarks")
+    md("""
+    The model was compared with external benchmarks country by country (logic review Batch 5+6, item VAL1;
+    `audit/logic_review/validation.md`), with the acceptance band stated first: a ratio between 0.5 and 2 counts as
+    agreement for like-for-like quantities, and every ratio outside it is listed with a likely explanation. Nothing was
+    tuned to a benchmark. For the US Bilateral Exit + Multilateral Withdrawals scenario:
+
+    - **HIV vs Optima HIV** (ten Brink et al. 2025, appendix Table C2, PEPFAR discontinued without mitigation minus
+      status quo, 2025-2030; 15 overlapping countries): the model's HIV deaths are 0.39 of Optima's excess and its
+      infections 0.36. Kenya (1.04), Eswatini (1.17) and the Dominican Republic (1.09) agree; South Africa (0.18),
+      Mozambique (0.41), Uganda (0.40), Zimbabwe (0.48) and Côte d'Ivoire (0.37) are below the band, because Optima
+      removes all PEPFAR support for six years with zero new initiations while the model keeps 15% continuity and
+      converts lost money at the full cost per patient-year; the small programmes (Azerbaijan, Cambodia, Moldova,
+      Kyrgyzstan) are below it because Optima's scenario also includes a 24% cut by the five largest donors; Tajikistan
+      (3.65) is above it because Optima records no international HIV funding there while IHME records US aid.
+    - **People on ART**: model (ART coverage x people living with HIV) vs UNAIDS 2025 people receiving ART, 65
+      countries, ratio median 1.00, none outside the band (an input check).
+    - **TB**: excess TB deaths a year are a median 9% of WHO's 2024 TB deaths (Mozambique 79%, the only country
+      above 50%); patients treated equal WHO notifications (median 1.00); the model's full cost per patient is a
+      median 0.47 of the national TB programme budget per notified patient, below the band in 33 countries, because
+      a programme budget funds laboratories, staff, surveillance and drug-resistant management for the whole country
+      while the model's cost is what a lost dollar of treatment money pays for per patient.
+    - **Malaria**: excess malaria deaths a year are a median 6% of the World Malaria Report 2025 deaths (maximum
+      Zambia 28%); the malaria total moved 369,425 (before Batch 3+4) -> 143,889 -> 190,824 (Batch 4b) -> 276,952
+      (Batch 5+6).
+    - **Vaccines**: deaths averted per 1,000 fully immunized children vs Toor et al. 2021 Table 3: measles 1.97x and
+      yellow fever 2.26x (per child vs per dose), hepatitis B, Hib, PCV and rotavirus 0.65-0.74x (lower-mortality
+      countries, 2026-30 mortality); 38 extreme values were replaced by regional medians before use.
+    - **Context**: Cavalcanti et al. 2025 (more than 14M deaths by 2030 from USAID defunding, all causes and
+      sectors), UNAIDS 2025 (more than 4M AIDS deaths if PEPFAR ends) and ten Brink et al. 2025 (0.77-2.93M HIV
+      deaths, all LMICs) have wider scopes than the model's four diseases and 70 countries, so they bound rather than
+      test it.
+    """)
