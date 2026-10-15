@@ -256,3 +256,19 @@ numeric cell with the committed file (relative difference, tolerance 0.5%):
 No model input is read from the three blocked folders except `macro_data/` (the WEO GDP growth used by the
 `budget_growth` sensitivity, item 10, and the GDP series behind Section 2 charts), so the headline is unaffected.
 The committed files were not changed by this item (the script was run into a temporary folder only).
+
+## Item 16. L-32: PMTCT cost relabelled
+
+Search of every `.md`, `.csv`, `.txt`, `.py` and PDF under the repository (excluding `.venv`) for the review's
+author names (Gopalappa, Ishikawa, Ciaranello, Fasawe, Kuznik) and for "Option B+": the names occur only in the
+model's own files (`model_params.csv`, `views/4_Methods.py`, `docs/`, `tests/test_hiv.py`,
+`audit/logic_review/assumptions.md`), which repeat the citation; no copy or extract of *Health Policy and Planning*
+2016;31(8):1133 is on disk (the PDFs in `datasets/` are the IHME DAH guide and info sheet, the WHO World Malaria
+Report 2025, the Optima ten Brink 2025 appendix, Toor 2021 and the Lancet 2025 supplementary appendix `mmc1.pdf`,
+none of which contains the review's figures). `assumptions.md` already recorded "could not be read from the abstract
+(UNVERIFIED)".
+
+Action: `uc_pmtct` status `sourced` -> `unverified`; source prefixed "UNVERIFIED; review figure"; central 250 and
+range 150-450 unchanged; the Methods assumptions tab now lists unverified review figures in their own table. The
+test `test_pmtct_cost` asserted the status word and was updated for the label (value and range assertions kept).
+Headline unchanged (label only).

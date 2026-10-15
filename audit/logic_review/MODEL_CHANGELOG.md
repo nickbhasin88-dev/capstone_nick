@@ -110,7 +110,9 @@ Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
 | L-15 TB timing (item 13) | case fatality in the year of loss; secondary cases at 1 and 2 years, undocumented | Methods note: both are labelled assumptions about timing (WHO methods: untreated TB lasts about three years; Vynnycky and Fine 1997: most progression within two to five years); no rule change | WHO TB burden estimation methods; Vynnycky & Fine 1997 (already cited for `tb_secondary`) | `72e562d` |
 | Malaria input flags (item 14) | caveats L-07, L-21, L-22, L-23 recorded in text only | four boolean columns in `country_inputs.csv` and in the All Countries files: `flag_itn_default` (31 countries), `flag_irs_household` (36), `flag_irs_implied` (56), `flag_map_who_gap` (26); no rule change | `audit/batch7_flags.py`; `batch7_evidence.md` item 14 | `f1f1ca7` |
 | Section 1-3 files rebuildable (item 15) | no build scripts in the repository (L-38 / IMP-12) | `build_sections.py` rebuilds `country_data/` (IHME DAH rows per recipient, `elim_ch == 0`) and `spending_data/` (IHME spending 1995-2023 plus expected 2024-2050); `--verify` reproduces 71 of 71 files in each within 0.5% (worst 0.0000%). `macro_data/`, `revenue_data/`, `cofog_all/` BLOCKED: inputs not on disk (listed in `batch7_evidence.md` item 15) | `build_sections.py --verify` | `ced445d` |
+| PMTCT cost label (item 16) | `uc_pmtct` status `sourced` | status `unverified`, source prefixed "UNVERIFIED; review figure" (the review's figures are in no file on disk); 250 (150-450) unchanged; Methods page lists unverified figures under the assumptions tab | `batch7_evidence.md` item 16 | `7396a28` |
 ### Closed in Batch 7
+- L-32: `uc_pmtct` relabelled "unverified; review figure"; value and range unchanged (test updated for the label).
 - L-38 / IMP-12 (partly): `country_data/` and `spending_data/` rebuild from `build_sections.py` within 0.5%; `macro_data/`, `revenue_data/`, `cofog_all/` stay as committed (BLOCKED: full WEO series, WoRLD code mapping and general-government totals, COFOG data not on disk).
 - L-07, L-21, L-22, L-23 (malaria input caveats): flagged per country (no rule change); affected countries listed in `batch7_evidence.md` item 14.
 - L-15 (TB timing): closed as a label; no rule change.
@@ -148,7 +150,6 @@ Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
 - **L-11**: `hiv_deaths_est` (GBD-2019 share via Gapminder) still feeds the Lancet rate-ratio method on the Validation page.
 - **L-15**: TB case fatality is placed in the year of loss; secondary cases all arrive in 1-2 years.
 - **L-29, L-31, L-34, L-35**: fiscal-capacity and MOU presentation details (not cumulative capacity; untagged WEO vintage; mixed interest definitions; nominal MOU amounts).
-- **L-32**: `uc_pmtct` 250 review figures not verified.
 - **L-38 / IMP-12 (remaining part)**: `macro_data/`, `revenue_data/` and `cofog_all/` cannot be rebuilt from files on disk (Batch 7 item 15 rebuilt `country_data/` and `spending_data/`).
 - **L-39**: India's TB systems and unspecified money follows its own line mix toward DR-TB.
 - **L-09**: Gavi -15% default is an estimate (preset only).

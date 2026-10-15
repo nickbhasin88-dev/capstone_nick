@@ -70,8 +70,8 @@ def test_service_table_care_row():
 # ---------------- I-27 PMTCT ----------------
 def test_pmtct_cost():
     r = P.loc["uc_pmtct"]
-    assert (r["central"], r["low"], r["high"], r["status"]) == (250, 150, 450, "sourced")
-    assert "Option B+" in r["label"] and "Health Policy and Planning" in r["source"]
+    assert (r["central"], r["low"], r["high"], r["status"]) == (250, 150, 450, "unverified")   # Batch 7 item 16 (L-32): relabelled, value and range unchanged
+    assert "Option B+" in r["label"] and "Health Policy and Planning" in r["source"] and r["source"].startswith("UNVERIFIED")
     assert ms.COST_UNIT["hiv_pmtct"] == "per woman per year, including her ART"
 
 

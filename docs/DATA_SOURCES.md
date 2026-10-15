@@ -121,7 +121,7 @@ fallback when the World Bank health-share series is missing.
 | Kranzer et al. 2010, JAIDS 55:e17; Kaplan et al. 2017, PLoS Med 14:e1002407; Mody et al. 2026, PLoS Med 23:e1005052 | `art_reengage` | 0.35 (0.17-0.68) a year | 42% within 3 years; about 50% by 2.5 years; 67.7% within 12 months |
 | Giguere et al. 2021, Lancet HIV 8:e284 (Shiny90) | `hiv_new_inf_unsup_years` (basis of the assumption) | 4 (2.5-5.5) years | median time to diagnosis 2.6 years |
 | Donnell et al. 2010, Lancet 375:2092 | cross-check on the transmission rate | 2.24 per 100 person-years in serodiscordant couples | cited in `art_transmission_mult` |
-| Health Policy and Planning 2016;31(8):1133 (review of Option B+ cost-effectiveness analyses) | `uc_pmtct` | 250 (150-450) US$ per woman-year | annual costs of five studies (US$114-470) |
+| Health Policy and Planning 2016;31(8):1133 (review of Option B+ cost-effectiveness analyses) | `uc_pmtct` | 250 (150-450) US$ per woman-year | annual costs of five studies (US$114-470); unverified, the review's figures could not be checked against the paper (L-32) |
 | WHO AFRO (PMTCT transmission) | `pmtct_vt_reduction` | 0.25 (0.10-0.40) | 15-45% without, under 5% with intervention |
 | Newell et al. 2004, Lancet (pooled analysis) | `pmtct_infant_mort` | 0.45 (0.35-0.525) | 35.2% dead by age 1, 52.5% by age 2 |
 | Todd et al. 2007, AIDS 21 Suppl 6 (ALPHA network); CASCADE | `hiv_survival_median`, `hiv_inf_death_untreated`; Weibull shape 2.25 (UNAIDS Spectrum) | 10.5 (8.6-12.5) years; 0.85 (0.70-0.95) | median survival by age at infection |

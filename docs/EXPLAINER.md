@@ -225,7 +225,7 @@ more people than their money pays for.
 | Service | Cost (central, range) | How it is built and why it measures the right thing |
 |---|---|---|
 | HIV Treatment (ART) | by country; median US$216 (191 to 400); Kenya 308, Nigeria 208, Mozambique 227, South Africa 208, Uganda 314, India 216 | The lower of (a) the site-level cost per patient-year from the Global Health Cost Consortium repository pooled with Rosen et al. 2021 (Gates Open Research 5:177), times 1 / (1 - 0.45) for above-site programme costs (management, monitoring, supply chain: 47% of PEPFAR spending, KFF 2025), and (b) observed HIV treatment spending per person on ART (total HIV spending from ten Brink et al. 2025 appendix Table B2 or WHO GHED, times the country's Global Fund treatment module share, divided by UNAIDS people on ART), used only where the Global Fund funds at least 10% of HIV spending (35 countries), otherwise the regional median ratio of (b) to (a). Floor US$190.84 = the lowest measured site delivery cost (Malawi, US$86.50 in 2018 US dollars, Rosen 2021) inflated and marked up; gate US$50 to 600. The model needs what a dollar of lost treatment money pays for per patient, so a cost above what a country spends per person on ART cannot be right (logic review L-50) |
-| Prevention Of Mother-To-Child Transmission | US$250 (150 to 450) per woman per year, including her ART | Health Policy and Planning 2016;31(8):1133 review of Option B+ costs (US$114 to 470 across five studies; median about 250 in 2023 dollars) |
+| Prevention Of Mother-To-Child Transmission | US$250 (150 to 450) per woman per year, including her ART | Health Policy and Planning 2016;31(8):1133 review of Option B+ costs (US$114 to 470 across five studies; median about 250 in 2023 dollars). Unverified: the review's figures could not be checked against the paper, so this is labelled a review figure, not evidence |
 | HIV Prevention | US$5,000 (2,500 to 12,000) per infection averted at an incidence of 1 per 1,000, scaled by (1 / incidence)^0.5 | Labelled assumption: prevention costs more per infection averted where infections are rare; affects infections only |
 | Orphans & Vulnerable Children | US$100 (60 to 160) per child-year | Labelled assumption; no deaths modelled |
 | TB Case Finding & Treatment | by country, provider cost per course x 1 / (1 - 0.45): Kenya 150, India 105, Ethiopia 218, Philippines 120 (Value TB facility costs, 2018 dollars); South Africa 274 (Vassall 2017); others 275 / 135 / 678 by income group (pooled with Laurence, Griffiths & Vassall 2015) | Facility-level financial cost of a full course (intensive plus continuation phase), the money that buys one treated patient |
@@ -579,7 +579,7 @@ methods compared for Kenya.
 | `asd_share` above-site programme share | 0.45 (0.30-0.55) | Evidence | KFF 2025 (Gaba, Razavi, Kates & Nandakumar): non-service delivery 47% of PEPFAR spending 2018-23 |
 | `uc_art_mult` ART cost multiplier (country costs in `art_cost_full`) | 1 (0.68-1.38) | Evidence | GHCC repository; Rosen 2021; ten Brink 2025 Table B2; GHED; UNAIDS; floor Rosen Malawi; range from the spread of cost studies |
 | `uc_scale_elast` income elasticity of staff costs | 0.4 (0.25-0.6) | Labelled Assumption | fallback only when no country study exists |
-| `uc_pmtct` | 250 (150-450) US$ per woman-year | Evidence | Health Policy and Planning 2016;31(8):1133 review |
+| `uc_pmtct` | 250 (150-450) US$ per woman-year | Unverified; review figure | Health Policy and Planning 2016;31(8):1133 review, cited but its per-study figures could not be checked against the paper (L-32) |
 | `cpia_ref` cost per HIV infection averted | 5,000 (2,500-12,000) US$ | Labelled Assumption | no single cost per infection averted across prevention mixes; affects infections only |
 | `uc_ovc` | 100 (60-160) US$ per child-year | Labelled Assumption | no mortality effect modelled |
 | `uc_tb_mult` TB cost multiplier (country costs in `tb_ds_cost`, `tb_dr_cost`) | 1 (0.78-1.60) | Evidence | Value TB; GHCC (Vassall 2017, Cox 2015); Laurence, Griffiths & Vassall 2015 |
@@ -658,7 +658,6 @@ Direction: the way the headline would most likely move if the item were resolved
 - Fiscal capacity is one strong year's growth held flat (a cumulative version is a known alternative, not
   implemented); the debt-stress thresholds are labelled assumptions with ranges. Direction: Government Response
   options only (L-29, labelling half closed in Batch 7).
-- The PMTCT cost review figures could not be verified. Direction: Unclear (L-32).
 - Of the Sections 1 to 3 per-country files, the macro, revenue and spending-by-function folders cannot be rebuilt
   from files on disk (the aid and health-spending folders now can, Batch 7). Direction: none (L-38).
 - India's TB systems and unspecified money follows its own line mix toward drug-resistant TB. Direction: Lower for
@@ -693,7 +692,8 @@ projection is on disk. L-15: the TB timing rules are labelled as assumptions on 
 input caveats are per-country flag columns (31, 36, 56 and 26 countries). L-38: `build_sections.py` rebuilds the
 aid and health-spending per-country files from the IHME datasets and reproduces all 71 of each within 0.5%; the
 macro, revenue and spending-by-function files stay as committed because their inputs (full WEO series, the IMF
-revenue code mapping, COFOG data) are not on disk.
+revenue code mapping, COFOG data) are not on disk. L-32: the PMTCT cost is relabelled "unverified; review
+figure" (status `unverified` in the parameter file, shown on the Methods page); its value and range are unchanged.
 
 ---
 

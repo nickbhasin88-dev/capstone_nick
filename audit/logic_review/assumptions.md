@@ -89,7 +89,8 @@ Values are central (low-high). "Swing" is deaths 2026-30 at the low and high val
   abstract (UNVERIFIED).
 - **Internal consistency:** the model's own ART cost (about US$300 with markup in Kenya) plus PMTCT-specific
   services (about US$50-100) supports about US$250-400.
-- **Class:** (a)/(c) (L-32).
+- **Class:** (a)/(c) (L-32). Batch 7 item 16: relabelled "unverified; review figure" in `model_params.csv`
+  (status `unverified`); the figures are in no file on disk; value and range unchanged.
 
 **cpia_ref**: 5,000 (2,500-12,000) per infection averted, scaled by (1/incidence)^0.5.
 - **Swing:** +0.3% / -0.2%; affects infections, not deaths.
