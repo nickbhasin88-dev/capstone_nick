@@ -184,7 +184,10 @@ find in a year.
 - **Gradual Budget Increase**: the government raises health's share of its total budget by a number of percentage
   points a year (Points per Year; Steady, Fast start, Slow start or Custom shapes), never past the Abuja target of
   15%; extra money = points / 100 x total government spending, where total government spending = government health
-  spending 2023 / health's share of government spending (World Bank WDI, latest year).
+  spending 2023 / health's share of government spending (World Bank WDI, latest year), held at its 2023 level in
+  constant 2023 dollars. A `budget_growth` setting (default 0) can let that budget grow at the country's projected
+  nominal GDP growth (WEO, median 7.5% a year); at the full rate the all-country gradual-increase result falls by
+  22% (Batch 7).
 
 **Why No Government Replacement is the default.** A two-way fixed-effects regression across 97 countries and 2,134
 country-years (2002 to 2023) relates the yearly change in government health spending per person to falls in aid per
@@ -678,7 +681,10 @@ Validation-page regressions. L-11: the Lancet rate-ratio comparison on the Valid
 now has one primary definition, IMF WEO net interest, available for every country; the World Bank gross-interest
 series is a flagged fallback that no country currently needs. L-35: MOU amounts stay nominal by default and are
 labelled so on the dashboard; a `mou_deflate` switch (2% a year US$ inflation, labelled assumption, range 1-4%)
-expresses them in 2023 US$, which raises the America First MOUs preset from 364,586 to 416,307 deaths.
+expresses them in 2023 US$, which raises the America First MOUs preset from 364,586 to 416,307 deaths. Gradual
+Budget Increase: a `budget_growth` setting (default 0, the 2023 budget held flat) lets the budget grow with WEO
+nominal GDP; at the full rate the preset falls from 534,944 to 419,439 deaths and Kenya's break-even from 1.12 to
+1.06 points a year.
 
 ---
 

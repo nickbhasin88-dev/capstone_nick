@@ -833,6 +833,7 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
     P = draw_params(ptab, n_draws, seed)
     Pc = draw_params(ptab, 0)
     n = len(P["uc_imm"])
+    gov_add = gov_add * budget_growth_factors(row, Pc)      # Batch 7 item 10: default factors of 1
 
     # ---- 1. money: effective loss by direct line (per draw because kappa is uncertain) ----
     def unspec_shares(b):
@@ -1505,13 +1506,23 @@ def _money_by_year(iso3, scenario, fiscal, inputs, cut_path):
     return G_t, np.array(R_t)
 
 
+def budget_growth_factors(row: pd.Series, P: dict) -> np.ndarray:
+    """(1 + budget_growth x g)^(t + 1) for t = 0..4: how the government budget behind a Gradual Budget Increase grows
+    over 2026-2030 (Batch 7 item 10). budget_growth (model_params.csv, constant, default 0 = the budget stays at its
+    2023 level); g = the country's mean nominal US$ GDP growth 2026-2030 from the WEO projections on disk
+    (gdp_growth_weo_2026_30; 0 if missing). Feeds: run_country (gov_add) and break_even_share."""
+    bg = float(np.ravel(P.get("budget_growth", np.zeros(1)))[0])
+    g = _v(row, "gdp_growth_weo_2026_30", 0.0)
+    return (1.0 + bg * g) ** np.arange(1, N_YEARS + 1)
+
+
 def gov_add_from_points(points, gov_spend_usd: float) -> np.ndarray:
     """Extra government health money (US$) from extra percentage points of the government budget, year by year.
     Feeds: Gradual Budget Increase money (US$ a year)."""
     return np.clip(_path(points, 0.0), 0, None) / 100 * (gov_spend_usd if gov_spend_usd == gov_spend_usd else 0.0)
 
 
-def break_even_share(iso3, scenario, fiscal, inputs, cut_path=None, tol: float = 1e-4):
+def break_even_share(iso3, scenario, fiscal, inputs, cut_path=None, tol: float = 1e-4, ptab=None):
     """Smallest constant yearly increase s in health's share of government spending (percentage points per year,
     cumulative: s in 2026, 2s in 2027, ...) that keeps the net gap <= 0 in every year of the cut path, on top of the
     government response in `fiscal`; capped so the share never passes the Abuja 15% target. Found by bisection.
@@ -1525,11 +1536,13 @@ def break_even_share(iso3, scenario, fiscal, inputs, cut_path=None, tol: float =
     if np.isnan(hb["gov_spend_usd"]) or np.isnan(hb["room_pct"]) or hb["room_pct"] <= 0:
         return None
     steps = np.arange(1, N_YEARS + 1)
+    row = inputs["ci"].loc[iso3] if iso3 in inputs["ci"].index else pd.Series(dtype=float)
+    growth = budget_growth_factors(row, draw_params(load_params() if ptab is None else ptab, 0))
 
     def keeps_up(s):
         """True if raising health's budget share by s points a year (cumulative) gives at least the aid gap in every
-        year."""
-        return bool((gov_add_from_points(s * steps, hb["gov_spend_usd"]) >= gap - 1e-6).all())
+        year (the budget growing by budget_growth x WEO GDP growth, default none)."""
+        return bool((gov_add_from_points(s * steps, hb["gov_spend_usd"]) * growth >= gap - 1e-6).all())
 
     hi = hb["room_pct"] / N_YEARS                    # fastest steady rise that still ends at or below 15%
     if not keeps_up(hi):

@@ -87,6 +87,16 @@ def process(raw: pd.DataFrame) -> pd.DataFrame:
     return w
 
 
+def weo_nominal_growth(iso3: str, years=(2026, 2030)) -> float:
+    """Mean year-on-year growth of nominal US$ GDP over `years` from macro_data/<ISO3>.csv (WEO projections), or NaN."""
+    p = HERE / "macro_data" / f"{iso3}.csv"
+    if not p.exists():
+        return np.nan
+    d = pd.read_csv(p).set_index("year")["gdp_usd_bn"]
+    g = d.pct_change().loc[years[0]:years[1]].dropna()
+    return float(g.mean()) if len(g) else np.nan
+
+
 def imf_latest(index) -> pd.DataFrame:
     w = pd.read_csv(OUT)
     a = w[w["actual"] & w["net_interest_pct_revenue"].notna() & (w["GGR_NGDP"] > 0)]
@@ -114,6 +124,11 @@ def apply(ci: pd.DataFrame) -> pd.DataFrame:
     ci["interest_pct_revenue_source"] = np.where(use_imf, IMF_LABEL, np.where(use_wb, WB_LABEL, ""))
     ci["interest_imf"], ci["interest_imf_year"] = iv, iy                       # both kept for the comparison
     ci["interest_estimated"] = False
+    # Batch 7 item 10: the country's projected nominal US$ GDP growth 2026-2030 (IMF WEO, macro_data/<ISO3>.csv), the
+    # upper end of the budget_growth sensitivity for the Gradual Budget Increase option
+    ci["gdp_growth_weo_2026_30"] = [weo_nominal_growth(c) for c in idx]
+    ci["gdp_growth_weo_2026_30_source"] = np.where(ci["gdp_growth_weo_2026_30"].notna(),
+                                                   "IMF WEO (macro_data, nominal US$ GDP), mean growth 2026-2030", "")
     have = ci["interest_pct_revenue"].notna()
     groups = ci.get("income_group", pd.Series("", index=idx)).fillna("")
     dash = ci.get("in_dashboard", pd.Series(True, index=idx)).fillna(True).astype(bool)

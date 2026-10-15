@@ -165,3 +165,16 @@ the repository. They are now named constants in `health_model.py` (`STRESS_FREE_
 `STRESS_FLOOR` 0.25) with ranges 5-15%, 30-50 points and 0.15-0.50, labelled assumptions, not drawn (a structural
 setting, like `hss_service_share`). The non-cumulative capacity rule is unchanged; the Methods page and SPEC note the
 cumulative version as a known alternative. No value changes; 357 tests pass.
+
+## Item 10. Gradual Budget Increase: a budget-growth sensitivity
+
+`fiscal_inputs.py` now writes `gdp_growth_weo_2026_30` = the mean year-on-year growth of nominal US$ GDP over
+2026-2030 in `macro_data/<ISO3>.csv` (IMF WEO projections; 69 of 70 countries, median 0.075, interquartile range
+0.059-0.095; Kenya 0.061). `budget_growth` (appended to `model_params.csv`, constant, default 0) scales the extra
+government money in year t by (1 + budget_growth x g)^(t + 1) in `health_model.run_country` and in the break-even
+search. Default 0 reproduces the current behaviour exactly (the 2023 budget held flat in constant 2023 US$; the
+checks and baselines are unchanged). At budget_growth = 1 (the budget grows with nominal GDP) the all-country
+Gradual Budget Increase result (Steady, 0.5 points a year, Full US Exit) is 419,439 deaths against 534,944 (-22%),
+and Kenya's break-even rise is 1.06 instead of 1.12 points a year. Held constant rather than drawn because a
+one-sided range above a central of 0 would put the central run outside the displayed range (the `hss_service_share`
+precedent). Headline unchanged; 357 tests pass.

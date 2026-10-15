@@ -700,7 +700,13 @@ with tabs[2]:
     **Gradual budget increase.** The government raises health's share of its total spending by a number of
     percentage points each year (cumulative): Steady p·t; Fast start 5p·(1 - (1 - t/5)²); Slow start 5p·(t/5)², never
     past the Abuja target of 15%. Extra money A(t) = points(t) ÷ 100 x total government spending, where total
-    government spending = government health spending (IHME, 2023) ÷ health's share of government spending.
+    government spending = government health spending (IHME, 2023) ÷ health's share of government spending, held at
+    its 2023 level in constant 2023 US$ (so the aid loss and the budget are on the same price basis, and a growing
+    economy is not credited). The parameter `budget_growth` (default 0) lets the budget grow at that share of the
+    country's projected nominal GDP growth 2026-2030 (IMF World Economic Outlook; median 7.5% a year across the
+    dashboard countries, Kenya 6.1%): at 1 the all-country Gradual Budget Increase result (Steady, 0.5 points a
+    year, US Bilateral Exit + Multilateral Withdrawals) falls from 534,944 to 419,439 deaths and Kenya's break-even
+    rise from 1.12 to 1.06 points a year. It is a sensitivity setting, not drawn.
 
     **Health's share of government spending** has one definition everywhere on the dashboard (the fiscal panel, the
     budget-increase sliders, the break-even rise and every points-to-dollars conversion): (1) the World Bank's

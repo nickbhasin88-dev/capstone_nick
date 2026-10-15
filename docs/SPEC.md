@@ -68,6 +68,7 @@ Country columns used (`country_inputs.csv`):
 | GDP per person | `gdp_pc` | 1,000 if missing |
 | income group | `income_group` | `low_income`, `lower_middle_income`, `upper_middle_income` |
 | GHES | `ghes_2023` | government health spending, US$ |
+| WEO nominal GDP growth 2026-2030 | `gdp_growth_weo_2026_30` (`_source`) | mean year-on-year growth of nominal US$ GDP 2026-2030 in `macro_data/<ISO3>.csv` (IMF WEO projections); the upper end of the `budget_growth` sensitivity (Batch 7 item 10); 0 if missing |
 | growth | `ghes_growth_median`, `ghes_growth_p75`, `ghes_growth_p90` | shares a year; 0 if missing |
 | interest | `interest_pct_revenue` (`_year`, `_source`) | % of revenue; never missing. IMF World Economic Outlook, October 2026 release (`datasets/IMF_WEO_Oct2026_GG_balances_2026-10-13.csv`, downloaded 13 October 2026), with World Bank WDI as the fallback (Batch 7 item 7). The GDP, revenue and expenditure series in `macro_data/` carry no recorded WEO vintage; their projection horizon ends in 2031, consistent with the October 2026 release |
 | MOU | `mou_us_ref`, `mou_us_2026` .. `mou_us_2030` | nominal US$ |
@@ -229,8 +230,12 @@ the same every year (one strong year's surge held flat); a cumulative alternativ
 | custom | theta x L_t | min(wanted, capacity) when "cap to fiscal space" is on, else wanted |
 | max | L_t | min(L_t, capacity) (always capped) |
 
-**Gradual Budget Increase:** gov_add_t = points_t / 100 x gov_spend.
-- gov_spend = ghes_2023 / (health share of government spending / 100).
+**Gradual Budget Increase:** gov_add_t = points_t / 100 x gov_spend x (1 + budget_growth x g)^(t + 1).
+- gov_spend = ghes_2023 / (health share of government spending / 100), in 2023 US$.
+- budget_growth (model_params.csv, constant, default 0) x g, with g = `gdp_growth_weo_2026_30` (the country's mean
+  nominal US$ GDP growth 2026-2030 from the WEO projections in `macro_data/`; 0 if missing): the default keeps the
+  budget at its 2023 level; 1 lets it grow with GDP (Batch 7 item 10). The same factors apply in the break-even
+  search.
 - points_t follow the chosen shape (Steady p x (t+1); Fast start 5p (1 - (1 - u)^2); Slow start 5p u^2), capped at
   the room to the Abuja 15% share.
 
