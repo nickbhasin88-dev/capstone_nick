@@ -310,6 +310,15 @@ def _v(row, k, default=np.nan):
     return default if x is None or (isinstance(x, float) and np.isnan(x)) else float(x)
 
 
+# Debt-stress factor thresholds (fiscal space). Labelled assumptions (logic review L-29; Batch 7 item 9): no study
+# measures the point at which interest costs stop a health budget from growing. Central (range, not drawn): interest
+# takes STRESS_FREE_PCT = 10% of revenue (5-15) or less: no stress; the factor falls linearly over the next
+# STRESS_SPAN_PCT = 40 points (30-50), i.e. to its floor at 40-60% of revenue; floor STRESS_FLOOR = 0.25 (0.15-0.50).
+# Known alternative (not implemented): cumulative capacity, where a strong year's surge compounds over 2026-2030
+# instead of being held flat; it would raise capacity in later years.
+STRESS_FREE_PCT, STRESS_SPAN_PCT, STRESS_FLOOR = 10.0, 40.0, 0.25
+
+
 def fiscal_space(row: pd.Series, effort: str = "p75") -> dict:
     """Backfill capacity per year = GHES x (strong-year growth - typical growth) x debt-stress factor.
     effort 'p75' = a strong year (75th percentile of real GHES growth, 2001-23); 'p90' = the best years (90th).
@@ -328,8 +337,9 @@ def fiscal_space(row: pd.Series, effort: str = "p75") -> dict:
     intr = _v(row, "interest_pct_revenue")
     if np.isnan(intr):
         raise ValueError(f"{row.name}: no interest-to-revenue value (run fiscal_inputs.py)")
-    # debt stress: 1 when interest takes <= 10% of revenue, falling linearly to 0.25 at >= 40%
-    stress = float(np.clip(1 - (intr - 10) / 40, 0.25, 1.0))
+    # debt stress: 1 when interest takes <= STRESS_FREE_PCT of revenue, falling linearly to STRESS_FLOOR at
+    # STRESS_FREE_PCT + STRESS_SPAN_PCT or more (labelled assumptions, Batch 7 item 9 / L-29; see the constants)
+    stress = float(np.clip(1 - (intr - STRESS_FREE_PCT) / STRESS_SPAN_PCT, STRESS_FLOOR, 1.0))
     pop, gdp_pc = _v(row, "sp_pop_totl"), _v(row, "gdp_pc")
     rev_pct = _v(row, "gc_rev_xgrt_gd_zs")
     gdp = pop * gdp_pc if not (np.isnan(pop) or np.isnan(gdp_pc)) else np.nan     # US$ (for revenue in US$)

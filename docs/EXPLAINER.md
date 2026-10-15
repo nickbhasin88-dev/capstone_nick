@@ -608,7 +608,7 @@ methods compared for Kenya.
 | `hiv_inf_death_untreated`, `hiv_survival_median` | 0.85 (0.70-0.95); 10.5 (8.6-12.5) years | Evidence | Todd et al. 2007 (ALPHA network), CASCADE |
 | `hiv_inf_death_treated` | 0.10 (0.05-0.20) | Labelled Assumption | near-normal life expectancy on ART, allowing for late diagnosis |
 | `art_reengage` | 0.35 (0.17-0.68) a year | Evidence (indirect) | Kranzer 2010; Kaplan 2017; Mody 2026 (disengagement while services ran, not a programme restart) |
-| Fiscal-space formula (surge, debt-stress thresholds 10% and 40%) | | Labelled Assumption | thresholds unsourced (logic review L-29) |
+| Fiscal-space debt-stress thresholds | 10% of revenue (5-15); 40-point span (30-50); floor 0.25 (0.15-0.50) | Labelled Assumption | no study measures where interest costs stop a health budget growing (L-29); constants, not drawn |
 | Cut paths (Linear, Front-loaded, Back-loaded, S-curve shapes) | | Scenario definitions | user choices, not estimates |
 | Ramp-up (LAG) shares: PMTCT 60%, TB 70%, bednets 50%, spraying 80% in year 1 | | Labelled Assumption | how fast the full effect appears |
 
@@ -651,8 +651,9 @@ Direction: the way the headline would most likely move if the item were resolved
   page only (L-11).
 - TB case fatality is placed in the year of loss; secondary cases all arrive within two years. Direction: Lower for
   2026 to 2030 TB deaths, Higher after (L-15).
-- Fiscal capacity is one strong year's growth held flat; debt-stress thresholds are unsourced. Direction:
-  Government Response options only (L-29).
+- Fiscal capacity is one strong year's growth held flat (a cumulative version is a known alternative, not
+  implemented); the debt-stress thresholds are labelled assumptions with ranges. Direction: Government Response
+  options only (L-29, labelling half closed in Batch 7).
 - The PMTCT cost review figures could not be verified. Direction: Unclear (L-32).
 - Sections 1 to 3 per-country files cannot be rebuilt from scripts in the repository. Direction: none (L-38).
 - India's TB systems and unspecified money follows its own line mix toward drug-resistant TB. Direction: Lower for

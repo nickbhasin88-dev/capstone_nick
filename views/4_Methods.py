@@ -381,7 +381,10 @@ with tabs[2]:
     - **g_strong**: the 75th percentile of that growth (a strong year), or the 90th (the best years), chosen under
       Advanced.
     - **s, the debt-stress factor**: 1 when interest takes 10% of revenue or less, falling linearly to 0.25 at 40%
-      or more. Interest as % of revenue is IMF World Economic Outlook net interest, October 2026 release (downloaded 13
+      or more. The three thresholds (10%, 40%, floor 0.25) are *labelled assumptions* with ranges 5-15%, 30-50% and
+      0.15-0.50 (not drawn; no study measures where interest costs stop a health budget growing). Capacity is one
+      strong year's surge held flat for five years; a cumulative version (the surge compounding year on year) is a
+      known alternative that would raise later-year capacity and is not implemented. Interest as % of revenue is IMF World Economic Outlook net interest, October 2026 release (downloaded 13
       October 2026): (primary balance - overall balance) ÷ revenue (`GGXONLB_NGDP`, `GGXCNL_NGDP`, `GGR_NGDP`), latest
       actual year (WEO's data API does not flag projections, so a year counts as actual only if it is before the
       country's first GDP estimate year). Net interest is interest paid minus interest received, so it can be a little

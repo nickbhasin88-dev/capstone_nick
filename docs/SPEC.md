@@ -216,6 +216,10 @@ amounts: the linked testing-and-care money has its own row, although its kappa s
     stress = clip(1 - (interest_pct_revenue - 10) / 40, 0.25, 1)
     capacity = ghes_2023 x surge x stress           (0 if ghes_2023 is missing)
 
+The stress thresholds 10 (range 5-15), 40 (30-50) and the floor 0.25 (0.15-0.50) are labelled assumptions held as
+constants (`health_model.STRESS_FREE_PCT`, `STRESS_SPAN_PCT`, `STRESS_FLOOR`; not drawn; Batch 7 item 9). Capacity is
+the same every year (one strong year's surge held flat); a cumulative alternative is noted, not implemented.
+
 **Wanted replacement** in year t for loss L_t:
 
 | Mode | Wanted | Paid R_t |

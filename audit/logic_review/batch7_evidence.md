@@ -156,3 +156,12 @@ purchasing power follows US inflation. The dashboard caption under the MOU scena
 and that the switch exists. Kenya's schedule: nominal cuts 0%, 4.5%, 16.1%, 19.8%, 60.3%; deflated at 2%: 4.0%,
 11.8%, 24.0%, 28.7%, 65.4%. America First MOUs preset, 16 countries, central: nominal 364,586 deaths; deflated at 2%
 416,307 (+14%). Default unchanged; headline unchanged; 357 tests pass (the MOU tests check the default schedules).
+
+## Item 9. L-29: the debt-stress thresholds labelled
+
+The existing evidence files (`logic.md` line 319, `redteam_report.md` line 337, `coverage.md` I-037) all record the
+10% and 40% thresholds and the 0.25 floor as class (c) assumptions with no source, and none was found elsewhere in
+the repository. They are now named constants in `health_model.py` (`STRESS_FREE_PCT` 10, `STRESS_SPAN_PCT` 40,
+`STRESS_FLOOR` 0.25) with ranges 5-15%, 30-50 points and 0.15-0.50, labelled assumptions, not drawn (a structural
+setting, like `hss_service_share`). The non-cumulative capacity rule is unchanged; the Methods page and SPEC note the
+cumulative version as a known alternative. No value changes; 357 tests pass.
