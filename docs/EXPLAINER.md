@@ -684,7 +684,8 @@ labelled so on the dashboard; a `mou_deflate` switch (2% a year US$ inflation, l
 expresses them in 2023 US$, which raises the America First MOUs preset from 364,586 to 416,307 deaths. Gradual
 Budget Increase: a `budget_growth` setting (default 0, the 2023 budget held flat) lets the budget grow with WEO
 nominal GDP; at the full rate the preset falls from 534,944 to 419,439 deaths and Kenya's break-even from 1.12 to
-1.06 points a year.
+1.06 points a year. L-09: the Gavi -15% default is labelled as our estimate, applying to its preset only (value
+unchanged).
 
 ---
 

@@ -39,7 +39,8 @@ PRESETS = {
     "Global Fund & Gavi shortfalls": (
         "Channel shock for all donors: every donor's money through Gavi and through the Global Fund falls by the share "
         "you set (default Gavi -15%, Global Fund -20%), against each fund's 2021-23 disbursements (the model "
-        "baseline). The sliders' tooltips give the sources for each value."),
+        "baseline). The Gavi default is our estimate of the fall in spending implied by Gavi 6.0's pledges, not a "
+        "published figure, and both defaults apply to this preset only. The sliders' tooltips give the sources."),
     "Combined retreat": "'US Bilateral Exit + Multilateral Withdrawals' for the US plus the OECD-reported 2025 total-aid cuts for all other donors.",
     "Custom": "Set cuts yourself by donor and by channel (cuts combine multiplicatively: 1 - (1-donor cut)(1-channel cut)).",
 }

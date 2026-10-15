@@ -178,3 +178,10 @@ Gradual Budget Increase result (Steady, 0.5 points a year, Full US Exit) is 419,
 and Kenya's break-even rise is 1.06 instead of 1.12 points a year. Held constant rather than drawn because a
 one-sided range above a central of 0 would put the central run outside the displayed range (the `hss_service_share`
 precedent). Headline unchanged; 357 tests pass.
+
+## Item 11. L-09: the Gavi -15% default labelled
+
+The value stays. The Methods scenario table already said "(our estimate)" and the slider marks say "~15%: fall vs
+2021-23 spending (our estimate)"; the preset description (`scenarios.PRESETS`, shown as the scenario tooltip) did not,
+so it now says the Gavi default is our estimate, not a published figure, and that both defaults apply to this preset
+only; the Methods text says the same. No value change.
