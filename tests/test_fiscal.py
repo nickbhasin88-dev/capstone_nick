@@ -70,7 +70,7 @@ def test_income_group_median_when_both_missing():
 
 def test_interest_text_shows_source_and_year():
     F = hm.fiscal_space(CI.loc["PAK"])
-    assert ms.interest_text(F) == f"Interest: {F['interest_pct_revenue']:.0f}% of revenue (IMF WEO, 2024)"
+    assert ms.interest_text(F) == f"Interest: {F['interest_pct_revenue']:.0f}% of revenue (IMF WEO Oct 2026, 2024)"   # Batch 7 item 6: the label carries the WEO release
 
 
 def test_inputs_years_line():
