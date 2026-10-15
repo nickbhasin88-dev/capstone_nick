@@ -48,8 +48,8 @@ RANGE_LABEL, RANGE_TIP = th.RANGE_LABEL, th.RANGE_TIP
 SRC_MODEL = "Model estimates from IHME aid data (2021-23 average), WHO, UNAIDS and World Bank data; see Methods."
 SHOW_BRIEF = False                   # the Download Country Brief button (code kept for later)
 PRESET_SHORT = {
-    "Full US exit": "US bilateral health aid ends and the US leaves WHO, Gavi and UNFPA; its Global Fund pledge falls "
-                    "23%, so 77% of it is kept. Other US multilateral money is unchanged.",
+    "Full US exit": "US bilateral health aid ends and the US withdraws from multilateral agreements (its Global Fund pledge "
+                    "falls 23%, so 77% of it is kept). Other US multilateral money is unchanged.",
     "America First MOUs": "US bilateral aid follows this country's signed MOU year by year, 2026-2030; US multilateral "
                           "exits as in US Bilateral Exit + Multilateral Withdrawals. The partner government's co-financing commitments are not "
                           "modelled.",
@@ -575,7 +575,7 @@ def response_phrase(ctl) -> str:
 # Story lede: a headline, a short summary and three big numbers, written from the model's results
 # --------------------------------------------------------------------------- #
 SCENARIO_PHRASE = {
-    "Full US exit": "If U.S. bilateral health aid ends and the U.S. leaves WHO, Gavi and UNFPA",
+    "Full US exit": "If U.S. bilateral health aid ends and the U.S. withdraws from multilateral agreements",
     "America First MOUs": "If U.S. aid follows the new “America First” health agreements",
     "IHME 2025 preliminary estimates": "If aid follows IHME’s 2025 estimates",
     "OECD-reported 2025 aid cuts": "If donors cut health aid as much as their total 2025 aid",
