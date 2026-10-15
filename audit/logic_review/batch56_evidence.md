@@ -359,3 +359,7 @@ are missing (§5); the proportional branch returns 0 when the line's baseline mo
 cut, "any row" meaning any row of the country (§6); the unit-cost fallbacks from `unit_cost_reference.csv` carry the
 same multiplier and markup (§5). The others are already determined by the text or concern parts the four cases do not
 exercise (lives-first allocation, gradual budget increase, the MOU and IHME presets, cards, draws). No new finding.
+
+**Final full check** (after VAL1, VAL2 and DOC; nothing but documents, the reproduction script and check text changed
+since the first): `audit/checks.py --full`, 59 checks, 76,501 rows, **0 failures, 6 known warnings**; 15 min 07 s.
+Pushed to `origin/tomato`.
