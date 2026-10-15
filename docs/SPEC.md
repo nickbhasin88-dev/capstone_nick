@@ -52,7 +52,7 @@ Country columns used (`country_inputs.csv`):
 | sub-Saharan Africa | `is_ssa` | True / False (sensitivity switch only) |
 | WHO region; under-5 rule | `who_region`, `malaria_u5_share_rule`, `malaria_u5_share_param` | from `ext_data/who_regions.csv` (WHO TB data `g_whoregion`), written by `malaria_inputs.py` |
 | bednet use, spraying, treatment coverage | `mal_itn_cov`, `mal_irs_cov`, `mal_cm_cov` | shares 0-1 (not percentages); NaN = see section 5 |
-| births | `births` | |
+| births | `births`; `births_2026` .. `births_2030` (`births_proj_source`) | latest-year births = crude birth rate x population (WDI); projected births 2026-2030 from UN WPP 2024, medium variant (thousands x 1,000; `immunization_inputs.apply_births`, Batch 7 item 12), used for the immunization need year by year; the latest-year value is the fallback |
 | DTP3 % | `sh_imm_idpt` (`_year`, `_source`) | WHO/UNICEF WUENIC 2025 revision, latest year (2025 for every country), % of surviving infants (`immunization_inputs.py`; Batch 7 item 3; before: the World Bank WDI mirror) |
 | U5MR | `sh_dyn_mort` | 50 if missing (legacy vaccine rule only) |
 | deaths averted per fully immunized child | `imm_dpc` (`_lo`, `_hi`), `imm_dpc_lag0` .. `imm_dpc_lag9`, `imm_dpc_beyond_window`, `imm_q5_ratio`, `imm_antigens`, `imm_dpc_source` | Batch 5+6 V2: VIMC deaths averted per vaccinated child (Toor et al. 2021, supplementary data) summed over the routine antigens the country uses, x the WPP Q5 2026-30 / 2015-19 ratio; `_lag<k>` = the part falling k years after vaccination (`audit/batch56_vaccines.py`; `batch34_inputs.py --vaccines`); if missing, the legacy rule applies |
@@ -272,7 +272,7 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
 | mal_itn | PAR | `mal_itn_cov`; if NaN, `mal_itn_default_use` |
 | mal_irs | PAR | see below |
 | mal_cm | malaria cases | `mal_cm_cov`; if NaN, `mal_cm_default_cov` |
-| imm | births | DTP3 % |
+| imm | births_t = `births_<2026+t>` (WPP 2024 projection) for year t; the displayed need is their mean; `births` if any projection is missing | DTP3 % |
 | hiv_prev, hiv_ovc | none | none |
 
 **Spraying coverage.**
@@ -336,7 +336,8 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
 - units = raw x (1 - continuity). continuity = 0.15 (0-0.30; assumption; Batch 3+4 IMP-16 found only indirect
   evidence, recorded with 0.30 as a sensitivity value).
 - If need and coverage both exist, units = min(units, cap), with cap = covered for hiv_art and coverage x need
-  otherwise.
+  otherwise; for imm, covered and the cap are coverage x births_t in year t (Batch 7 item 12), and the pool test
+  uses the same year's value.
 - units = max(units, 0).
 - hiv_prev and hiv_ovc have no cap (continuity applies).
 

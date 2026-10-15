@@ -41,8 +41,26 @@ def wuenic_series(antigen: str, path: Path = WUENIC_FILE) -> pd.DataFrame:
     return d.sort_values(["iso3", "year"]).reset_index(drop=True)
 
 
-def apply(ci: pd.DataFrame) -> pd.DataFrame:
+WPP_FILE = HERE / "datasets" / "WPP2024" / "WPP2024_Demographic_Indicators_Medium.csv"
+BIRTH_YEARS = range(2026, 2031)
+WPP_SOURCE = "UN WPP 2024 medium variant, Births (thousands x 1,000)"
+
+
+def apply_births(ci: pd.DataFrame) -> pd.DataFrame:
+    """births_2026 .. births_2030 (people) from the WPP 2024 medium-variant projections (logic review L-24, Batch 7
+    item 12): the immunization line's people in need year by year. Countries without a WPP value keep NaN and the
+    model falls back to the latest-year `births`."""
     ci = ci.copy()
+    wp = pd.read_csv(WPP_FILE, usecols=["ISO3_code", "Time", "Births"], low_memory=False).dropna(subset=["ISO3_code"])
+    b = wp[wp.Time.isin(list(BIRTH_YEARS))].pivot(index="ISO3_code", columns="Time", values="Births").reindex(ci.index) * 1000
+    for y in BIRTH_YEARS:
+        ci[f"births_{y}"] = b[y]
+    ci["births_proj_source"] = np.where(b.notna().all(axis=1), WPP_SOURCE, "")
+    return ci
+
+
+def apply(ci: pd.DataFrame) -> pd.DataFrame:
+    ci = apply_births(ci)
     t = wuenic_latest().reindex(ci.index)
     for col in ANTIGENS:
         have = t[col].notna()
@@ -59,6 +77,8 @@ def main():
         d = (new[col] - ci[col]).abs()
         print(f"  {col}: WUENIC for {int((new[f'{col}_source'] == SOURCE).sum())} of {len(ci)}; year {new[f'{col}_year'].value_counts().to_dict()}; "
               f"changed by > 2 points in {int((d > 2).sum())} countries")
+    print(f"  births 2026-2030 from WPP for {int((new['births_proj_source'] != '').sum())} of {len(ci)}; "
+          f"2026 / latest-year births median {(new['births_2026'] / new['births']).median():.3f}")
     new.reset_index().to_csv(INPUTS_FILE, index=False)
     print("updated", INPUTS_FILE)
 

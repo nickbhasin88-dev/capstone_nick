@@ -185,3 +185,21 @@ The value stays. The Methods scenario table already said "(our estimate)" and th
 2021-23 spending (our estimate)"; the preset description (`scenarios.PRESETS`, shown as the scenario tooltip) did not,
 so it now says the Gavi default is our estimate, not a published figure, and that both defaults apply to this preset
 only; the Methods text says the same. No value change.
+
+## Item 12. L-24 (births): projected births as the immunization need
+
+The WPP 2024 file on disk (`WPP2024_Demographic_Indicators_Medium.csv`, medium variant) has projected births for
+every year to 2101, so `immunization_inputs.apply_births` writes `births_2026` .. `births_2030` (people) for all 70
+countries. In `health_model.epi` the immunization need becomes those five values (displayed as their mean); in
+`run_country` the people covered and the cap on units lost for the immunization line use the year's own births. No
+other line uses births: PMTCT's need is UNAIDS pregnant women needing ARV (item 4), with births only in the derived
+fallback that Iraq and Jordan still use; those two keep the latest-year value. People living with HIV and TB and
+malaria incidence are held at the latest year because no projection of them is on disk (the UNAIDS file ends in 2025;
+the WHO TB and malaria files are estimates to 2024), so that half of L-24 stays open and is not guessed.
+
+Births 2026 against the latest-year value: median ratio 1.009; growth 2026 to 2030: median +1.7%, from -6.9% to
++8.1% (South Africa and India fall, Mozambique +5.6%). Effect: immunization baseline refreshed (62 entries, `imm`
+only); headline **1,927,847 -> 1,928,289 (+0.02%)**; vaccine deaths 188,412 -> 188,853; nothing else moved. 357
+tests pass. Note for VAL2: the independent reproduction script (`audit/logic_review/reproduction/repro.py`) still
+holds the immunization need at the latest-year births and has not been re-run in this batch; its comparison would now
+differ on the `imm` line by the births ratio.

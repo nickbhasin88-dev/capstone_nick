@@ -288,7 +288,7 @@ coverage (UNAIDS AIDSinfo 2026 estimates for 2025, read directly from the UNAIDS
 HIV-positive pregnancies (women needing ARV) and PMTCT coverage (same file); TB: WHO TB incidence and the case
 detection rate (capped at 100%); drug-resistant TB: WHO's rifampicin-resistant share of incidence and enrolment;
 bednets and spraying: population at risk (WHO) and Malaria Atlas Project (MAP) 2025 net use and household spraying
-coverage; malaria treatment: MAP clinical cases and effective treatment per 100 cases; immunization: births and DTP3
+coverage; malaria treatment: MAP clinical cases and effective treatment per 100 cases; immunization: projected births for each year 2026 to 2030 (UN WPP 2024, since Batch 7) and DTP3
 coverage (WHO/UNICEF WUENIC 2025, since Batch 7). People losing a service can never exceed the people covered.
 
 **Formula.** Coverage drop (percentage points) = people losing the service / people in need x 100; Coverage After =
@@ -566,7 +566,7 @@ methods compared for Kenya.
 | UNAIDS AIDSinfo 2026 estimates | UNAIDS | 2025 | PLHIV, ART and PMTCT coverage, women needing ARV, new infections, AIDS deaths, suppressed viral load, people on ART | counts | 2d, 2e, 2f, 2i |
 | VIMC estimates (Toor et al. 2021) | Vaccine Impact Modelling Consortium | vaccination years 2015-2019; calendar years 2000-2019 | Deaths averted by year of vaccination, calendar year and birth cohort, 10 pathogens, 112 countries | counts | 2f |
 | WUENIC 2025 revision | WHO / UNICEF | 2015-2019, 2025 | Coverage by antigen; DTP3 and MCV1 model inputs | % | 2e, 2f |
-| World Population Prospects 2024 | UN DESA | 2015-2030 | Surviving infants, births, under-5 mortality, population | thousands (x 1,000); per 1,000 | 2f, Section 4 of slides |
+| World Population Prospects 2024 | UN DESA | 2015-2030 | Surviving infants, births (projected 2026-2030 for the immunization need), under-5 mortality, population | thousands (x 1,000); per 1,000 | 2e, 2f |
 | KFF America First MOU tracker; team MOU sheet | KFF; project team | 2026 | Signed MOUs; yearly US funding schedules | nominal US$ | 2b |
 | OECD preliminary ODA 2025 | OECD | April 2026 | Change in total aid by donor | % | 2b |
 
@@ -648,8 +648,8 @@ Direction: the way the headline would most likely move if the item were resolved
 - Bednet use defaults to 50% where no MAP or recent survey exists; IRS household share is applied to people; IRS is
   implied from donor spending where MAP shows none; MAP and WHO case counts differ (Pakistan). Direction: Unclear
   (L-07, L-21, L-22, L-23).
-- People in need (births, people living with HIV, incidence) are held at the latest year through 2030. Direction:
-  Higher where need grows (L-24 / IMP-17).
+- People living with HIV and TB and malaria incidence are held at the latest year through 2030 (no projection on
+  disk); births now follow WPP projections (Batch 7). Direction: Higher where need grows (L-24 / IMP-17, partly done).
 - The Lancet rate-ratio method on the Validation page still uses a GBD-2019 HIV death share. Direction: Validation
   page only (L-11).
 - TB case fatality is placed in the year of loss; secondary cases all arrive within two years. Direction: Lower for
@@ -685,7 +685,9 @@ expresses them in 2023 US$, which raises the America First MOUs preset from 364,
 Budget Increase: a `budget_growth` setting (default 0, the 2023 budget held flat) lets the budget grow with WEO
 nominal GDP; at the full rate the preset falls from 534,944 to 419,439 deaths and Kenya's break-even from 1.12 to
 1.06 points a year. L-09: the Gavi -15% default is labelled as our estimate, applying to its preset only (value
-unchanged).
+unchanged). L-24 (births): the immunization need follows WPP 2024 projected births for each year 2026 to 2030
+(vaccine deaths +0.2%); people living with HIV and TB and malaria incidence stay at the latest year because no
+projection is on disk.
 
 ---
 

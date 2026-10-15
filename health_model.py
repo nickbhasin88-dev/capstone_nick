@@ -382,6 +382,13 @@ def epi(row: pd.Series, P: dict) -> dict:
         "mal_cm": (_v(row, "malaria_cases"), cm),
         "imm": (_v(row, "births"), _v(row, "sh_imm_idpt") / 100),
     }
+    # Batch 7 item 12 (L-24): the immunization need follows WPP 2024 projected births 2026-2030 (births_2026 ..
+    # births_2030) where present; the displayed need is their mean and the per-year values cap each year's units
+    need_by_year = {}
+    bp = np.array([_v(row, f"births_{y}") for y in range(2026, 2026 + N_YEARS)])
+    if not np.isnan(bp).any():
+        need_by_year["imm"] = bp
+        e["imm"] = (float(bp.mean()), e["imm"][1])
     flags = []
     if _v(row, "sh_tbs_dtec_zs") > 100:
         flags.append(f"TB case detection rate is {_v(row, 'sh_tbs_dtec_zs'):.0f}% (notifications above WHO's incidence "
@@ -390,8 +397,8 @@ def epi(row: pd.Series, P: dict) -> dict:
         flags.append("bednet use: no MAP estimate or survey since 2015, default assumed")
     if np.isnan(cm):
         flags.append("malaria treatment coverage: no MAP estimate or usable survey, default assumed")
-    return {"need_cov": e, "hiv_incidence_per_1000": inc_hiv, "flags": flags, "art_cov": art,
-            "cov_source": {l: coverage_source(row, l) for l in ("mal_itn", "mal_irs", "mal_cm")}}
+    return {"need_cov": e, "need_by_year": need_by_year, "hiv_incidence_per_1000": inc_hiv, "flags": flags,
+            "art_cov": art, "cov_source": {l: coverage_source(row, l) for l in ("mal_itn", "mal_irs", "mal_cm")}}
 
 
 def coverage_source(row: pd.Series, line: str) -> str:
@@ -1036,10 +1043,13 @@ def run_country(iso3: str, scenario: Scenario, fiscal: Fiscal, inputs: dict, pta
             nc_t = netc_t[t][l] + sum(netc_t[t][k] for k in links)
             b_all = eff_base[l] + sum(eff_base[k] for k in links)
             bc_all = effc_base[l] + sum(effc_base[k] for k in links)
-            u = _units_lost(n_t, b_all, uc[l], covered, cap_base=eff_base[l], donor_share=donor_share[l]) * (1 - P["continuity"])
-            uc0 = _units_lost(nc_t, bc_all, ucc[l], covered, cap_base=effc_base[l], donor_share=donor_share[l]) * (1 - Pc["continuity"])
+            # people covered in year t: constant, except the immunization line, whose need follows projected births
+            nby = ep["need_by_year"].get(l)
+            covered_t = cov * nby[t] if (nby is not None and not np.isnan(cov)) else covered
+            u = _units_lost(n_t, b_all, uc[l], covered_t, cap_base=eff_base[l], donor_share=donor_share[l]) * (1 - P["continuity"])
+            uc0 = _units_lost(nc_t, bc_all, ucc[l], covered_t, cap_base=effc_base[l], donor_share=donor_share[l]) * (1 - Pc["continuity"])
             if l in ep["need_cov"] and not np.isnan(need) and not np.isnan(cov):
-                hi = covered if l == "hiv_art" else cov * need
+                hi = covered if l == "hiv_art" else covered_t
                 capped[l] = capped[l] or bool(np.ravel(uc0)[0] > hi)
                 u, uc0 = np.minimum(u, hi), np.minimum(uc0, hi)
             # never negative: aid rises count as no loss (I-15), so this only removes floating-point noise when the
