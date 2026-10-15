@@ -551,6 +551,14 @@ with tabs[2]:
     *Further deaths, 2031-2035*. Only one year of infectiousness per untreated patient and no onward chains beyond
     these secondary cases are modelled, so this is conservative (untreated TB typically lasts 2-3 years).
 
+    **Timing of TB deaths (logic review L-15).** The whole case-fatality difference for a patient who goes untreated is
+    placed in the year the treatment is lost, although WHO's burden-estimation methods describe untreated TB as
+    lasting about three years; and the secondary cases arrive one and two years later (half each), although
+    Vynnycky and Fine 1997 find that most progression to disease happens within two to five years of infection. Both
+    are *labelled assumptions* about timing, not about the number of deaths: they shift deaths within and just beyond
+    the 2026-2030 window (earlier than a three-year spread would), so the five-year TB total is somewhat high and the
+    2031-2035 TB part somewhat low. No rule change (Batch 7, item 13).
+
     **Malaria** uses the Lives Saved Tool form. Coverage after the cut feeds a multiplicative death reduction:
     """)
     st.latex(r"D_1=D_0\times\frac{1-E_v C_{v,1}}{1-E_v C_{v,0}}\times\frac{1-E_c C_{c,1}}{1-E_c C_{c,0}}")

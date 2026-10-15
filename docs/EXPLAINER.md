@@ -652,8 +652,8 @@ Direction: the way the headline would most likely move if the item were resolved
   disk); births now follow WPP projections (Batch 7). Direction: Higher where need grows (L-24 / IMP-17, partly done).
 - The Lancet rate-ratio method on the Validation page still uses a GBD-2019 HIV death share. Direction: Validation
   page only (L-11).
-- TB case fatality is placed in the year of loss; secondary cases all arrive within two years. Direction: Lower for
-  2026 to 2030 TB deaths, Higher after (L-15).
+- TB case fatality is placed in the year of loss and secondary cases arrive within two years, both labelled timing
+  assumptions (Batch 7). Direction: 2026 to 2030 TB deaths somewhat high, 2031 to 2035 somewhat low (L-15).
 - Fiscal capacity is one strong year's growth held flat (a cumulative version is a known alternative, not
   implemented); the debt-stress thresholds are labelled assumptions with ranges. Direction: Government Response
   options only (L-29, labelling half closed in Batch 7).
@@ -687,7 +687,7 @@ nominal GDP; at the full rate the preset falls from 534,944 to 419,439 deaths an
 1.06 points a year. L-09: the Gavi -15% default is labelled as our estimate, applying to its preset only (value
 unchanged). L-24 (births): the immunization need follows WPP 2024 projected births for each year 2026 to 2030
 (vaccine deaths +0.2%); people living with HIV and TB and malaria incidence stay at the latest year because no
-projection is on disk.
+projection is on disk. L-15: the TB timing rules are labelled as assumptions on the Methods page.
 
 ---
 

@@ -203,3 +203,11 @@ only); headline **1,927,847 -> 1,928,289 (+0.02%)**; vaccine deaths 188,412 -> 1
 tests pass. Note for VAL2: the independent reproduction script (`audit/logic_review/reproduction/repro.py`) still
 holds the immunization need at the latest-year births and has not been re-run in this batch; its comparison would now
 differ on the `imm` line by the births ratio.
+
+## Item 13. L-15: TB timing labelled
+
+No WHO basis for the two-year window was found in the evidence files: `model_params.csv` cites Vynnycky & Fine 1997
+("most within 2-5 years") for the share of infected contacts who progress, and the one-and-two-year arrival is the
+model's own simplification; WHO's burden-estimation methods describe untreated TB as lasting about three years. The
+Methods page now states both as labelled timing assumptions with their direction (five-year TB deaths somewhat high,
+2031-2035 somewhat low). No rule change; headline unchanged.
