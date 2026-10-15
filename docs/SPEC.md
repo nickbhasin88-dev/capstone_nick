@@ -52,7 +52,7 @@ Country columns used (`country_inputs.csv`):
 | WHO region; under-5 rule | `who_region`, `malaria_u5_share_rule`, `malaria_u5_share_param` | from `ext_data/who_regions.csv` (WHO TB data `g_whoregion`), written by `malaria_inputs.py` |
 | bednet use, spraying, treatment coverage | `mal_itn_cov`, `mal_irs_cov`, `mal_cm_cov` | shares 0-1 (not percentages); NaN = see section 5 |
 | births | `births` | |
-| DTP3 % | `sh_imm_idpt` | |
+| DTP3 % | `sh_imm_idpt` (`_year`, `_source`) | WHO/UNICEF WUENIC 2025 revision, latest year (2025 for every country), % of surviving infants (`immunization_inputs.py`; Batch 7 item 3; before: the World Bank WDI mirror) |
 | U5MR | `sh_dyn_mort` | 50 if missing (legacy vaccine rule only) |
 | deaths averted per fully immunized child | `imm_dpc` (`_lo`, `_hi`), `imm_dpc_lag0` .. `imm_dpc_lag9`, `imm_dpc_beyond_window`, `imm_q5_ratio`, `imm_antigens`, `imm_dpc_source` | Batch 5+6 V2: VIMC deaths averted per vaccinated child (Toor et al. 2021, supplementary data) summed over the routine antigens the country uses, x the WPP Q5 2026-30 / 2015-19 ratio; `_lag<k>` = the part falling k years after vaccination (`audit/batch56_vaccines.py`; `batch34_inputs.py --vaccines`); if missing, the legacy rule applies |
 | ART site cost | `art_site_cost` (`_lo`, `_hi`, `_source`, `_year`) | US$ per patient-year at site level, 2023 US$ (`batch34_inputs.py --art`; `audit/batch34_art_costs.py`) |

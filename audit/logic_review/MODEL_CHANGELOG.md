@@ -96,7 +96,9 @@ Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
 | L-43 status reconciled (item 1) | listed open in the findings table; done in the changelog | done, with stated gap: 34 of 210 country-disease lines use a WHO-region median for the split of unspecified money; the capped lines are listed in `batch7_evidence.md` | no model change | `f772662` |
 | Headline chain corrected (item 2) | 2,017,000 (rounded) -> 2,055,422 -> 2,055,422 -> ... | 1,969,304 -> 1,945,605 -> 1,965,386 -> 2,055,422 -> 1,379,963 -> 1,695,601 -> 1,927,405, each re-run at its own commit | `batch7_evidence.md` item 2 | `5742b44` |
 
+| L-17 DTP3 coverage (item 3) | World Bank WDI mirror of WUENIC, 2024 (2023 for Nicaragua) | WHO/UNICEF WUENIC 2025 revision read directly, 2025 for all 70 countries (`immunization_inputs.py`, also MCV1); 30 countries differ by more than 2 points (Angola -12, Venezuela -12, Tajikistan -11, Honduras +11, South Africa -9, Ethiopia +8, Namibia +8) | `datasets/WUENIC_2025.xlsx` | `ccb0dcd` |
 ### Closed in Batch 7
+- L-17 (DTP3 via the WDI mirror): closed; the model reads WUENIC 2025 directly. Headline 1,927,405 -> 1,927,871 (+0.02%); vaccine deaths 187,945 -> 188,412.
 
 - L-43 (unspecified money): done with stated gap, 34 of 210 lines on regional medians; capped cases listed in `batch7_evidence.md` item 1.
 

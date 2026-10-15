@@ -53,3 +53,20 @@ Corrections made to the changelog header: the starting value is 1,969,304, not "
 figure had been taken from the Batch 1 before/after table's pre-cleanup baseline); Batch 1 moved the headline to
 1,945,605 (malaria -9%, TB +3%), the under-5 share to 1,965,386, and Batch 2 to 2,055,422 (HIV +9%), which the
 header had wrongly described as unchanged by Batch 2. The Batch 3+4, 4b and 5+6 values reproduce.
+
+## Item 3. L-17: DTP3 coverage from WUENIC 2025
+
+`immunization_inputs.py` reads `datasets/WUENIC_2025.xlsx` (sheet `country`) and writes `sh_imm_idpt` (DTP3) and
+`sh_imm_meas` (MCV1) with `_year` and `_source`; `prepare_model.py` calls it after `who_inputs.apply()`. Every one of
+the 70 countries has a 2025 value (the WDI mirror was 2024, Nicaragua 2023). Countries where the two differ by more
+than 2 points (WDI -> WUENIC 2025): Angola 64 -> 52, Venezuela 62 -> 50, Tajikistan 97 -> 86, South Africa 74 -> 65,
+Côte d'Ivoire 77 -> 70, Iraq 90 -> 84, Bangladesh 97 -> 92, Belize 88 -> 83, Nigeria 67 -> 62, Guatemala 81 -> 77,
+Jamaica 99 -> 95, Moldova 86 -> 82, Kenya 91 -> 88, Kyrgyzstan 85 -> 82, Rwanda 98 -> 95; and upward: Honduras 75 ->
+86, Ethiopia 73 -> 81, Namibia 74 -> 82, Nicaragua 89 -> 96, Benin 63 -> 69, Cameroon 77 -> 83, Djibouti 77 -> 83,
+Uganda 91 -> 97, Central African Republic 42 -> 46, Ghana 95 -> 99, Indonesia 78 -> 82, Libya 86 -> 90, Madagascar 60
+-> 64, Mauritius 93 -> 96, El Salvador 95 -> 99 (30 countries; median absolute change 2 points). Part of the
+difference is the year (2025 vs 2024) and part is the mirror's rounding and vintage: 13 countries differ from WUENIC's
+own 2024 value as well.
+
+Effect: immunization baseline refreshed (22 entries, `imm` only); headline **1,927,405 -> 1,927,871 (+0.02%)**;
+vaccine deaths 187,945 -> 188,412; no other disease moved. 357 tests pass.

@@ -285,7 +285,7 @@ coverage (UNAIDS 2025); PMTCT: HIV-positive pregnancies and PMTCT coverage; TB: 
 detection rate (capped at 100%); drug-resistant TB: WHO's rifampicin-resistant share of incidence and enrolment;
 bednets and spraying: population at risk (WHO) and Malaria Atlas Project (MAP) 2025 net use and household spraying
 coverage; malaria treatment: MAP clinical cases and effective treatment per 100 cases; immunization: births and DTP3
-coverage. People losing a service can never exceed the people covered.
+coverage (WHO/UNICEF WUENIC 2025, since Batch 7). People losing a service can never exceed the people covered.
 
 **Formula.** Coverage drop (percentage points) = people losing the service / people in need x 100; Coverage After =
 Coverage Before - the drop.
@@ -548,7 +548,7 @@ methods compared for Kenya.
 | Development Assistance for Health database, 1990-2026 | IHME | 2021-2023 average; 2025 preliminary for the IHME preset | Aid by source, channel, recipient and programme area | thousands of constant 2023 US$ (x 1,000) | 2a, 2b |
 | Health spending 1995-2023; expected spending 2024-2050 | IHME | 2023 | Government health spending, growth history | constant 2023 US$ | 2c |
 | World Economic Outlook, October 2026 | IMF | latest actual year | Revenue, expenditure, balances (interest as share of revenue) | % of GDP | 2c |
-| World Development Indicators | World Bank | latest year | Health share of government spending; DTP3 coverage; TB detection; HIV incidence; population; births | % and counts | 2c, 2e |
+| World Development Indicators | World Bank | latest year | Health share of government spending; TB detection; HIV incidence; population; births | % and counts | 2c, 2e |
 | Global Health Observatory | WHO / UNAIDS | 2025 (HIV); 2024 (malaria) | People living with HIV, ART and PMTCT coverage; malaria deaths, cases, incidence | counts, % | 2e, 2f |
 | Global TB Report data | WHO | 2024 | TB incidence, deaths, notifications, RR-TB share and enrolment, financing | counts, US$ | 2e, 2f, 2d (TB donor share), 2i |
 | Malaria Atlas Project national estimates | MAP | 2025 | Net access and use, IRS coverage, effective treatment, clinical cases | % and counts | 2e, 2f |
@@ -561,7 +561,7 @@ methods compared for Kenya.
 | Optima HIV appendix (ten Brink et al. 2025) | Lancet HIV | most recent GAM year | Total HIV spending by source (Table B2); progression and death rates (Tables A1-A2); scenario outcomes (Table C2) | US$, rates, counts | 2d, 2f, 2i |
 | UNAIDS AIDSinfo 2026 estimates | UNAIDS | 2025 | People on ART, new infections, PLHIV, suppressed viral load | counts | 2d, 2f, 2i |
 | VIMC estimates (Toor et al. 2021) | Vaccine Impact Modelling Consortium | vaccination years 2015-2019; calendar years 2000-2019 | Deaths averted by year of vaccination, calendar year and birth cohort, 10 pathogens, 112 countries | counts | 2f |
-| WUENIC 2025 revision | WHO / UNICEF | 2015-2019, 2025 | Coverage by antigen | % | 2f |
+| WUENIC 2025 revision | WHO / UNICEF | 2015-2019, 2025 | Coverage by antigen; DTP3 and MCV1 model inputs | % | 2e, 2f |
 | World Population Prospects 2024 | UN DESA | 2015-2030 | Surviving infants, births, under-5 mortality, population | thousands (x 1,000); per 1,000 | 2f, Section 4 of slides |
 | KFF America First MOU tracker; team MOU sheet | KFF; project team | 2026 | Signed MOUs; yearly US funding schedules | nominal US$ | 2b |
 | OECD preliminary ODA 2025 | OECD | April 2026 | Change in total aid by donor | % | 2b |
@@ -667,7 +667,8 @@ Direction: the way the headline would most likely move if the item were resolved
 country-disease lines use a WHO-region median because the country has no Global Fund grant for that disease, and the
 lines where donor money would buy more than the donor-funded pool are listed in `audit/logic_review/batch7_evidence.md`.
 The headline chain in the changelog was re-run at each batch's own commit and corrected (before Batch 1: 1,969,304;
-Batch 2 raised HIV deaths by 9%).
+Batch 2 raised HIV deaths by 9%). L-17: DTP3 coverage now comes from WUENIC 2025 directly (30 countries moved by
+more than 2 points; vaccine deaths +0.2%).
 
 ---
 
