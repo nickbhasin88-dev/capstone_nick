@@ -319,7 +319,7 @@ Headline = all countries, Full US Exit, central, 2026-30 deaths. Before the batc
 | L-29 | Minor | Medium | Fiscal capacity is one strong year's growth held flat for 5 years, not cumulative. Stress thresholds unsourced. | 0 on default headlines | Cumulative capacity; cite IMF DSF | No |
 | L-31 | Minor | Medium | WEO vintage of `macro_data` is untagged. WDI revenue and debt are central government only, missing for 18 and 41 countries. | display only | Tag the vintage | No |
 | L-32 | Minor | Low | `uc_pmtct` 250: the cited review's figures could not be verified. | ±1.5% | Verify or replace | No |
-| L-34 | Minor | High | Interest burden mixes IMF net general-government interest (53 countries) and WDI gross central-government interest (17). | fiscal panel only | Document; prefer one | No |
+| L-34 ✅ done (Batch 7 item 7: IMF WEO net interest for every country; World Bank series a flagged fallback) | Minor | High | Interest burden mixes IMF net general-government interest (53 countries) and WDI gross central-government interest (17). | fiscal panel only | Document; prefer one | No |
 | L-35 | Minor | High | MOU amounts are nominal against a nominal reference, so inflation over 2026-30 is uncounted. Schedules ending 2028 are held flat; increases are counted as 0. | MOU preset understated by about 2-3% a year in real terms | Deflate | No |
 | L-38 | Minor | High | Sections 1-3 per-country files can't be rebuilt (scripts not in the repository). | reproducibility | IMP-12 | No |
 | L-39 | Minor | High | India's TB systems and unspecified money goes mostly to DR-TB (by own-money mix) at US$14,773 per patient. India's TB card: 638 deaths per US$1M vs about 2,000 elsewhere. | India only | Spread by patients or by the WHO DS/DR split | No |

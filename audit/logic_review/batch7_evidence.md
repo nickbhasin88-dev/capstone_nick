@@ -116,3 +116,29 @@ series in `macro_data/<ISO3>.csv` were built by a script that is not in the repo
 their headers; their projection horizon ends in 2031 for all 71 files, which is consistent with the October 2026
 release, so they are labelled "vintage not recorded; horizon consistent with October 2026" rather than asserted.
 Label only; no value changes.
+
+## Item 7. L-34: one primary interest definition, with a flag for the fallback
+
+Coverage: the IMF WEO net-interest series (October 2026; (primary balance - overall balance) / revenue, general
+government, latest actual year) exists for all 70 modelled countries; the World Bank WDI interest-payments series
+(`GC.XPN.INTP.RV.ZS`, gross interest paid, central government, 2015-2024) exists for 52. The IMF series is therefore
+the primary definition. `fiscal_inputs.apply` now uses it wherever it exists and keeps the World Bank value only where
+the IMF one is missing, marking those rows `flag_interest_alt_def = True`; today no country needs the fallback, so the
+flag is False everywhere and the mix is gone. Before this item the rule was "the more recent of the two sources", which
+had put 17 countries on the World Bank definition without saying so.
+
+How the two definitions differ for the 52 countries with both (IMF minus World Bank, points of revenue): median
++0.2; within plus or minus 2 points in 36 countries; IMF lower in India (-11.1), Zimbabwe (-9.2), Honduras (-7.6),
+Jamaica (-5.4), Ethiopia (-4.9), Philippines (-3.5); IMF higher in Egypt (+22.5, World Bank value from 2015),
+Senegal (+8.2), Bangladesh and Burundi (+6.7), Kenya (+5.7), Malawi (+5.6), Ghana (+3.7). Net interest is interest
+paid minus interest received, so it sits below gross interest where governments hold interest-bearing assets
+(India, Zimbabwe), and the World Bank series is central government only, so it sits below net general-government
+interest where sub-national or social-security debt matters.
+
+The 17 countries that change value (World Bank -> IMF, % of revenue): Ethiopia 12.6 -> 7.8, Mozambique 15.1 ->
+13.3, Uganda 21.0 -> 22.4, Tanzania 13.9 -> 14.2, Angola 25.2 -> 25.6, Kyrgyzstan 2.6 -> 3.4, Botswana 3.4 -> 4.7,
+Mauritius 10.4 -> 11.7, El Salvador 14.3 -> 17.1, Guatemala 12.5 -> 13.0, Fiji 13.9 -> 14.6, Lesotho 3.5 -> 2.0,
+Madagascar 4.8 -> 4.6, Somalia 0.6 -> 0.6, Tajikistan 2.9 -> 2.8, Togo 14.0 -> 14.0, Central African Republic 4.2 ->
+1.9. Only Mozambique's fiscal capacity changed enough to move a locked baseline (13 entries with a government
+response refreshed with `make_baseline.py --fiscal`, which checks that no-response entries are unchanged). Headline
+unchanged (the default response is none). The test that encoded the old rule is updated in the same commit.

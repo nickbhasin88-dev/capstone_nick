@@ -197,8 +197,8 @@ strong year, times a debt-stress factor. In symbols: capacity = GHES_2023 x max(
 where g_typical is the country's median real growth in government health spending 2001 to 2023 (IHME), g_strong its
 75th percentile (Strong year; or the 90th percentile under Best years in Advanced), and the debt-stress factor s =
 clip(1 - (interest as % of revenue - 10) / 40, 0.25, 1): 1 when interest takes 10% of revenue or less, falling to
-0.25 at 40% or more. Interest as a share of revenue is the more recent of World Bank WDI and IMF World Economic
-Outlook figures.
+0.25 at 40% or more. Interest as a share of revenue is IMF World Economic Outlook (October 2026) net interest, with the World Bank
+series as a flagged fallback (not needed by any country).
 
 **Where the replacement goes.** Pro-rata to what was cut (default): in proportion to each service's loss. Hypothetical
 best case (triage): services are refilled in order of the model's own deaths averted per dollar (usually TB
@@ -651,9 +651,8 @@ Direction: the way the headline would most likely move if the item were resolved
   page only (L-11).
 - TB case fatality is placed in the year of loss; secondary cases all arrive within two years. Direction: Lower for
   2026 to 2030 TB deaths, Higher after (L-15).
-- Fiscal capacity is one strong year's growth held flat; debt-stress thresholds are unsourced; the WEO vintage is
-  untagged; interest definitions mix two sources; MOU amounts are nominal. Direction: Government Response options
-  only (L-29, L-31, L-34, L-35).
+- Fiscal capacity is one strong year's growth held flat; debt-stress thresholds are unsourced; MOU amounts are
+  nominal. Direction: Government Response options only (L-29, L-35).
 - The PMTCT cost review figures could not be verified. Direction: Unclear (L-32).
 - Sections 1 to 3 per-country files cannot be rebuilt from scripts in the repository. Direction: none (L-38).
 - India's TB systems and unspecified money follows its own line mix toward drug-resistant TB. Direction: Lower for
@@ -674,7 +673,9 @@ HIV-positive pregnancies, new infections) are read from the UNAIDS 2026 file dir
 the only HIV series still taken from the World Bank mirror is adult prevalence, used in a fallback and in the
 Validation-page regressions. L-11: the Lancet rate-ratio comparison on the Validation page now starts from UNAIDS
 2025 AIDS-related deaths instead of a GBD-2019 share of all deaths (Kenya's baseline 70,569 to 19,434 a year). L-31: the interest series is labelled with its IMF WEO release (October
-2026); the other macro series carry no recorded vintage and are labelled as such.
+2026); the other macro series carry no recorded vintage and are labelled as such. L-34: interest as a share of revenue
+now has one primary definition, IMF WEO net interest, available for every country; the World Bank gross-interest
+series is a flagged fallback that no country currently needs.
 
 ---
 

@@ -95,15 +95,20 @@ def imf_latest(index) -> pd.DataFrame:
 
 
 def apply(ci: pd.DataFrame) -> pd.DataFrame:
-    """interest_pct_revenue (+ _year, _source, _estimated) for every country: the more recent of World Bank and IMF
-    (ties: World Bank); otherwise the income-group median of the dashboard countries, marked estimated."""
+    """interest_pct_revenue (+ _year, _source, _estimated, flag_interest_alt_def) for every country. Primary definition
+    (Batch 7 item 7, logic review L-34): IMF WEO net interest as a share of revenue, the definition with the wider
+    coverage (every dashboard country). Where the IMF value is missing, the World Bank WDI interest-payments value is
+    kept and flag_interest_alt_def = True marks the different definition (gross interest paid, central government);
+    otherwise the income-group median of the dashboard countries, marked estimated. Before Batch 7 the rule was the
+    more recent of the two sources (ties: World Bank), which mixed the definitions silently in 17 countries."""
     ci = ci.copy()
     idx = ci.index
     wb, wy = ci["gc_xpn_intp_rv_zs"], pd.to_numeric(ci.get("gc_xpn_intp_rv_zs_year"), errors="coerce")
     im = imf_latest(idx) if OUT.exists() else pd.DataFrame(index=idx, columns=["net_interest_pct_revenue", "year"])
     iv, iy = pd.to_numeric(im["net_interest_pct_revenue"]), pd.to_numeric(im["year"])
-    use_imf = iv.notna() & (wb.isna() | (iy > wy.fillna(-1)))
+    use_imf = iv.notna()
     use_wb = wb.notna() & ~use_imf
+    ci["flag_interest_alt_def"] = use_wb
     ci["interest_pct_revenue"] = np.where(use_imf, iv, np.where(use_wb, wb, np.nan))
     ci["interest_pct_revenue_year"] = np.where(use_imf, iy, np.where(use_wb, wy, np.nan))
     ci["interest_pct_revenue_source"] = np.where(use_imf, IMF_LABEL, np.where(use_wb, WB_LABEL, ""))
@@ -134,7 +139,7 @@ def main():
         process(pd.read_csv(RAW))
     new = apply(ci)
     s = new["interest_pct_revenue_source"].str.split(" \\(").str[0].value_counts().to_dict()
-    print("  sources:", s, "| estimated:", int(new["interest_estimated"].sum()))
+    print("  sources:", s, "| estimated:", int(new["interest_estimated"].sum()), "| flag_interest_alt_def:", int(new["flag_interest_alt_def"].sum()))
     new.reset_index().to_csv(INPUTS_FILE, index=False)
     print("updated", INPUTS_FILE)
 

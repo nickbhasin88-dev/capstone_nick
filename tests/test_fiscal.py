@@ -40,14 +40,28 @@ def test_imf_net_interest_formula_and_actual_years():
     assert set(w["source"]) == {fi.SOURCE}
 
 
-def test_more_recent_source_wins_ties_go_to_world_bank():
+def test_imf_net_interest_is_primary_and_the_world_bank_fallback_is_flagged():
+    """Batch 7 item 7 (L-34): the IMF WEO net-interest definition is used wherever it exists (every dashboard
+    country); the World Bank gross-interest value is used only where the IMF value is missing, and then
+    flag_interest_alt_def marks the different definition. Replaces the pre-Batch-7 'more recent source wins' test."""
     for iso, r in CI.iterrows():
-        wb_y, imf_y = r["gc_xpn_intp_rv_zs_year"], r["interest_imf_year"]
-        if pd.notna(r["gc_xpn_intp_rv_zs"]) and pd.notna(r["interest_imf"]):
-            want = fi.IMF_LABEL if imf_y > wb_y else fi.WB_LABEL
-            assert r["interest_pct_revenue_source"] == want, iso
+        if pd.notna(r["interest_imf"]):
+            assert r["interest_pct_revenue_source"] == fi.IMF_LABEL, iso
+            assert r["interest_pct_revenue"] == pytest.approx(r["interest_imf"]), iso
+            assert not bool(r["flag_interest_alt_def"]), iso
     assert CI.loc["PAK", "interest_pct_revenue_source"] == fi.IMF_LABEL        # previously missing
-    assert CI.loc["PAK", "interest_pct_revenue"] == pytest.approx(CI.loc["PAK", "interest_imf"])
+    # a country whose IMF value is missing keeps the World Bank value, flagged
+    ci = CI.copy()
+    real_latest = fi.imf_latest
+    fi.imf_latest = lambda idx: real_latest(idx).assign(
+        net_interest_pct_revenue=lambda d: d["net_interest_pct_revenue"].where(d.index != "KEN"))
+    try:
+        out = fi.apply(ci)
+    finally:
+        fi.imf_latest = real_latest
+    assert out.loc["KEN", "interest_pct_revenue_source"] == fi.WB_LABEL
+    assert out.loc["KEN", "interest_pct_revenue"] == pytest.approx(CI.loc["KEN", "gc_xpn_intp_rv_zs"])
+    assert bool(out.loc["KEN", "flag_interest_alt_def"]) and not bool(out.loc["UGA", "flag_interest_alt_def"])
 
 
 def test_income_group_median_when_both_missing():

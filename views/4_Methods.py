@@ -381,13 +381,16 @@ with tabs[2]:
     - **g_strong**: the 75th percentile of that growth (a strong year), or the 90th (the best years), chosen under
       Advanced.
     - **s, the debt-stress factor**: 1 when interest takes 10% of revenue or less, falling linearly to 0.25 at 40%
-      or more. Interest as % of revenue is the more recent of two sources (ties: World Bank): World Bank WDI
-      interest payments (`GC.XPN.INTP.RV.ZS`), and IMF World Economic Outlook, October 2026 release (downloaded 13 October 2026), net interest = (primary
-      balance - overall balance) ÷ revenue (`GGXONLB_NGDP`, `GGXCNL_NGDP`, `GGR_NGDP`), latest actual year. WEO's
-      data API does not flag projections, so a year counts as actual only if it is before the country's first GDP
-      estimate year. Net interest is interest paid minus interest received, so it can be a little below interest
-      paid. Where neither source has a value, the median of the dashboard countries in the same income group is used
-      and marked "estimated". The source and year are shown in the fiscal panel.
+      or more. Interest as % of revenue is IMF World Economic Outlook net interest, October 2026 release (downloaded 13
+      October 2026): (primary balance - overall balance) ÷ revenue (`GGXONLB_NGDP`, `GGXCNL_NGDP`, `GGR_NGDP`), latest
+      actual year (WEO's data API does not flag projections, so a year counts as actual only if it is before the
+      country's first GDP estimate year). Net interest is interest paid minus interest received, so it can be a little
+      below interest paid. Every dashboard country has an IMF value; where one were missing, the World Bank WDI
+      interest-payments series (`GC.XPN.INTP.RV.ZS`, gross interest, central government) would be used and flagged
+      `flag_interest_alt_def` so the different definition is visible rather than silent (Batch 7, item 7; before it
+      the more recent of the two sources was used, which mixed the definitions in 17 countries). Where neither
+      source has a value, the median of the dashboard countries in the same income group is used and marked
+      "estimated". The source and year are shown in the fiscal panel.
     """)
     st.latex(r"s=\operatorname{clip}\!\Big(1-\frac{\text{interest \% of revenue}-10}{40},\ 0.25,\ 1\Big)")
     md(f"""
