@@ -1495,7 +1495,7 @@ def interest_text(F: dict) -> str:
     """'Interest: 38% of revenue (IMF WEO, 2024)', or '(estimated: median of low income countries)' (audit I-26)."""
     if F.get("interest_estimated"):
         return f"Interest: {F['interest_pct_revenue']:.0f}% of revenue (estimated: {F['interest_source']})"
-    src = "IMF WEO" if str(F.get("interest_source", "")).startswith("net interest") else "World Bank WDI"
+    src = "IMF WEO Oct 2026" if str(F.get("interest_source", "")).startswith("net interest") else "World Bank WDI"
     y = F.get("interest_year")
     return f"Interest: {F['interest_pct_revenue']:.0f}% of revenue ({src}{f', {int(y)}' if y == y and y else ''})"
 

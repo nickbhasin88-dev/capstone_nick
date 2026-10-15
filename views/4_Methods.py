@@ -160,7 +160,7 @@ with tabs[1]:
     | Region | World Bank region code recorded with the country in the IHME aid database (most common value) | IHME DAH database |
     | Income Group | World Bank income classification; if missing, GDP per person below $1,150 = low, below $4,500 = lower-middle, otherwise upper-middle | World Bank country entities (Gapminder mirror) |
     | US MOU | "MOU Signed" if the country is in KFF's tracker of signed America First MOU bilateral global health agreements (36 countries, data as of 8 October 2026); otherwise "No MOU". Never inferred from whether schedule data exist | KFF Tracker: America First MOU Bilateral Global Health Agreements (as of 2026-10-08) |
-    | GDP | Latest year the IMF reports as actual (not an estimate), in constant 2023 US$ (see *Units and Currency*) | IMF World Economic Outlook, IHME GDP |
+    | GDP | Latest year the IMF reports as actual (not an estimate), in constant 2023 US$ (see *Units and Currency*) | IMF World Economic Outlook (vintage not recorded in the per-country files; their projections run to 2031, consistent with the October 2026 release), IHME GDP |
     | Population | Same year as GDP | IMF World Economic Outlook |
     """)
 
@@ -382,7 +382,7 @@ with tabs[2]:
       Advanced.
     - **s, the debt-stress factor**: 1 when interest takes 10% of revenue or less, falling linearly to 0.25 at 40%
       or more. Interest as % of revenue is the more recent of two sources (ties: World Bank): World Bank WDI
-      interest payments (`GC.XPN.INTP.RV.ZS`), and IMF World Economic Outlook (October 2026) net interest = (primary
+      interest payments (`GC.XPN.INTP.RV.ZS`), and IMF World Economic Outlook, October 2026 release (downloaded 13 October 2026), net interest = (primary
       balance - overall balance) ÷ revenue (`GGXONLB_NGDP`, `GGXCNL_NGDP`, `GGR_NGDP`), latest actual year. WEO's
       data API does not flag projections, so a year counts as actual only if it is before the country's first GDP
       estimate year. Net interest is interest paid minus interest received, so it can be a little below interest

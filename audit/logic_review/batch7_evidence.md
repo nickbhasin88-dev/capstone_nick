@@ -105,3 +105,14 @@ d'Ivoire, Guatemala, Iraq, Jamaica, Jordan and Nicaragua; the Validation page no
 Lancet-method HIV row (five-year deaths, Full US Exit): Kenya 221,301 -> 60,943 (baseline deaths 70,569 -> 19,434 a
 year); Nigeria 260,631 -> 60,245; Mozambique 72,764 -> 46,230; South Africa 521,748 -> 133,701; Uganda 45,793 ->
 43,463; Honduras 163 -> 581. Validation page only; the model's own numbers do not change. 357 tests pass.
+
+## Item 6. L-31: the WEO vintage, labelled
+
+The interest series comes from `datasets/IMF_WEO_Oct2026_GG_balances_2026-10-13.csv`, which `fiscal_inputs.py`
+downloaded from the IMF SDMX API on 13 October 2026 (dataflow IMF.RES:WEO) and labels as the October 2026 release; the
+source label now reads "net interest (IMF WEO October 2026: primary minus overall balance)" in `country_inputs.csv`,
+the fiscal panel ("IMF WEO Oct 2026, 2024") and the Methods page. The per-country GDP, revenue, expenditure and debt
+series in `macro_data/<ISO3>.csv` were built by a script that is not in the repository (L-38) and carry no vintage in
+their headers; their projection horizon ends in 2031 for all 71 files, which is consistent with the October 2026
+release, so they are labelled "vintage not recorded; horizon consistent with October 2026" rather than asserted.
+Label only; no value changes.

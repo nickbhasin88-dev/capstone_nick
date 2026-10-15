@@ -38,7 +38,7 @@ DOWNLOADED = "2026-10-13"
 CODES = ["GGXONLB_NGDP", "GGXCNL_NGDP", "GGR_NGDP"]
 API = "https://api.imf.org/external/sdmx/3.0/data/dataflow/IMF.RES/WEO/%2B/{keys}.{codes}.A?c%5BTIME_PERIOD%5D=ge:2000"
 WB_LABEL = "interest payments (World Bank WDI)"
-IMF_LABEL = "net interest (IMF WEO: primary minus overall balance)"
+IMF_LABEL = "net interest (IMF WEO October 2026: primary minus overall balance)"
 
 
 def download(isos) -> pd.DataFrame:

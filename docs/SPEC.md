@@ -69,7 +69,7 @@ Country columns used (`country_inputs.csv`):
 | income group | `income_group` | `low_income`, `lower_middle_income`, `upper_middle_income` |
 | GHES | `ghes_2023` | government health spending, US$ |
 | growth | `ghes_growth_median`, `ghes_growth_p75`, `ghes_growth_p90` | shares a year; 0 if missing |
-| interest | `interest_pct_revenue` | % of revenue; never missing |
+| interest | `interest_pct_revenue` (`_year`, `_source`) | % of revenue; never missing. IMF World Economic Outlook, October 2026 release (`datasets/IMF_WEO_Oct2026_GG_balances_2026-10-13.csv`, downloaded 13 October 2026), with World Bank WDI as the fallback (Batch 7 item 7). The GDP, revenue and expenditure series in `macro_data/` carry no recorded WEO vintage; their projection horizon ends in 2031, consistent with the October 2026 release |
 | MOU | `mou_us_ref`, `mou_us_2026` .. `mou_us_2030` | nominal US$ |
 
 **Lines.**

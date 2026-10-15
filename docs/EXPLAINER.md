@@ -673,7 +673,8 @@ more than 2 points; vaccine deaths +0.2%). IMP-24: the HIV inputs (people living
 HIV-positive pregnancies, new infections) are read from the UNAIDS 2026 file directly, with WHO GHO as the fallback;
 the only HIV series still taken from the World Bank mirror is adult prevalence, used in a fallback and in the
 Validation-page regressions. L-11: the Lancet rate-ratio comparison on the Validation page now starts from UNAIDS
-2025 AIDS-related deaths instead of a GBD-2019 share of all deaths (Kenya's baseline 70,569 to 19,434 a year).
+2025 AIDS-related deaths instead of a GBD-2019 share of all deaths (Kenya's baseline 70,569 to 19,434 a year). L-31: the interest series is labelled with its IMF WEO release (October
+2026); the other macro series carry no recorded vintage and are labelled as such.
 
 ---
 
