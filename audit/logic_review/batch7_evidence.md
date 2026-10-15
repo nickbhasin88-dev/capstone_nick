@@ -95,3 +95,13 @@ out of the model's path; left as is.
 because ART coverage enters the HIV-positive TB case fatality). Headline **1,927,871 -> 1,927,847 (-0.001%)**; HIV
 998,535 -> 998,517; TB 463,973 -> 463,966; HIV infections 3,966,261 -> 3,936,613 (the lower UNAIDS 2025 incidence
 raises the cost per infection averted on the prevention line). 357 tests pass.
+
+## Item 5. L-11: UNAIDS AIDS-related deaths for the Lancet rate-ratio method
+
+The UNAIDS 2026 file includes "AIDS-related deaths" (all ages estimate, 2025) for 65 of the 70 countries, written
+to `hiv_deaths_unaids` by `unaids_inputs.py` (item 4). `health_model.LANCET_BASELINE` now uses it, with
+`hiv_deaths_est` (GBD-2019 HIV share of all deaths x crude death rate x population) as the fallback for Côte
+d'Ivoire, Guatemala, Iraq, Jamaica, Jordan and Nicaragua; the Validation page note says which applies. Change in the
+Lancet-method HIV row (five-year deaths, Full US Exit): Kenya 221,301 -> 60,943 (baseline deaths 70,569 -> 19,434 a
+year); Nigeria 260,631 -> 60,245; Mozambique 72,764 -> 46,230; South Africa 521,748 -> 133,701; Uganda 45,793 ->
+43,463; Honduras 163 -> 581. Validation page only; the model's own numbers do not change. 357 tests pass.

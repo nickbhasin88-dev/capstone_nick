@@ -772,7 +772,7 @@ with tabs[3]:
     | World Development Indicators | World Bank, via Gapminder's open-numbers mirror | See the table below | Model inputs |
     | Global Health Observatory | WHO (UNAIDS 2025 round for HIV; World Malaria Report for 2024 malaria) | People living with HIV; ART and PMTCT coverage; women receiving ARVs for PMTCT; malaria deaths, cases and incidence per 1,000 at risk; modelled ITN use | Model inputs (people in need, coverage, malaria deaths and trend) |
     | Systema Globalis | Gapminder (WHO estimates) | TB incidence and deaths (HIV-negative and HIV-positive); child (1-59 months) malaria, measles and pneumonia deaths (WHO/MCEE) | TB inputs; Validation page regressions |
-    | HIV share of deaths | Gapminder fasttrack (IHME GBD) | HIV deaths as % of all deaths | Validation page (Lancet rate ratios) |
+    | HIV share of deaths | Gapminder fasttrack (IHME GBD 2019) | HIV deaths as % of all deaths | Validation page (Lancet rate ratios), only for the 6 countries without a UNAIDS AIDS-deaths estimate; elsewhere UNAIDS AIDSinfo 2026 AIDS-related deaths, 2025 (Batch 7) |
     | Country classifications | World Bank (Gapminder mirror) | Income group | Header; TB costs |
     | MOU / co-financing sheet | Capstone team | US reference funding 2021-25 and 2026-2030 schedules (nominal US$, as written in the MOU) | America First MOUs scenario |
     | KFF Tracker: America First MOU Bilateral Global Health Agreements | KFF, data as of 8 October 2026 | Countries with a signed MOU (36), agreement date, US funding | Header MOU status; which countries can run America First MOUs |

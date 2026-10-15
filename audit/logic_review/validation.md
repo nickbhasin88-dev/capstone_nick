@@ -139,6 +139,19 @@ Compared directly only where the scope matches; otherwise the difference is stat
 | UNAIDS 2025 (Goals model) | PEPFAR ending | all PEPFAR countries | 2025-2029 | AIDS deaths | more than 4M additional AIDS deaths; 6.6M new infections | Scope overlaps partly: PEPFAR only, all its countries; the model's Full US Exit HIV deaths 2026-30 are 1.0M in 70 countries (71.5% of country-coded HIV aid), infections 4.0M |
 | ten Brink et al. 2025, *Lancet HIV* (Optima) | 24% cut by the five largest donors, plus PEPFAR discontinued | 26 modelled countries, extrapolated to all LMICs (Table C3) | 2025-2030 | HIV deaths and infections | 0.77M-2.93M additional HIV deaths, 4.4M-10.8M infections (all LMICs) | Country-level comparison above for the 15 overlapping countries (ratio 0.39 deaths, 0.36 infections) |
 
+## 5b. Lancet rate-ratio baseline (Batch 7, item 5)
+
+The Validation page's third method applies Cavalcanti et al. 2025's rate ratios to baseline HIV deaths. Those were
+the IHME GBD-2019 HIV share of all deaths times the crude death rate (L-11); they are now UNAIDS AIDSinfo 2026
+AIDS-related deaths for 2025 (65 of 70 countries; the old value remains for Côte d'Ivoire, Guatemala, Iraq, Jamaica,
+Jordan and Nicaragua). Baseline HIV deaths and the Lancet-method HIV estimate over five years, Full US Exit: Kenya
+70,569 -> 19,434 a year, Lancet estimate 221,301 -> 60,943 (model 78,750); Nigeria 140,304 -> 32,431, 260,631 ->
+60,245 (model 110,906); Mozambique 60,011 -> 38,127, 72,764 -> 46,230 (model 108,429); South Africa 162,773 ->
+41,712, 521,748 -> 133,701 (model 89,099); Uganda 20,442 -> 19,402, 45,793 -> 43,463 (model 79,924); Honduras 86 ->
+304, 163 -> 581 (model 1,060). The GBD-2019 share overstated current AIDS deaths by 2 to 4 times in the large
+programmes (AIDS deaths have fallen since 2019), so the Lancet-method HIV row now sits below the model in most
+countries rather than above it.
+
 ## 6. UNAIDS year used for each country's HIV transmission rate
 
 `art_transmission_rate` = new infections / (PLHIV - people with suppressed viral load), UNAIDS AIDSinfo 2026 estimates,

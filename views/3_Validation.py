@@ -300,10 +300,14 @@ if len(lp):
                  f"US\\${r.us_aid_pc_after:,.2f} per person in this scenario ({r.us_cut_share:.0%} of US money in the "
                  "modelled programs, net of any government replacement).")
 row = I["ci"].loc[iso3]
-if not pd.isna(row.get("hiv_deaths_est", np.nan)):
+if not pd.isna(row.get("hiv_deaths_unaids", np.nan)):
+    notes.append(f"HIV baseline deaths ({num(row['hiv_deaths_unaids'])} a year) = UNAIDS AIDSinfo 2026 estimates, "
+                 f"AIDS-related deaths, all ages, {int(row['hiv_deaths_unaids_year'])}.")
+elif not pd.isna(row.get("hiv_deaths_est", np.nan)):
     notes.append(f"HIV baseline deaths ({num(row['hiv_deaths_est'])} a year) = IHME's HIV share of all deaths in "
                  f"{int(row['hiv_death_share_year'])} (Gapminder) x the current crude death rate x population; "
-                 f"{int(row['hiv_death_share_year'])} is the latest year in that series.")
+                 f"{int(row['hiv_death_share_year'])} is the latest year in that series (UNAIDS has no estimate for "
+                 "this country).")
 notes.append("The Poisson regression applies the change in child malaria deaths proportionally to all-age malaria "
              "deaths, and its under-5 estimate covers all child health and vaccine aid, so it is compared with the "
              "immunization bucket.")

@@ -1625,7 +1625,10 @@ def poisson_projection(res: dict, inputs: dict) -> pd.DataFrame:
 LANCET_FUNDING = np.array([0.71, 1.37, 5.76])
 LANCET_RR = {"HIV": np.array([0.83, 0.81, 0.50]), "Malaria": np.array([0.94, 0.78, 0.58]),
              "Maternal": np.array([0.91, 0.83, 0.67])}
-LANCET_BASELINE = {"HIV": "hiv_deaths_est", "Malaria": "malaria_deaths", "Maternal": "sh_mmr_dths"}
+# Batch 7 (L-11): HIV baseline deaths are UNAIDS AIDS-related deaths (country_inputs.csv hiv_deaths_unaids, 2025,
+# unaids_inputs.py); hiv_deaths_est (the GBD-2019 HIV share of all deaths x the crude death rate) is the fallback for
+# the 6 countries UNAIDS does not cover
+LANCET_BASELINE = {"HIV": ("hiv_deaths_unaids", "hiv_deaths_est"), "Malaria": "malaria_deaths", "Maternal": "sh_mmr_dths"}
 
 
 def lancet_log_rr(bucket: str, funding_pc: float) -> float:
@@ -1656,7 +1659,8 @@ def lancet_projection(res: dict, inputs: dict) -> pd.DataFrame:
     f1 = f0 * (1 - us_cut)
     out = []
     for b, col in LANCET_BASELINE.items():
-        deaths = _v(row, col)
+        cols = col if isinstance(col, tuple) else (col,)
+        deaths = next((v for v in (_v(row, c) for c in cols) if not np.isnan(v)), np.nan)
         if np.isnan(deaths):
             continue
         ratio = np.exp(lancet_log_rr(b, f1) - lancet_log_rr(b, f0))

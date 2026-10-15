@@ -41,6 +41,7 @@ Country columns used (`country_inputs.csv`):
 | new HIV infections | `sh_hiv_incd_tl` (`_year`, `_source`) | number a year: UNAIDS 2026 estimates, all ages, 2025; the WDI mirror (2024) where missing |
 | HIV transmission rate per unsuppressed person | `art_transmission_rate` (`_lo`, `_hi`, `_year`, `_source`) | UNAIDS new infections / (PLHIV - suppressed), latest year with all three (`hiv_transmission_inputs.py`); WHO-region median of the dashboard countries where missing |
 | population | `sp_pop_totl` | |
+| AIDS-related deaths | `hiv_deaths_unaids` (`_year`, `_source`) | UNAIDS 2026 estimates, all ages, 2025 (`unaids_inputs.py`); Validation page only (Lancet rate-ratio baseline); `hiv_deaths_est` (GBD-2019 share x crude death rate) where missing |
 | TB incidence | `all_forms_of_tb_incidence_estimated` | number a year (not `sh_tbs_incd`, which is per 100,000) |
 | TB detection % | `sh_tbs_dtec_zs` | capped at 100 (flagged when above) |
 | h (TB-HIV share) | `tb_hiv_share` | 0 if missing |
