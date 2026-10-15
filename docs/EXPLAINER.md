@@ -663,6 +663,14 @@ Direction: the way the headline would most likely move if the item were resolved
 
 ---
 
+**Closed in Batch 7 (15 October 2026).** L-43, the split of unspecified aid, is done with a stated gap: 34 of the 210
+country-disease lines use a WHO-region median because the country has no Global Fund grant for that disease, and the
+lines where donor money would buy more than the donor-funded pool are listed in `audit/logic_review/batch7_evidence.md`.
+The headline chain in the changelog was re-run at each batch's own commit and corrected (before Batch 1: 1,969,304;
+Batch 2 raised HIV deaths by 9%).
+
+---
+
 ## 7. Likely Questions And Answers
 
 **Why are there more deaths than people losing coverage in some places?** There are not. Every service's five-year

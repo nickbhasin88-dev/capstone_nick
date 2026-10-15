@@ -6,9 +6,9 @@ Scope: Batch 1 (the "Do now" items, commits `cff29af`..`91d48fa`), the malaria u
 quantity and the value carries a stated range. Full evidence: `batch2_evidence.md`, `batch34_evidence.md`,
 `batch4b_evidence.md`, `batch56_evidence.md`; the specification is `docs/SPEC.md`.
 
-Headline (all countries, Full US Exit, central, deaths 2026-2030) at each boundary: before Batch 1 2,017,000 (rounded;
-`91d48fa` before/after table) -> after Batch 1 and the under-5 share 2,055,422 -> after Batch 2 (not changed by it
-in this measure; HIV infections 1.55M -> 4.33M, further deaths changed) 2,055,422 -> after Batch 3+4 1,379,963 ->
+Headline (all countries, Full US Exit, central, deaths 2026-2030) at each boundary, each re-run at its own commit
+with its own inputs (Batch 7 item 2): before Batch 1 1,969,304 -> after Batch 1 1,945,605 -> after the malaria
+under-5 share 1,965,386 -> after Batch 2 2,055,422 (HIV 1,006,114 -> 1,096,151) -> after Batch 3+4 1,379,963 ->
 after Batch 4b 1,695,601 -> after Batch 5+6 1,927,405.
 
 ## Batch 1: "Do now" items (14 October 2026)
@@ -86,6 +86,19 @@ after Batch 4b 1,695,601 -> after Batch 5+6 1,927,405.
 | `imm_legacy_u5mr_scaling` (new switch) | - | 0 (constant): 1 restores the old vaccine rule; `imm_deaths_per_child_ref` and `imm_u5_share` relabelled legacy | sensitivity | `7464034` |
 | Vaccine scope statement | none | dashboard, Methods and Validation state that DTP, polio and BCG are excluded (no citable per-child value; Shattock et al. 2024 give totals only), HPV excluded (adolescent), JE unmapped: a conservative floor | | `7464034` |
 | Validation | Validation page framed to pass; Gavi row circular | `validation.md` with a stated 0.5-2x band, country-level Optima, UNAIDS, WHO TB, WMR and Toor comparisons, explained flags; Methods section | IMP-19 / L-47 | `a4cd2c2` |
+
+## Batch 7: closing the small open items (15 October 2026)
+
+Evidence: `batch7_evidence.md`. Headline before the batch 1,927,405.
+
+| Change | Old | New | Source | Commit |
+|---|---|---|---|---|
+| L-43 status reconciled (item 1) | listed open in the findings table; done in the changelog | done, with stated gap: 34 of 210 country-disease lines use a WHO-region median for the split of unspecified money; the capped lines are listed in `batch7_evidence.md` | no model change | (item 1 commit) |
+| Headline chain corrected (item 2) | 2,017,000 (rounded) -> 2,055,422 -> 2,055,422 -> ... | 1,969,304 -> 1,945,605 -> 1,965,386 -> 2,055,422 -> 1,379,963 -> 1,695,601 -> 1,927,405, each re-run at its own commit | `batch7_evidence.md` item 2 | (item 2 commit) |
+
+### Closed in Batch 7
+
+- L-43 (unspecified money): done with stated gap, 34 of 210 lines on regional medians; capped cases listed in `batch7_evidence.md` item 1.
 
 ## Open items and known limitations (one line each)
 
