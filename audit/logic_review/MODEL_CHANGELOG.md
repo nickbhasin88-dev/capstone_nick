@@ -97,7 +97,7 @@ after Batch 4b 1,695,601 -> after Batch 5+6 1,927,405.
 - **L-18 / IMP-15 (partly done)**: the vaccine unit is still a full-schedule child at `uc_imm` US$87; donor money buys specific antigens; no cost per antigen.
 - **L-42 (done, with a stated gap)**: vaccine deaths exclude DTP, polio and BCG for lack of a citable per-child value; a conservative floor.
 - **Vaccine timing beyond 2035**: lifetime deaths averted after the 2031-2035 window (adult hepatitis B, meningitis A and yellow fever at age 5+) are not counted anywhere.
-- **test_paths.py::test_late_vaccine_cut_committed (5 parametrised cases) fails after V2**: it asserts the pre-batch cohort weights ("60% of a cohort's deaths fall after its first year"); the VIMC timing puts 64-100% of under-5 deaths in the first two years. Not edited (rule: never edit tests to make them pass); recorded for the user to decide.
+- Test test_late_vaccine_cut_committed updated from the superseded 60% assumption to the VIMC-based timing rule (approved). It now checks that the committed share of a 2030-only vaccine cut equals the share implied by the country's own timing inputs (lags 1-5 of imm_dpc_lag0..9 over lags 0-5), that within-window plus committed deaths equal the cohort's total, and that a late cut still commits deaths after 2030.
 - **A3 case management**: the intervention-specific share is applied to malaria treatment as well as nets and spraying; the alternative (GHED all-source share for treatment) would give 84,075 instead of 123,822 treatment deaths under Full US Exit.
 - **L-06 / IMP-06**: aid baseline is 2021-23; 2025 US cuts already in force are not netted out; coverage is 2024-25.
 - **L-08 / IMP-08 (partly done)**: MOU co-financing commitments are not modelled (labelled).
