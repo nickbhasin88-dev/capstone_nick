@@ -154,7 +154,7 @@ no loss (gains are not modelled).
 | Donor Scenario | What it assumes | Source |
 |---|---|---|
 | US Bilateral Exit + Multilateral Withdrawals | US money through Bilateral Agency, NGOs, Gates Direct and Other channels: -100%; US contributions through WHO, Gavi and UNFPA: -100%; US Global Fund pledge: -23% (US$6.0 billion to US$4.6 billion, so 77% is kept); US money through UNICEF, UNAIDS and development banks and all other donors unchanged | US announcements: WHO exit effective January 2026, Gavi funding stopped June 2025; Global Fund Eighth Replenishment, November 2025 |
-| America First MOUs | For the 16 countries with a signed Memorandum of Understanding and a funding schedule: US direct aid follows the country's own schedule year by year (cut in year t = 1 - US funding that year / the 2021-2025 reference), used exactly as written; a funding increase is a 0% cut; a schedule that ends in 2028 holds its 2028 cut; US multilateral exits as above; co-financing commitments are not modelled | KFF America First MOU tracker (signed status); the team's MOU and co-financing sheet (schedules) |
+| America First MOUs | For the 16 countries with a signed Memorandum of Understanding and a funding schedule: US direct aid follows the country's own schedule year by year (cut in year t = 1 - US funding that year / the 2021-2025 reference), used exactly as written; a funding increase is a 0% cut; a schedule that ends in 2028 holds its 2028 cut; US multilateral exits as above; co-financing commitments are not modelled; amounts are nominal US$ as written (a `mou_deflate` switch in the parameter file expresses them in 2023 US$ at an assumed 2% a year, raising the preset's deaths by 14%) | KFF America First MOU tracker (signed status); the team's MOU and co-financing sheet (schedules) |
 | IHME 2025 Preliminary Estimates | Each donor x channel x disease cell changes by IHME's 2025 preliminary total divided by its 2021-23 average (a global ratio applied to the country's own mix; cells under US$20 million a year use the donor x disease ratio; clipped to 0 to 1.5) | IHME DAH database, 2025 preliminary estimates |
 | Total-Aid Cuts (OECD) Applied to Health Aid | Each donor's 2025 change in total official development assistance applied to its health aid, bilateral and multilateral alike: United States -57%, Germany -17.4%, France -10.9%, United Kingdom -10.8%, Japan -5.6% | OECD preliminary 2025 ODA data, April 2026 (total aid, not health-specific; labelled as such) |
 | Global Fund & Gavi Shortfalls | Every donor's money through Gavi falls by the Gavi Funding Cut (%) slider (default 15%) and through the Global Fund by the Global Fund Funding Cut (%) slider (default 20%), against each fund's 2021-23 disbursements; no US multilateral exit is added | Gavi 6.0 pledges vs 2021-23 spending (our estimate); Global Fund Eighth Replenishment US$12.64 billion vs US$15.7 billion in the Seventh (about -20%); KFF and Aidspan allocation data are the slider marks |
@@ -651,8 +651,8 @@ Direction: the way the headline would most likely move if the item were resolved
   page only (L-11).
 - TB case fatality is placed in the year of loss; secondary cases all arrive within two years. Direction: Lower for
   2026 to 2030 TB deaths, Higher after (L-15).
-- Fiscal capacity is one strong year's growth held flat; debt-stress thresholds are unsourced; MOU amounts are
-  nominal. Direction: Government Response options only (L-29, L-35).
+- Fiscal capacity is one strong year's growth held flat; debt-stress thresholds are unsourced. Direction:
+  Government Response options only (L-29).
 - The PMTCT cost review figures could not be verified. Direction: Unclear (L-32).
 - Sections 1 to 3 per-country files cannot be rebuilt from scripts in the repository. Direction: none (L-38).
 - India's TB systems and unspecified money follows its own line mix toward drug-resistant TB. Direction: Lower for
@@ -675,7 +675,9 @@ Validation-page regressions. L-11: the Lancet rate-ratio comparison on the Valid
 2025 AIDS-related deaths instead of a GBD-2019 share of all deaths (Kenya's baseline 70,569 to 19,434 a year). L-31: the interest series is labelled with its IMF WEO release (October
 2026); the other macro series carry no recorded vintage and are labelled as such. L-34: interest as a share of revenue
 now has one primary definition, IMF WEO net interest, available for every country; the World Bank gross-interest
-series is a flagged fallback that no country currently needs.
+series is a flagged fallback that no country currently needs. L-35: MOU amounts stay nominal by default and are
+labelled so on the dashboard; a `mou_deflate` switch (2% a year US$ inflation, labelled assumption, range 1-4%)
+expresses them in 2023 US$, which raises the America First MOUs preset from 364,586 to 416,307 deaths.
 
 ---
 

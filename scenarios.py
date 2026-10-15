@@ -72,10 +72,25 @@ def mou_signed(path=None) -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame(columns=["iso3", "country", "agreement_date"])
 
 
-def mou_schedule(ci: pd.DataFrame, iso3: str):
+MOU_PRICE_BASE_YEAR = 2023      # the 2021-25 reference is centred on 2023; deflation (mou_deflate = 1) is relative to it
+
+
+def mou_deflate_settings(ptab=None) -> tuple:
+    """(deflate on?, US$ inflation a year) from model_params.csv (central values; mou_deflate and mou_us_inflation,
+    Batch 7 item 8). Read from the parameter file, not the dashboard's parameter editor: the switch is a
+    sensitivity setting, and the default (0, nominal as written) is what the dashboard shows."""
+    ptab = hm.load_params() if ptab is None else ptab
+    on = "mou_deflate" in ptab.index and float(ptab.loc["mou_deflate", "central"]) >= 0.5
+    infl = float(ptab.loc["mou_us_inflation", "central"]) if "mou_us_inflation" in ptab.index else 0.0
+    return on, infl
+
+
+def mou_schedule(ci: pd.DataFrame, iso3: str, deflate=None):
     """(yearly cuts 2026-2030, last year with schedule data) from the team's MOU sheet, or (None, None) without a
     schedule. Cut = 1 - US funding that year / 2021-25 reference, used as written: never rescaled; a funding increase
-    is a 0% cut; years after the schedule ends hold its last year's cut.
+    is a 0% cut; years after the schedule ends hold its last year's cut. Amounts are nominal US$ as written in the
+    MOU; with mou_deflate = 1 in model_params.csv (or deflate=(True, inflation)) each year's amount is first divided
+    by (1 + inflation)^(year - 2023) so that it is in 2023 US$ like the reference (Batch 7 item 8, L-35).
     Feeds: the America First MOUs scenario and its schedule chart."""
     if iso3 not in ci.index:
         return None, None
@@ -83,10 +98,13 @@ def mou_schedule(ci: pd.DataFrame, iso3: str):
     ref = r.get("mou_us_ref")
     if pd.isna(ref) or ref <= 0 or pd.isna(r.get(f"mou_us_{YEARS[0]}")):
         return None, None
+    on, infl = mou_deflate_settings() if deflate is None else deflate
     cuts, last, end = [], None, None
     for y in YEARS:
         v = r.get(f"mou_us_{y}")
         if pd.notna(v):
+            if on:
+                v = v / (1.0 + infl) ** (y - MOU_PRICE_BASE_YEAR)
             last, end = float(np.clip(1 - v / ref, 0.0, 1.0)), y
         cuts.append(last)
     return cuts, end
@@ -116,9 +134,13 @@ def mou_schedule_text(ci: pd.DataFrame, iso3: str, country_name: str) -> str:
     parts = [f"{c:.0%}" for c in cuts]
     parts[0] += f" ({YEARS[0]})"
     parts[-1] += f" ({YEARS[-1]})"
+    on, infl = mou_deflate_settings()
+    basis = (f"Cuts compare MOU amounts in 2023 US$ (deflated at {infl:.0%} a year, an assumption; mou_deflate = 1) with the 2021-2025 reference."
+             if on else "Cuts compare MOU amounts (nominal US$, as written in the MOU) with the 2021-2025 reference; "
+             "inflation over 2026-2030 is not deducted, so the real cut is somewhat deeper (mou_deflate = 1 in the parameter file expresses them in 2023 US$).")
     return (f"US bilateral aid cut: {', '.join(parts)}, per {country_name}'s MOU"
             + (f". Schedule ends {end}; {end} level held through {YEARS[-1]}" if end < YEARS[-1] else "")
-            + ". Cuts compare MOU amounts (nominal US$, as written in the MOU) with the 2021-2025 reference.")
+            + ". " + basis)
 
 
 def shortfall_cuts(opts: dict) -> tuple:

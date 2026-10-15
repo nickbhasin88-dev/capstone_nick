@@ -142,7 +142,10 @@ institutions) has cut 0.
 **MOU schedule** for country i (America First MOUs only; countries without a schedule cannot run this preset):
 - Requires `mou_us_ref` > 0 and `mou_us_2026` present.
 - For each year y = 2026..2030: if `mou_us_<y>` is present, cut_y = clip(1 - mou_us_<y> / mou_us_ref, 0, 1);
-  otherwise the last available year's cut is held.
+  otherwise the last available year's cut is held. Amounts are nominal US$ as written (default). With `mou_deflate`
+  = 1 (constant switch, `model_params.csv`; Batch 7 item 8), mou_us_<y> is first divided by (1 + mou_us_inflation)^(y -
+  2023), mou_us_inflation = 0.02 (0.01-0.04, labelled assumption), and the reference is unchanged (a 2021-25 average
+  centred on 2023). The switch is read from the parameter file at its central value, not from the dashboard editor.
 - On US direct-channel rows the yearly cut is x_t = pair[US, c] if defined, else cut_t; then
   1 - (1 - x_t)(1 - y), clipped to -1..1.
 - All other rows use the same cut every year.

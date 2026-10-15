@@ -142,3 +142,17 @@ Madagascar 4.8 -> 4.6, Somalia 0.6 -> 0.6, Tajikistan 2.9 -> 2.8, Togo 14.0 -> 1
 1.9. Only Mozambique's fiscal capacity changed enough to move a locked baseline (13 entries with a government
 response refreshed with `make_baseline.py --fiscal`, which checks that no-response entries are unchanged). Headline
 unchanged (the default response is none). The test that encoded the old rule is updated in the same commit.
+
+## Item 8. L-35: MOU amounts, nominal by default, with a deflation switch
+
+The MOU schedules divide nominal US$ amounts for 2026-2030 by a nominal 2021-25 reference, so inflation over the period
+is not deducted and the real cut is understated. Two parameters appended to `model_params.csv`: `mou_deflate`
+(constant switch, default 0 = nominal, as written) and `mou_us_inflation` (0.02, range 0.01-0.04, labelled
+assumption). With the switch on, `scenarios.mou_schedule` divides each year's amount by (1 + 0.02)^(year - 2023) and
+leaves the reference (a 2021-25 average centred on 2023) unchanged. No forward US inflation projection is on disk:
+the IMF file in `datasets/` holds general-government balances for the model countries, and the country US$ GDP
+deflators in `macro_data/` (Kenya's implies 1.26 by 2030) are the wrong concept for US-dollar budget amounts, whose
+purchasing power follows US inflation. The dashboard caption under the MOU scenario now says the amounts are nominal
+and that the switch exists. Kenya's schedule: nominal cuts 0%, 4.5%, 16.1%, 19.8%, 60.3%; deflated at 2%: 4.0%,
+11.8%, 24.0%, 28.7%, 65.4%. America First MOUs preset, 16 countries, central: nominal 364,586 deaths; deflated at 2%
+416,307 (+14%). Default unchanged; headline unchanged; 357 tests pass (the MOU tests check the default schedules).
