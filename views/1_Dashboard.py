@@ -723,7 +723,9 @@ FOCUS_COLORS = {"hiv": th.DISEASE_COLORS["HIV"], "tb": th.DISEASE_COLORS["TB"], 
                 "nch": th.DISEASE_COLORS["Immunization"], "rmh": th.PINK, "swap_hss_total": th.AMBER}
 FOCUS_OTHER = ["oid", "ncd", "other", "unalloc"]
 ALL_OTHER = "All other"
-MAX_PROGRAM_AREAS = 6                              # inside one focus area: the largest 6, then "All Other"
+SMALLER = "Smaller categories"                     # inside one focus area: not "All other", which would sit next to
+                                                   # IHME's own "Other" program area in the same chart
+MAX_PROGRAM_AREAS = 6                              # inside one focus area: the largest 6, then "Smaller categories"
 PA_SHADES = (1.0, 0.8, 0.64, 0.5, 0.38, 0.28)      # opacity of the focus area's color, darkest = largest
 
 if pd.isna(crow["dah_file"]):
@@ -754,7 +756,7 @@ else:
         groups = [(pas3[c], th.blend(base, PA_SHADES[i]), {c: pas3[c]}) for i, c in enumerate(top)]
         rest = {c: pas3[c] for c in ranked.index[MAX_PROGRAM_AREAS:]}
         if rest:
-            groups.append((ALL_OTHER, th.OTHER, rest))
+            groups.append((SMALLER, th.OTHER, rest))
 
     members = [c for _, _, m in groups for c in m if c in df3.columns]
     byyr = df3.groupby("year")[members].sum() / 1e3                  # thousands of US$ -> millions
