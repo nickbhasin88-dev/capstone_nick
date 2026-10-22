@@ -526,7 +526,8 @@ def backfill_regression_text(reg) -> str:
 
 
 def _controls(iso3, country_name, I) -> dict:
-    """Slim scenario bar under the story headline: scenario | government response | Advanced (popover)."""
+    """Scenario bar under the story headline: Donor Scenario (+ how fast the cut arrives) | Government Response (+ the
+    fiscal-space settings) | Advanced (popover: where replacement money goes, a second scenario, model parameters)."""
     ci = I["ci"]
     ctx = st.session_state.get("model_ctx", {})
     if "m_trend" not in st.session_state:
@@ -542,13 +543,15 @@ def _controls(iso3, country_name, I) -> dict:
             preset, group, note = donor_scenario_select(ci, iso3, country_name, "m_preset")
             if note:
                 st.caption(_esc(note))
+            # how fast the cut arrives: fixed for the MOU schedule and the announced phase-out (their charts are drawn
+            # under the controls); every other scenario chooses it here, under the scenario
+            shape = None
+            if preset not in (MOU, scn.ANNOUNCED):
+                shape = paths_ui.path_selector()
             schedule, sched_end = scn.mou_schedule(ci, iso3) if preset == MOU else (None, None)
             if preset == MOU:
                 st.caption(_esc(scn.mou_schedule_text(ci, iso3, country_name)))
             opts = _preset_options(preset, ci, iso3, country_name, "m")
-        # the cut's timing: the MOU schedule and the announced phase-out are fixed (their charts are drawn under the
-        # three controls); every other scenario's path selector lives in the Advanced popover
-        shape = None
         if preset == MOU:
             shape = MOU_SHAPE
         elif preset == scn.ANNOUNCED:
@@ -575,6 +578,14 @@ def _controls(iso3, country_name, I) -> dict:
                 else:
                     st.caption("No data on this government's total spending, so a budget increase can't be modelled.")
                     mode = "none"
+            # fiscal space: how far the health budget can be pushed, and whether replacement is capped by it
+            ceiling = CEILINGS[st.radio("Fiscal-Space Ceiling", list(CEILINGS), key="m_effort",
+                                        disabled=(mode == "none"), format_func=title_case,
+                                        help="How hard can the health budget be pushed? Capacity = government health "
+                                             "spending x (that growth rate minus the country's typical growth) x a "
+                                             "debt-stress factor, every year.")]
+            cap = st.checkbox("Cap Replacement at Fiscal Space", value=True, key="m_cap",
+                              disabled=(mode in ("none", "max")))
             abuja = taxup = False
             if SHOW_GOV_OPTIONS:
                 abuja = st.checkbox("Health Budget Reaches the Abuja Target", key="m_abuja", disabled=(mode == "gradual"),
@@ -599,21 +610,11 @@ def _controls(iso3, country_name, I) -> dict:
             st.markdown("<div class='ed-adv-spacer'></div>", unsafe_allow_html=True)   # lines up with the selects
             adv = st.popover("Advanced", icon=":material/tune:", width="stretch")
         with adv:
-            if shape is None:                                   # how fast the cut arrives (scenarios without a schedule)
-                shape = paths_ui.path_selector()
-                st.divider()
-            ceiling = CEILINGS[st.radio("Fiscal-Space Ceiling", list(CEILINGS), key="m_effort",
-                                        disabled=(mode == "none"), format_func=title_case,
-                                        help="How hard can the health budget be pushed? Capacity = government health "
-                                             "spending x (that growth rate minus the country's typical growth) x a "
-                                             "debt-stress factor, every year.")]
             alloc = ALLOCS[st.radio("Where Replacement Money Goes", list(ALLOCS), key="m_alloc",
                                     disabled=(mode == "none"), format_func=title_case,
                                     help="Hypothetical best case: an optimisation rule, not how governments are known to "
                                          "behave. It refills the highest-priority services first (usually TB "
                                          "treatment, vaccines, ART) before anything else.")]
-            cap = st.checkbox("Cap Replacement at Fiscal Space", value=True, key="m_cap",
-                              disabled=(mode in ("none", "max")))
             trend = scn.DEFAULT_MORTALITY_TREND          # no setting: the dashboard shows coverage, not deaths
             st.divider()
             cmp = None
