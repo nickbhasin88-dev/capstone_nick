@@ -312,6 +312,30 @@ hr {{ border-color: {RULE} !important; }}
 .ed-country {{ font-family: {SERIF}; font-size: 36px; font-weight: 600; line-height: 1.05; color: {INK};
                margin: 0 0 0.5rem; letter-spacing: -0.015em; }}
 
+/* popover buttons (Advanced, Channel Settings) show their whole label; popover bodies are wide enough for their
+   multiselect tags, which wrap instead of being cut off */
+[data-testid="stPopover"] button p {{ white-space: nowrap; overflow: visible; text-overflow: clip; }}
+[data-testid="stPopoverBody"] {{ min-width: min(460px, 92vw); }}
+/* multiselect tags (Streamlit 1.65: stMultiSelectTagsContainer) wrap their text instead of ending in "..." */
+[data-testid="stMultiSelectTagsContainer"] span {{ overflow: visible !important; text-overflow: clip !important;
+    white-space: normal !important; height: auto !important; line-height: 1.3; }}
+[data-testid="stMultiSelectTagsContainer"] > span > span {{ padding-top: 3px; padding-bottom: 3px; }}
+
+/* the Advanced button sits level with the Donor Scenario / Government Response selects (their label height) */
+.ed-adv-spacer {{ height: 1.75rem; }}
+@media (max-width: 640px) {{ .ed-adv-spacer {{ display: none; }} }}
+
+/* header facts: label over value, separated by thin vertical rules */
+/* every fact carries a left rule; the container's negative left margin + overflow hide the rule of whichever fact
+   starts a row, so a wrapped row never begins with a stray divider */
+.ed-facts {{ display: flex; flex-wrap: wrap; align-items: stretch; row-gap: 8px; margin: 6px 0 2px -16px;
+             overflow: hidden; }}
+.ed-fact {{ padding: 0 16px; border-left: 1px solid {RULE}; margin-left: -1px; }}
+.ed-fact .k {{ font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: {MUTED}; }}
+.ed-fact .v {{ font-size: 16px; font-weight: 600; color: {INK}; margin-top: 2px; white-space: nowrap; }}
+/* header map: centred in its column, horizontally and vertically */
+.st-key-hdr .stPlotlyChart {{ display: flex; justify-content: center; }}
+
 .ed-units {{ font-family: {SANS}; font-size: 12px; font-weight: 400; color: {MUTED}; margin-left: 14px;
              letter-spacing: 0; vertical-align: middle; }}
 @media (max-width: 720px) {{ .ed-units {{ display: block; margin: 2px 0 0; }} }}
@@ -325,23 +349,28 @@ hr {{ border-color: {RULE} !important; }}
     {{ margin-bottom: 0 !important; }}
 .ed-pill {{ background: {SURFACE_TINT}; border: 1px solid {RULE}; border-radius: 10px; padding: 8px 12px;
             display: flex; flex-direction: column; justify-content: space-between; min-width: 0; line-height: 1.25; }}
-.ed-pill .l {{ display: block; font-size: 11px; color: {MUTED}; overflow-wrap: anywhere; }}
-.ed-pill .v {{ display: block; font-size: 14px; font-weight: 700; color: {INK}; margin-top: 4px; }}
-.ed-pill .n {{ display: block; font-size: 11.5px; color: {MUTED}; margin-top: 2px; }}
+.ed-pill .l {{ display: block; font-size: 13px; color: {MUTED}; overflow-wrap: anywhere; }}
+.ed-pill .v {{ display: block; font-size: 16px; font-weight: 700; color: {INK}; margin-top: 4px; }}
+.ed-pill .n {{ display: block; font-size: 13px; color: {MUTED}; margin-top: 2px; }}
 .st-key-hdr .ed-pill {{ min-height: 64px; }}
 .ed-pills.lg {{ gap: 12px; margin: 0.4rem 0 1rem !important; }}
 .ed-pills.lg .ed-pill {{ padding: 12px 16px; min-height: 96px; }}
-.ed-pills.lg .l {{ font-size: 12.5px; }}
-.ed-pills.lg .v {{ font-family: {SERIF}; font-size: 28px; font-weight: 600; line-height: 1.15; margin-top: 8px; }}
+.ed-pills.lg .l {{ font-size: 15px; line-height: 1.3; }}
+.ed-pills.lg .n {{ font-size: 13.5px; }}
+.ed-pills.lg .v {{ font-family: {SERIF}; font-size: 31px; font-weight: 600; line-height: 1.15; margin-top: 8px; }}
 @media (max-width: 720px) {{
   .st-key-hdr {{ padding: 0.3rem 14px 14px !important; }}
   .ed-country {{ font-size: 26px; margin-bottom: 0.35rem; }}
+  .ed-facts {{ margin-left: -12px; }}
+  .ed-fact {{ padding: 0 12px; }}
+  .ed-fact .v {{ font-size: 15px; }}
   .st-key-hdr .ed-pills {{ display: flex; overflow-x: auto; scrollbar-width: none; align-items: stretch; }}
   .st-key-hdr .ed-pill {{ flex: 0 0 128px; min-height: 58px; }}
   .st-key-hdr [data-testid="stWidgetLabel"] {{ display: none; }}
   .st-key-hdr [data-testid="stHorizontalBlock"] {{ gap: 0.4rem; }}
   .ed-pills.lg {{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }}
-  .ed-pills.lg .v {{ font-size: 23px; }}
+  .ed-pills.lg .v {{ font-size: 25px; }}
+  .ed-pills.lg .l {{ font-size: 14px; }}
 }}
 
 /* "what each service loses" table */
@@ -443,7 +472,7 @@ hr {{ border-color: {RULE} !important; }}
 [data-testid="stMarkdownContainer"] > p {{ font-size: 16.5px; line-height: 1.6; }}
 
 /* ---- story lede (top of the Dashboard) ---- */
-.ed-lede {{ margin: 8px 0 6px; }}
+.ed-lede {{ margin: 4px 0 6px; }}
 .ed-kicker {{ font-family: {SANS}; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
               color: {ACCENT}; margin-bottom: 10px; }}
 .ed-kicker-row {{ display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }}
@@ -451,8 +480,8 @@ hr {{ border-color: {RULE} !important; }}
             white-space: nowrap; }}
 .ed-jump:hover {{ text-decoration: underline; }}
 #change-scenario {{ scroll-margin-top: 230px; }}       /* lands below the sticky header */
-.ed-headline {{ font-family: {SERIF}; font-size: 42px; line-height: 1.12; font-weight: 600; color: {INK};
-                letter-spacing: -0.015em; margin: 0 0 14px; }}
+.ed-headline {{ font-family: {SERIF}; font-size: 36px; line-height: 1.18; font-weight: 600; color: {INK};
+                letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance; max-width: 30em; }}
 .ed-dek {{ font-family: {SANS}; font-size: 19px; line-height: 1.5; color: #4A4458; margin: 0 0 26px; }}
 .ed-bignums {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid {INK};
                border-bottom: 1px solid {RULE}; margin: 0 0 18px; }}
@@ -463,7 +492,7 @@ hr {{ border-color: {RULE} !important; }}
 .ed-bignum .l {{ font-size: 13px; font-weight: 600; color: {INK}; margin-top: 6px; }}
 .ed-bignum .n {{ font-size: 12.5px; color: {MUTED}; margin-top: 2px; }}
 @media (max-width: 720px) {{
-  .ed-headline {{ font-size: 28px; }}
+  .ed-headline {{ font-size: 26px; }}
   .ed-dek {{ font-size: 16.5px; }}
   .ed-bignums {{ grid-template-columns: 1fr; }}
   .ed-bignum + .ed-bignum {{ border-left: none; border-top: 1px solid {RULE}; padding-left: 0; }}

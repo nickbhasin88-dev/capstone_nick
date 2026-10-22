@@ -266,7 +266,7 @@ countries = load_countries()
 
 # ---- sticky country header: name and profile pills on the left, the country picker on the right ------ #
 hdr = st.container(key="hdr")
-hdr_left, hdr_map, hdr_right = hdr.columns([3.2, 0.8, 1], vertical_alignment="center")
+hdr_left, hdr_map, hdr_right = hdr.columns([3.6, 0.7, 1], vertical_alignment="center")
 with hdr_right:                     # the country is shared with the other pages (st.session_state["sel_iso3"])
     _names = dict(zip(countries["iso3"], countries["label"]))
     sel_iso3 = th.shared_select("Country", list(countries["iso3"]), "country_sel", "sel_iso3",
@@ -298,15 +298,11 @@ _prof = load_profile().get(crow["iso3"], {})
 _facts = [("Region", _prof.get("region")), ("Income", INCOME_LABELS.get(_prof.get("income_group"))),
           (f"GDP, {_gdp_yr}", fmt_usd(_gdp_bn * 1e3) if _gdp_bn else None),
           (f"Population, {_pop_yr}", (f"{_pop_m:,.1f}M" if _pop_m >= 1 else f"{_pop_m:,.2f}M") if _pop_m else None)]
-_chips = "".join(
-    f"<div style='background:{th.SURFACE_TINT};border-radius:8px;padding:6px 12px'>"
-    f"<div style='font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:{th.MUTED}'>{html.escape(k)}</div>"
-    f"<div style='font-size:15px;font-weight:600;color:{th.INK}'>{html.escape(v)}</div></div>"
-    for k, v in _facts if v)
+_chips = "".join(f"<div class='ed-fact'><div class='k'>{html.escape(k)}</div><div class='v'>{html.escape(v)}</div></div>"
+                 for k, v in _facts if v)            # separated by vertical rules (theme.py .ed-fact)
 with hdr_left:
-    st.markdown(f"<div class='ed-country'>{html.escape(country_name)}</div>"
-                f"<div class='ed-facts' style='display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px'>{_chips}</div>",
-                unsafe_allow_html=True)
+    st.markdown(f"<div class='ed-country'>{html.escape(country_name)}</div><div class='ed-facts'>{_chips}</div>"
+                .replace("$", "&#36;"), unsafe_allow_html=True)
 with hdr_map:
     _mf = go.Figure(go.Choropleth(locations=[crow["iso3"]], z=[1], colorscale=[[0, th.BRAND], [1, th.BRAND]],
                                   showscale=False, marker_line_width=0, hoverinfo="skip"))
@@ -404,7 +400,7 @@ if pd.isna(crow["dah_file"]):
             "so there is no aid-funder breakdown to show.")
 else:
     df = load_country(crow["dah_file"])
-    c1, c2, c3 = st.columns([2, 2, 1], vertical_alignment="bottom")
+    c1, c2, c3 = st.columns([2, 1.7, 1.3], vertical_alignment="bottom")     # wide enough for "Channel Settings"
     with c1:
         hfa = st.selectbox("Health Category", list(HFA_LABELS), format_func=lambda k: title_case(HFA_LABELS[k]), key="c1_hfa")
     value_col, metric_label = "dah_23", HFA_LABELS["total"]
@@ -510,7 +506,7 @@ else:
                                 f"<br>of {last_data_year} aid", font=dict(size=12, color=th.INK))
     chart(fig, labels=True, source="IHME Development Assistance for Health database (1990-2026 release); constant 2023 US$.",
           note="Lighter shades are aid delivered through NGOs and foundations, a proxy for money that may bypass the "
-               f"government. IHME's country-level data end in {last_data_year}.")
+               "government.")
 
 
 # =========================================================================== #
@@ -745,8 +741,8 @@ def _budget_section():
     fig4.update_layout(title=dict(text=f"Government Revenue and Spending, {int(yr4)}"), height=720,
                        margin=dict(l=0, r=0, t=50, b=0),
                        uniformtext=dict(minsize=11, mode="hide"))     # boxes too small for text: hover only
-    chart(fig4, source="IMF World Economic Outlook (general-government totals); IMF World Revenue Longitudinal Data "
-                       "(revenue mix); IMF Government Finance Statistics, COFOG (spending mix); constant 2023 US$.")
+    chart(fig4, source="IMF World Economic Outlook; IMF World Revenue Longitudinal Data; IMF Government Finance "
+                       "Statistics, COFOG; constant 2023 US$.")
 
     # ---------------- headline numbers (IMF WEO, general government) ----------------
     mix = []
@@ -783,26 +779,12 @@ def _budget_section():
                    "Health share of government spending and tax revenue at the slider settings, reached in equal "
                    "steps from 2026. The coverage results above include it.")])
 
-    if bx["caption"]:
-        st.caption(bx["caption"])
     for sd in (rside, sside):
         if sd is not None and sd["note"]:
             st.caption(sd["note"])
-    if any(sd is not None and sd["other"] > 0 for sd in (rside, sside)):
-        st.caption("Grey box: the rest of the IMF WEO general-government total (states, provinces, local governments, "
-                   "social security funds), which the central-government breakdown does not cover.")
     if not weo:
         st.caption("The IMF World Economic Outlook has no general-government totals for this year, so each side is "
                    "sized from its own IMF file, and the two can cover different levels of government.")
-    # COFOG often misses health spending outside central budgets: compare with IHME
-    if health_pct is not None and crow["has_spend"] and (SPEND_DIR / f"{iso}.csv").exists():
-        _sp = load_spending(iso)
-        if "ghes_per_gdp_mean" in _sp.columns:
-            _h = _sp.loc[_sp["year"] == yr4, "ghes_per_gdp_mean"]
-            if len(_h) and pd.notna(_h.iloc[0]) and health_pct < 0.5 * float(_h.iloc[0]) * 100:
-                st.caption(f"The IMF records only part of {country_name}'s health spending (for example, spending by "
-                           f"local governments); IHME puts government health spending at {float(_h.iloc[0]) * 100:.1f}% "
-                           "of GDP.")
 
 
 
@@ -828,7 +810,3 @@ render_model_section(crow["iso3"], country_name, _imf, ctl, sk)
 # =========================================================================== #
 th.section_header("account_balance", f"Revenue and Spending in {country_name}")
 _budget_section()
-
-st.divider()
-st.caption(html.escape("All dollar figures are in constant 2023 US$, except MOU amounts and GDP (current US$). "
-                       + ms.inputs_years_line(ms._inputs()["ci"], sorted(set(ms._inputs()["lines"].iso3)))))

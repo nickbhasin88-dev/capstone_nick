@@ -251,6 +251,10 @@ def chart(fig, source: str | None = None, note: str | None = None, labels: bool 
     fig = th.style_fig(tc_fig(fig))
     if labels:
         th.direct_labels(fig)
+    # static axes: dragging an axis or the plot only panned/zoomed the view and never changed the model, so it is off
+    fig.update_layout(dragmode=False)
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
     # theme=None: draw with the "editorial" Plotly template instead of Streamlit's chart theme
     st.plotly_chart(fig, theme=None, config={"displayModeBar": False}, **WIDE, **kw)
     if source or note:
@@ -380,12 +384,12 @@ def known_vs_predicted_chart(iso3: str, country_name: str):
     ap = announced_path(iso3)
     if ap["lost"].sum() <= 0:
         return
-    st.markdown(f"<div class='ed-kicker' style='margin:0.6rem 0 0'>Aid lost each year in {html.escape(country_name)}: "
-                "known vs predicted</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='ed-kicker' style='margin:0.6rem 0 0'>Aid lost each year in {html.escape(country_name)}"
+                "</div>", unsafe_allow_html=True)
     fig = go.Figure()
     parts = (("known", "Known (published cuts)", th.ROSE, ap["known"]),
              ("mou_pred", "Predicted MOU cut (no MOU)", th.BLUE, ap["mou_pred"]),
-             ("predicted", "Predicted (model)", th.tint(th.ROSE, 0.35), ap["predicted"] - ap["mou_pred"]))
+             ("predicted", "Predicted (modelled estimate)", th.tint(th.ROSE, 0.35), ap["predicted"] - ap["mou_pred"]))
     for key, name, col, v in parts:
         if key == "mou_pred" and v.sum() <= 0:
             continue
@@ -393,9 +397,11 @@ def known_vs_predicted_chart(iso3: str, country_name: str):
                     hovertemplate="%{x}: $%{y:,.1f}M " + name.split(" (")[0].lower() + "<extra></extra>")
     fig.add_scatter(x=scn.YEARS, y=ap["lost"] / 1e6, mode="text", text=[money(v) for v in ap["lost"]],
                     textposition="top center", showlegend=False, hoverinfo="skip", cliponaxis=False)
-    fig.update_layout(barmode="stack", height=260, margin=dict(l=0, r=0, t=24, b=0),
-                      yaxis=dict(title="US$ million lost", rangemode="tozero"), xaxis=dict(tickvals=scn.YEARS),
-                      legend=dict(orientation="h", y=1.12, x=0))
+    top = float(ap["lost"].max()) / 1e6
+    fig.update_layout(barmode="stack", height=290, margin=dict(l=0, r=0, t=30, b=0),
+                      yaxis=dict(title=dict(text="Aid lost", standoff=14), rangemode="tozero",
+                                 range=[0, top * 1.18], ticksuffix="M", tickprefix="$", automargin=True),
+                      xaxis=dict(tickvals=scn.YEARS), legend=dict(orientation="h", y=-0.14, x=0))
     chart(fig)
 
 
@@ -460,10 +466,12 @@ def phase_out_by_donor_chart(iso3: str, country_name: str):
         fig.add_annotation(x=scn.YEARS[-1], y=y, text=f"<b>{html.escape(n)}</b>" if main else html.escape(n),
                            xanchor="left", xshift=8, showarrow=False, align="left",
                            font=dict(size=12 if main else 11, color=PHASE_MAIN.get(n, MUTED)))
-    _layout(fig, h=max(320, 26 * len(names) + 80), showlegend=False, margin=dict(l=0, r=190, t=10, b=0),
-            xaxis=dict(tickvals=scn.YEARS), yaxis=dict(title=dict(text="% of 2019-2023 aid cut", standoff=10), ticksuffix="%",
-                                                     range=[min(lo, 0) - 3, max(hi, pos[-1] if pos else hi) + 5]))
-    chart(fig, source="announcement_model/project_cuts.py; IHME DAH 2019-2023; OECD ODA; Global Fund GC7/GC8; Gavi; US MOUs.")
+    _layout(fig, h=max(340, 26 * len(names) + 90), showlegend=False, margin=dict(l=10, r=170, t=10, b=10),
+            xaxis=dict(tickvals=scn.YEARS, range=[scn.YEARS[0] - 0.25, scn.YEARS[-1] + 0.15], tickfont=dict(size=13),
+                       title=dict(text="Year", standoff=8)),
+            yaxis=dict(title=dict(text="Share of 2019-2023 aid cut", standoff=12), ticksuffix="%", tickfont=dict(size=13),
+                       range=[min(lo, 0) - 3, max(hi, pos[-1] if pos else hi) + 5]))
+    chart(fig, source="IHME DAH 2019-2023; OECD ODA; Global Fund GC7/GC8; Gavi; US MOUs.")
 
 
 def preset_choices(ci, iso3) -> tuple:
@@ -528,7 +536,8 @@ def _controls(iso3, country_name, I) -> dict:
     with st.container(key="model_controls"):
         st.markdown("<div id='change-scenario' class='ed-kicker' style='margin:0'>Change the Scenario</div>",
                     unsafe_allow_html=True)
-        c1, c2, c3, c4 = st.columns([1.3, 1.1, 1.3, 0.75], gap="medium")
+        # exactly three controls, equal width: Donor Scenario | Government Response | Advanced
+        c1, c3, c4 = st.columns(3, gap="medium", vertical_alignment="top")
         with c1:
             preset, group, note = donor_scenario_select(ci, iso3, country_name, "m_preset")
             if note:
@@ -537,31 +546,22 @@ def _controls(iso3, country_name, I) -> dict:
             if preset == MOU:
                 st.caption(_esc(scn.mou_schedule_text(ci, iso3, country_name)))
             opts = _preset_options(preset, ci, iso3, country_name, "m")
-        with c2:
-            if preset == MOU:
-                ended = sched_end is not None and sched_end < scn.YEARS[-1]
-                tip = (f" title='{html.escape(f'Schedule ends {sched_end}; {sched_end} level held through {scn.YEARS[-1]}.', quote=True)}'"
-                       if ended else "")
-                st.markdown(f"<div class='ed-kicker' style='margin:0.35rem 0 0'{tip}>"
-                            f"{html.escape(f'Follows {country_name}' + chr(39) + 's MOU schedule')}</div>",
-                            unsafe_allow_html=True)
-                paths_ui.mou_schedule_chart(schedule, sched_end)
-                shape = MOU_SHAPE
-            elif preset == scn.ANNOUNCED:
-                st.markdown("<div class='ed-kicker' style='margin:0.35rem 0 0'>Follows the announced phase-out, by funder</div>",
-                            unsafe_allow_html=True)
-                ap = announced_path(iso3)
-                schedule = list(ap["cut"])
-                if phase_out_by_donor(iso3).empty:      # otherwise the by-funder chart is drawn under the controls
-                    paths_ui.mou_schedule_chart(schedule, None, "share of aid cut")
-                shape = ANNOUNCED_SHAPE
-            else:
-                shape = paths_ui.path_selector()
+        # the cut's timing: the MOU schedule and the announced phase-out are fixed (their charts are drawn under the
+        # three controls); every other scenario's path selector lives in the Advanced popover
+        shape = None
+        if preset == MOU:
+            shape = MOU_SHAPE
+        elif preset == scn.ANNOUNCED:
+            schedule = list(announced_path(iso3)["cut"])
+            shape = ANNOUNCED_SHAPE
         budget = hm.health_budget(iso3, I)
         room = 0.0
         with c3:
+            if st.session_state.get("m_mode") == "As much as fiscal space allows":   # not offered in this bar
+                st.session_state["m_mode"] = list(GOV_MODES)[0]
             mode = GOV_MODES[st.selectbox(
-                "Government Response", list(GOV_MODES), key="m_mode", format_func=title_case,
+                "Government Response", [k for k in GOV_MODES if GOV_MODES[k] != "max"], key="m_mode",
+                format_func=title_case,
                 help=_esc("How much of the lost aid the government replaces from its own budget. "
                           + backfill_regression_text(I["reg"])))]
             theta = 0.0
@@ -596,9 +596,12 @@ def _controls(iso3, country_name, I) -> dict:
             if policy is not None and SHOW_GOV_OPTIONS:
                 st.caption(_esc(policy_caption(policy, country_name, abuja, taxup)))
         with c4:
-            st.markdown("<div style='height:1.75rem'></div>", unsafe_allow_html=True)
+            st.markdown("<div class='ed-adv-spacer'></div>", unsafe_allow_html=True)   # lines up with the selects
             adv = st.popover("Advanced", icon=":material/tune:", width="stretch")
         with adv:
+            if shape is None:                                   # how fast the cut arrives (scenarios without a schedule)
+                shape = paths_ui.path_selector()
+                st.divider()
             ceiling = CEILINGS[st.radio("Fiscal-Space Ceiling", list(CEILINGS), key="m_effort",
                                         disabled=(mode == "none"), format_func=title_case,
                                         help="How hard can the health budget be pushed? Capacity = government health "
@@ -653,8 +656,18 @@ def _controls(iso3, country_name, I) -> dict:
             else:
                 st.session_state["last_valid_ptab_json"] = ptab.to_json(orient="split")
 
+        if preset == MOU:
+            ended = sched_end is not None and sched_end < scn.YEARS[-1]
+            st.markdown(f"<div class='ed-kicker' style='margin:0.6rem 0 0'>"
+                        f"{html.escape(f'{country_name}' + chr(39) + 's MOU schedule')}</div>", unsafe_allow_html=True)
+            paths_ui.mou_schedule_chart(schedule, sched_end)
+            if ended:
+                st.caption(f"Schedule ends {sched_end}; the {sched_end} level is held through {scn.YEARS[-1]}.")
         if preset == scn.ANNOUNCED:
-            phase_out_by_donor_chart(iso3, country_name)
+            if phase_out_by_donor(iso3).empty:
+                paths_ui.mou_schedule_chart(schedule, None, "share of aid cut")
+            else:
+                phase_out_by_donor_chart(iso3, country_name)
 
         # ---- when the funding path or the response is not the default, the box expands: chart + year sliders ----
         expanded = (shape not in (paths_ui.SUDDEN, MOU_SHAPE, ANNOUNCED_SHAPE)) or mode == "gradual"
@@ -895,8 +908,7 @@ def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
     I = _inputs()
     e = html.escape
     # the controls sit in the scenario bar just below; the link jumps there (same cached run as Section 4)
-    kick_html = ("<div class='ed-kicker-row'><div class='ed-kicker'></div>"
-                 f"<a class='ed-jump' href='#change-scenario' target='_self'>Change Scenario ↓</a></div>")
+    kick_html = ""
     if iso3 not in I["ci"].index or iso3 not in set(I["lines"].iso3):
         head = f"{country_name} receives no recorded HIV, TB, malaria or vaccine aid"
         dek = "There is nothing for a donor cut to remove here; the spending and budget charts below still apply."
@@ -1060,13 +1072,9 @@ def _country_results(iso3, country_name, ctl, sk, imf):
                 chart(_who_cut_fig(cl, n_rows))
 
     # ------------------------------ services ------------------------------ #
-    h, pop = st.columns([3, 1], vertical_alignment="bottom")
-    with h:
-        st.subheader("Service Coverage, Year by Year")
-    with pop:
-        with st.popover("Biggest Drops", icon=":material/warning:", width="stretch"):
-            st.html(_drop_overview_html(rows))
+    st.subheader("Service Coverage, Year by Year")
     _service_grid(rows)
+    st.html(_drop_overview_html(rows))           # compact table of the drops, directly under the charts
     st.markdown(th.source_html("Model estimates; coverage today: UNAIDS/WHO 2025 (HIV), WHO 2024 (TB), Malaria Atlas "
                                "Project 2025 (malaria), WUENIC (DTP3).", None), unsafe_allow_html=True)
 
@@ -1305,7 +1313,7 @@ def _loss_by_bucket_fig(B: pd.DataFrame, any_replaced: bool = False, n_rows: int
     return fig
 
 
-SRC_SHORT = {"United States": "US", "United Kingdom": "UK", "Gates Foundation": "Gates"}
+SRC_SHORT = {"United States": "US", "United Kingdom": "UK", "Gates Foundation": "Gates", "Other DAC governments": "Other DAC"}
 CHAN_SHORT = {"Bilateral agency": "Bilateral", "Gates direct": "Direct", "Development banks": "Dev. Banks"}
 MAX_WHO_CUT_BARS = 12
 
@@ -1331,7 +1339,7 @@ def _who_cut_fig(cl: pd.DataFrame, n_rows: int | None = None):
                            text=[money(v) for v in vals], textposition="outside", cliponaxis=False,
                            textfont=dict(color=INK), hovertemplate="<b>%{y}</b>: %{text} a year<extra></extra>"))
     fig.update_layout(bargap=gap)
-    _layout(fig, h=h, title=_title("Who Cut the Money"), margin=dict(l=10, r=20, t=50, b=10),
+    _layout(fig, h=h, title=_title("Who Cut the Money"), margin=dict(l=10, r=58, t=50, b=10),     # room for labels
             xaxis=dict(range=[0, xmax]))
     return fig
 
@@ -1581,19 +1589,20 @@ def _drop_overview_html(rows: pd.DataFrame) -> str:
     y1 = paths[0][1][-1]
     tag = lambda d: "Needs help" if d >= DROP_ALERT else "Watch" if d >= DROP_WATCH else "Holding"  # noqa: E731
     li = "".join(
-        f"<tr><td style='padding:4px 8px 4px 0'><span style='display:inline-block;width:10px;height:10px;"
+        f"<tr><td style='padding:2px 10px 2px 0'><span style='display:inline-block;width:10px;height:10px;"
         f"border-radius:50%;background:{_drop_color(d)};margin-right:6px'></span><b>{html.escape(r.name)}</b></td>"
-        f"<td style='padding:4px 8px;white-space:nowrap'>{cov[0]:.0f}% → {cov[-1]:.0f}%</td>"
-        f"<td style='padding:4px 8px;white-space:nowrap;color:{_drop_color(d)};font-weight:600'>{_pts(d)}</td>"
-        f"<td style='padding:4px 0;color:{MUTED}'>{tag(d)}</td></tr>"
+        f"<td style='padding:2px 10px;white-space:nowrap'>{cov[0]:.0f}% → {cov[-1]:.0f}%</td>"
+        f"<td style='padding:2px 10px;white-space:nowrap;color:{_drop_color(d)};font-weight:600'>{_pts(d)}</td>"
+        f"<td style='padding:2px 0;color:{MUTED}'>{tag(d)}</td></tr>"
         for r, _, cov, d in paths)
-    return (f"<div style='font-size:14px'><div style='color:{MUTED};margin-bottom:6px'>Coverage today → {y1}</div>"
-            f"<table style='border-collapse:collapse'>{li}</table></div>")
+    return (f"<div style='font-size:13.5px;margin:4px 0 14px'><div style='color:{MUTED};margin-bottom:4px'>"
+            f"Coverage today → {y1}, largest drop first</div>"
+            f"<table style='border-collapse:collapse;line-height:1.25'>{li}</table></div>")
 
 
 def _service_fig(r, years: list, cov: list, drop: float):
-    """One service: coverage each year (left axis, %) and the same line as people covered (right axis), with the
-    cost per person in the title."""
+    """One service: coverage each year (%, one axis; people covered in the hover), with the cost per person in the
+    title."""
     col = BUCKET_COLORS[r.bucket]
     need = float(r.need)
     lo, hi = max(0.0, min(cov) - 8), min(100.0, max(cov) + 4)
@@ -1602,16 +1611,13 @@ def _service_fig(r, years: list, cov: list, drop: float):
     fig.add_scatter(x=years, y=cov, mode="lines+markers", line=dict(color=col, width=2.5), marker=dict(size=6),
                     customdata=[num(p) for p in people], showlegend=False,
                     hovertemplate="%{x}: %{y:.0f}% covered, %{customdata} people<extra></extra>")
-    fig.add_scatter(x=years, y=people, yaxis="y2", mode="lines", line=dict(width=0), hoverinfo="skip",
-                    showlegend=False)
     fig.add_annotation(x=years[-1], y=cov[-1], text=f"<b>{_pts(drop)}</b>", showarrow=False, xanchor="right",
                        yanchor="top", yshift=-6, font=dict(color=_drop_color(drop), size=13))
     cost = f"{money(r.unit_cost)} {r.cost_unit}"
-    _layout(fig, h=250, title=_title(th.title_sub(r.name, cost)), margin=dict(l=0, r=0, t=56, b=0),
+    _layout(fig, h=250, title=_title(th.title_sub(r.name, cost)), margin=dict(l=58, r=6, t=56, b=0),
             xaxis=dict(tickvals=years, ticktext=[str(y) if i else "Now" for i, y in enumerate(years)]),
-            yaxis=dict(range=[lo, hi], ticksuffix="%", nticks=4),
-            yaxis2=dict(range=[lo / 100 * need, hi / 100 * need], overlaying="y", side="right", showgrid=False,
-                        nticks=4, tickformat=".2~s", title=None))
+            yaxis=dict(range=[lo, hi], ticksuffix="%", nticks=4, tickfont=dict(size=12),
+                       title=dict(text="Coverage", standoff=12, font=dict(size=12))))
     return fig
 
 
@@ -1819,28 +1825,17 @@ def _fiscal_panel(res: dict, country_name: str, imf: dict, fiscal_t=scn.DEFAULT_
     st.markdown(th.pills_html([
         ("Government Health Spending (2023)", money(F["ghes"]),
          "IHME, constant 2023 US$",
-         f"${F['ghes_pc']:,.0f} per person · {F['ghes_pct_gdp']:.1f}% of GDP" if not pd.isna(F["ghes_pc"]) else ""),
+         f"{F['ghes_pct_gdp']:.1f}% of GDP" if not pd.isna(F["ghes_pct_gdp"]) else ""),
         ("Aid Lost as % of Government Health Spending", pct_smart(G / F["ghes"]) if F["ghes"] else "n/a",
          "Aid lost per year (gross, average 2026-2030) ÷ government health spending, 2023", ""),
         ("Aid Lost as % of Government Revenue", pct_smart(G / rev) if rev and not pd.isna(rev) else "n/a",
          "Aid lost per year (gross, average 2026-2030) ÷ total government revenue", ""),
         health_share_pill(F),
     ], large=True), unsafe_allow_html=True)
-    none_selected = avg["filled"] <= 0.5 and fiscal_t[0] == "none"
-    sub = lambda k: (f"2030: {money(y30[k])}" if show30 else "")
-    st.markdown(th.pills_html([
-        ("Gap Before Government Steps In", money(avg["gap"]),
-         "Aid lost per year (gross), average 2026-2030.", sub("gap")),
-        ("Filled by the Government", "0" if none_selected else money(avg["filled"]),
-         "Replacement under the chosen response plus any gradual budget increase, average per year 2026-2030.",
-         "No Government Replacement selected" if none_selected else sub("filled")),
-        ("Gap Left After Government Response", money(avg["left"]),
-         "Gap before the government steps in minus what it fills, average per year 2026-2030 (= Net Aid Lost).",
-         sub("left")),
-    ], large=True), unsafe_allow_html=True)
+    # the gap, what the government fills and what is left are shown in the chart below (no second pill row)
     if G <= 0:
         return
-    views = [("Average per Year, 2026-2030", avg)] + ([("2030", y30)] if show30 else [])
+    views = [("2026-30 Average", avg)] + ([("2030", y30)] if show30 else [])
     cap = float(F["capacity"] or 0.0)
     gmax = max(v["gap"] for _, v in views)
     on_scale = 0 < cap <= 4 * gmax                            # a capacity far beyond the gap would squash the bars
@@ -1867,17 +1862,17 @@ def _fiscal_panel(res: dict, country_name: str, imf: dict, fiscal_t=scn.DEFAULT_
                              textfont=dict(color=INK), cliponaxis=False))
     if on_scale:
         fig.add_vline(x=cap, line=dict(color=INK, width=1.5, dash="dash"))
-        fig.add_annotation(x=cap, y=1.0, yref="paper", text=f"Backfill Capacity (Fiscal Space): {money(cap)}",
+        fig.add_annotation(x=cap, y=1.0, yref="paper", text=f"Fiscal Space: {money(cap)}",
                            showarrow=False, xanchor="left", yanchor="top", xshift=5, font=dict(size=11, color=INK),
                            bgcolor=th.tint(th.SURFACE, 0.85))
     fig.update_layout(barmode="overlay", bargap=0.35, legend=dict(orientation="h", y=-0.18, x=0))
     _layout(fig, h=190 + 70 * len(views),
             title=_title(th.title_sub("The Gap and the Government Response", "US$ per year")),
-            xaxis=dict(range=[0, xmax], nticks=4), yaxis=dict(type="category"), margin=dict(l=10, r=90, t=70, b=10))
+            xaxis=dict(range=[0, xmax], nticks=4, tickangle=0), yaxis=dict(type="category"),
+            margin=dict(l=10, r=90, t=70, b=10))
     note = (None if on_scale or cap <= 0 else
             f"Backfill capacity (fiscal space), {money(cap)} a year, is off the scale of this chart.")
-    chart(fig, source="Model estimates; IHME government health spending and its real growth, 2001-2023; "
-                      f"{interest_text(F)}.", note=note)
+    chart(fig, source="IHME Government health spending, 2001-2023", note=note)
 
 
 # --------------------------------------------------------------------------- #
