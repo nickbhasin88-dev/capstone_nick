@@ -1,0 +1,574 @@
+{
+ "us_share": [
+  {
+   "iso3": "NGA",
+   "country": "Nigeria",
+   "total_musd": 821.3083333333334,
+   "us_musd": 403.6693333333333,
+   "us_share": 0.4914954797731262
+  },
+  {
+   "iso3": "ZAF",
+   "country": "South Africa",
+   "total_musd": 691.756,
+   "us_musd": 504.8293333333333,
+   "us_share": 0.7297794790841472
+  },
+  {
+   "iso3": "MOZ",
+   "country": "Mozambique",
+   "total_musd": 622.9443333333334,
+   "us_musd": 365.381,
+   "us_share": 0.5865387651010014
+  },
+  {
+   "iso3": "UGA",
+   "country": "Uganda",
+   "total_musd": 619.2363333333334,
+   "us_musd": 358.1743333333333,
+   "us_share": 0.5784129807198005
+  },
+  {
+   "iso3": "TZA",
+   "country": "Tanzania",
+   "total_musd": 591.9783333333334,
+   "us_musd": 371.1243333333333,
+   "us_share": 0.6269221564978448
+  },
+  {
+   "iso3": "COD",
+   "country": "Democratic Republic of the Congo",
+   "total_musd": 554.0173333333333,
+   "us_musd": 220.87833333333333,
+   "us_share": 0.3986848786921227
+  },
+  {
+   "iso3": "KEN",
+   "country": "Kenya",
+   "total_musd": 483.6476666666666,
+   "us_musd": 323.8326666666667,
+   "us_share": 0.6695631737428694
+  },
+  {
+   "iso3": "ZMB",
+   "country": "Zambia",
+   "total_musd": 439.5516666666667,
+   "us_musd": 294.2423333333333,
+   "us_share": 0.6694146687344301
+  },
+  {
+   "iso3": "ETH",
+   "country": "Ethiopia",
+   "total_musd": 420.533,
+   "us_musd": 180.462,
+   "us_share": 0.42912684616902835
+  },
+  {
+   "iso3": "ZWE",
+   "country": "Zimbabwe",
+   "total_musd": 385.477,
+   "us_musd": 216.80933333333334,
+   "us_share": 0.5624442789928669
+  },
+  {
+   "iso3": "PAK",
+   "country": "Pakistan",
+   "total_musd": 382.184,
+   "us_musd": 65.05766666666668,
+   "us_share": 0.17022603423133012
+  },
+  {
+   "iso3": "MWI",
+   "country": "Malawi",
+   "total_musd": 376.6603333333333,
+   "us_musd": 219.614,
+   "us_share": 0.5830558212925704
+  },
+  {
+   "iso3": "IND",
+   "country": "India",
+   "total_musd": 312.90566666666666,
+   "us_musd": 89.94766666666668,
+   "us_share": 0.287459372739601
+  },
+  {
+   "iso3": "IDN",
+   "country": "Indonesia",
+   "total_musd": 219.26233333333334,
+   "us_musd": 73.34333333333333,
+   "us_share": 0.33450037778186553
+  },
+  {
+   "iso3": "CMR",
+   "country": "Cameroon",
+   "total_musd": 205.74433333333334,
+   "us_musd": 109.006,
+   "us_share": 0.529812890756003
+  },
+  {
+   "iso3": "CIV",
+   "country": "Cote d'Ivoire",
+   "total_musd": 190.64733333333334,
+   "us_musd": 93.52466666666668,
+   "us_share": 0.4905637284899518
+  },
+  {
+   "iso3": "BGD",
+   "country": "Bangladesh",
+   "total_musd": 188.01033333333334,
+   "us_musd": 52.422666666666665,
+   "us_share": 0.2788286459432194
+  },
+  {
+   "iso3": "RWA",
+   "country": "Rwanda",
+   "total_musd": 166.762,
+   "us_musd": 87.496,
+   "us_share": 0.5246758853935549
+  },
+  {
+   "iso3": "GHA",
+   "country": "Ghana",
+   "total_musd": 164.90733333333336,
+   "us_musd": 65.78433333333334,
+   "us_share": 0.3989169675090253
+  },
+  {
+   "iso3": "BFA",
+   "country": "Burkina Faso",
+   "total_musd": 164.04466666666664,
+   "us_musd": 58.02033333333333,
+   "us_share": 0.35368619115931843
+  }
+ ],
+ "n_countries_with_aid": 70,
+ "total_aid_musd": 10344.582,
+ "us_aid_musd": 5203.625666666666,
+ "channel_purpose": {
+  "Bilateral agencies": {
+   "Direct services": 1519.432,
+   "Purpose not stated": 365.69,
+   "Systems support": 409.2253333333333,
+   "Testing and care": 389.693
+  },
+  "Gavi": {
+   "Direct services": 1117.9533333333331,
+   "Purpose not stated": 0.0,
+   "Systems support": 0.0,
+   "Testing and care": 0.0
+  },
+  "Global Fund": {
+   "Direct services": 1676.0443333333333,
+   "Purpose not stated": 1368.7633333333333,
+   "Systems support": 1048.631,
+   "Testing and care": 180.47066666666666
+  },
+  "NGOs": {
+   "Direct services": 726.9283333333334,
+   "Purpose not stated": 183.50033333333334,
+   "Systems support": 403.318,
+   "Testing and care": 164.55533333333335
+  },
+  "Other channels": {
+   "Direct services": 502.0303333333333,
+   "Purpose not stated": 112.242,
+   "Systems support": 151.03,
+   "Testing and care": 25.07466666666667
+  }
+ },
+ "purpose_total": {
+  "Direct services": 5542.388333333333,
+  "Purpose not stated": 2030.1956666666667,
+  "Systems support": 2012.2043333333334,
+  "Testing and care": 759.7936666666666
+ },
+ "art_bound": {
+  "mou_16": {
+   "art_off_per_year": 863435.3792944419,
+   "aid_lost_per_year_musd": 698.6684032118092,
+   "n": 16
+  },
+  "full_exit_16": {
+   "art_off_per_year": 2843274.057187669,
+   "aid_lost_per_year_musd": 1896.25892,
+   "n": 16
+  },
+  "full_exit_all": {
+   "art_off_per_year": 4863491.52506715,
+   "aid_lost_per_year_musd": 3957.2520466666665,
+   "n": 70
+  }
+ },
+ "mou16": [
+  "BDI",
+  "BWA",
+  "CMR",
+  "ETH",
+  "KEN",
+  "LBR",
+  "LSO",
+  "MDG",
+  "MOZ",
+  "MWI",
+  "NGA",
+  "RWA",
+  "SLE",
+  "SSD",
+  "SWZ",
+  "UGA"
+ ],
+ "mou_art": {
+  "BWA": {
+   "country": "Botswana",
+   "today": 1.0,
+   "2026": 0.9612430533152716,
+   "2027": 0.9770464916896884,
+   "2028": 0.9390272722723622,
+   "2029": 0.9390272722723622,
+   "2030": 0.9390272722723622
+  },
+  "SWZ": {
+   "country": "Eswatini",
+   "today": 0.9519320475036336,
+   "2026": 0.8485335340889533,
+   "2027": 0.8485335340889533,
+   "2028": 0.8298228069678228,
+   "2029": 0.7549799382933445,
+   "2030": 0.6801370497138446
+  },
+  "KEN": {
+   "country": "Kenya",
+   "today": 0.911549701003009,
+   "2026": 0.911549701003009,
+   "2027": 0.900303120074994,
+   "2028": 0.8712488948282725,
+   "2029": 0.8619959568516096,
+   "2030": 0.7603986978678507
+  },
+  "LSO": {
+   "country": "Lesotho",
+   "today": 0.9613058913434188,
+   "2026": 0.8106649151627434,
+   "2027": 0.7954661892571004,
+   "2028": 0.7853337053200052,
+   "2029": 0.7194725597288858,
+   "2030": 0.6485451721692188
+  },
+  "RWA": {
+   "country": "Rwanda",
+   "today": 0.9426060998590482,
+   "2026": 0.7222557444642222,
+   "2027": 0.8048065444879401,
+   "2028": 0.7502214183736928,
+   "2029": 0.6817639645960621,
+   "2030": 0.6505531351469906
+  }
+ },
+ "mou_art_pool_capped": {
+  "BWA": false,
+  "SWZ": false,
+  "KEN": false,
+  "LSO": false,
+  "RWA": true
+ },
+ "history": [
+  {
+   "group": "All countries",
+   "theta": -0.189022,
+   "lo": -0.450361646849903,
+   "hi": 0.0723176468499029,
+   "n_obs": 2134,
+   "n_countries": 97,
+   "r2_within": 0.033,
+   "b_fall": 0.073489,
+   "b_fall_l1": 0.115533,
+   "b_rise": -0.003046
+  },
+  {
+   "group": "Income: low income",
+   "theta": 0.009904,
+   "lo": -0.0358822189144812,
+   "hi": 0.0556902189144812,
+   "n_obs": 572,
+   "n_countries": 26,
+   "r2_within": 0.0045,
+   "b_fall": -0.002005,
+   "b_fall_l1": -0.007899,
+   "b_rise": 0.017036
+  },
+  {
+   "group": "Income: lower middle income",
+   "theta": -0.149841,
+   "lo": -0.3465918423325989,
+   "hi": 0.0469098423325989,
+   "n_obs": 814,
+   "n_countries": 37,
+   "r2_within": 0.0443,
+   "b_fall": 0.114504,
+   "b_fall_l1": 0.035337,
+   "b_rise": 0.102004
+  },
+  {
+   "group": "Income: upper middle income",
+   "theta": -0.411194,
+   "lo": -1.040998239545413,
+   "hi": 0.2186102395454129,
+   "n_obs": 704,
+   "n_countries": 32,
+   "r2_within": 0.0526,
+   "b_fall": 0.190076,
+   "b_fall_l1": 0.221118,
+   "b_rise": -0.187979
+  },
+  {
+   "group": "WHO region: AFR",
+   "theta": -0.131785,
+   "lo": -0.4259213687456769,
+   "hi": 0.1623513687456768,
+   "n_obs": 792,
+   "n_countries": 36,
+   "r2_within": 0.0309,
+   "b_fall": -0.005463,
+   "b_fall_l1": 0.137248,
+   "b_rise": 0.042318
+  },
+  {
+   "group": "WHO region: AMR",
+   "theta": -0.739887,
+   "lo": -1.725603190284032,
+   "hi": 0.2458291902840319,
+   "n_obs": 440,
+   "n_countries": 20,
+   "r2_within": 0.131,
+   "b_fall": 0.731722,
+   "b_fall_l1": 0.008165,
+   "b_rise": -0.529485
+  },
+  {
+   "group": "WHO region: EMR",
+   "theta": -0.193733,
+   "lo": -0.7569558125894973,
+   "hi": 0.3694898125894973,
+   "n_obs": 264,
+   "n_countries": 12,
+   "r2_within": 0.0492,
+   "b_fall": -0.164474,
+   "b_fall_l1": 0.358207,
+   "b_rise": -0.107572
+  },
+  {
+   "group": "WHO region: EUR",
+   "theta": 0.341561,
+   "lo": -2.149784498245902,
+   "hi": 2.832906498245902,
+   "n_obs": 308,
+   "n_countries": 14,
+   "r2_within": 0.0068,
+   "b_fall": -0.780752,
+   "b_fall_l1": 0.439191,
+   "b_rise": 0.610378
+  },
+  {
+   "group": "WHO region: WPR",
+   "theta": -0.7476119999999999,
+   "lo": -1.2497972176805494,
+   "hi": -0.2454267823194504,
+   "n_obs": 198,
+   "n_countries": 9,
+   "r2_within": 0.1957,
+   "b_fall": 0.565059,
+   "b_fall_l1": 0.182553,
+   "b_rise": 0.545289
+  },
+  {
+   "group": "Sub-Saharan Africa",
+   "theta": -0.090035,
+   "lo": -0.3584867281046437,
+   "hi": 0.1784167281046438,
+   "n_obs": 858,
+   "n_countries": 39,
+   "r2_within": 0.0264,
+   "b_fall": -0.025596,
+   "b_fall_l1": 0.115631,
+   "b_rise": 0.030719
+  },
+  {
+   "group": "Outside sub-Saharan Africa",
+   "theta": -0.540417,
+   "lo": -1.1636542211744534,
+   "hi": 0.0828202211744533,
+   "n_obs": 1276,
+   "n_countries": 58,
+   "r2_within": 0.0433,
+   "b_fall": 0.372031,
+   "b_fall_l1": 0.168386,
+   "b_rise": -0.076641
+  },
+  {
+   "group": "Aid dependence (DAH/THE 2015-23): low (bottom third)",
+   "theta": -0.3483739999999999,
+   "lo": -1.138846739020855,
+   "hi": 0.442098739020855,
+   "n_obs": 726,
+   "n_countries": 33,
+   "r2_within": 0.0534,
+   "b_fall": -0.326044,
+   "b_fall_l1": 0.674418,
+   "b_rise": -0.355236
+  },
+  {
+   "group": "Aid dependence (DAH/THE 2015-23): middle",
+   "theta": -0.400795,
+   "lo": -0.9283599488648524,
+   "hi": 0.1267699488648525,
+   "n_obs": 704,
+   "n_countries": 32,
+   "r2_within": 0.0998,
+   "b_fall": 0.401747,
+   "b_fall_l1": -0.000952,
+   "b_rise": 0.0507
+  },
+  {
+   "group": "Aid dependence (DAH/THE 2015-23): high (top third)",
+   "theta": -0.052792,
+   "lo": -0.2194670542874463,
+   "hi": 0.1138830542874463,
+   "n_obs": 704,
+   "n_countries": 32,
+   "r2_within": 0.0321,
+   "b_fall": 0.054461,
+   "b_fall_l1": -0.001669,
+   "b_rise": 0.051753
+  },
+  {
+   "group": "The 15 MOU countries",
+   "theta": -0.087804,
+   "lo": -0.256393662092687,
+   "hi": 0.080785662092687,
+   "n_obs": 330,
+   "n_countries": 15,
+   "r2_within": 0.0615,
+   "b_fall": 0.003935,
+   "b_fall_l1": 0.083869,
+   "b_rise": 0.078548
+  },
+  {
+   "group": "All except the 15 MOU countries",
+   "theta": -0.2420709999999999,
+   "lo": -0.5810817801061601,
+   "hi": 0.09693978010616,
+   "n_obs": 1804,
+   "n_countries": 82,
+   "r2_within": 0.036,
+   "b_fall": 0.106061,
+   "b_fall_l1": 0.13601,
+   "b_rise": -0.054815
+  },
+  {
+   "group": "Years 2001-2009",
+   "theta": 0.175888,
+   "lo": -0.7657161203947274,
+   "hi": 1.1174921203947272,
+   "n_obs": 776,
+   "n_countries": 97,
+   "r2_within": 0.0186,
+   "b_fall": -0.284385,
+   "b_fall_l1": 0.108497,
+   "b_rise": 0.177338
+  },
+  {
+   "group": "Years 2010-2014 (PEPFAR flat funding, Global Fund Round 11 cancelled)",
+   "theta": -0.312578,
+   "lo": -0.6058900948777421,
+   "hi": -0.0192659051222578,
+   "n_obs": 485,
+   "n_countries": 97,
+   "r2_within": 0.0463,
+   "b_fall": 0.142772,
+   "b_fall_l1": 0.169806,
+   "b_rise": -0.074648
+  },
+  {
+   "group": "Years 2015-2019 (incl. post-Ebola 2016-17)",
+   "theta": -0.0015389999999999,
+   "lo": -0.2201630737872313,
+   "hi": 0.2170850737872314,
+   "n_obs": 485,
+   "n_countries": 97,
+   "r2_within": 0.0144,
+   "b_fall": -0.045645,
+   "b_fall_l1": 0.047184,
+   "b_rise": -0.131475
+  },
+  {
+   "group": "Years 2020-2021 (COVID)",
+   "theta": -1.112543,
+   "lo": -3.7073046168809336,
+   "hi": 1.4822186168809337,
+   "n_obs": 194,
+   "n_countries": 97,
+   "r2_within": 0.0537,
+   "b_fall": -0.194947,
+   "b_fall_l1": 1.30749,
+   "b_rise": -0.140631
+  },
+  {
+   "group": "Years 2022-2023 (post-COVID retrenchment)",
+   "theta": -0.593269,
+   "lo": -2.371679692912307,
+   "hi": 1.1851416929123069,
+   "n_obs": 194,
+   "n_countries": 97,
+   "r2_within": 0.0778,
+   "b_fall": 0.408949,
+   "b_fall_l1": 0.18432,
+   "b_rise": -2.465264
+  }
+ ],
+ "channels_all": {
+  "Gavi (all donors)": {
+   "ART": 0.0,
+   "Bednets": 0.0,
+   "TB treatment": 0.0,
+   "Vaccines": 7792.36866256502
+  },
+  "Global Fund (all donors)": {
+   "ART": 407.43239535763456,
+   "Bednets": 32713.59236452287,
+   "TB treatment": 183.36213191145708,
+   "Vaccines": 0.0
+  },
+  "UNICEF (all donors)": {
+   "ART": 98.71721950453419,
+   "Bednets": 0.0,
+   "TB treatment": 0.0,
+   "Vaccines": 7036.541325825029
+  },
+  "US bilateral (direct channels)": {
+   "ART": 1083.2088650928254,
+   "Bednets": 32566.32617178626,
+   "TB treatment": 74.93957406962262,
+   "Vaccines": 81.49923076204644
+  },
+  "US money through the Global Fund": {
+   "ART": 415.10534528212696,
+   "Bednets": 35499.6128855522,
+   "TB treatment": 193.67794799438283,
+   "Vaccines": 0.0
+  },
+  "WHO (all donors)": {
+   "ART": 192.81631133965675,
+   "Bednets": 51066.87847311008,
+   "TB treatment": 246.03505092934182,
+   "Vaccines": 2647.035954622256
+  }
+ },
+ "channels_n": {
+  "Gavi (all donors)": 54,
+  "Global Fund (all donors)": 68,
+  "UNICEF (all donors)": 69,
+  "US bilateral (direct channels)": 58,
+  "US money through the Global Fund": 68,
+  "WHO (all donors)": 62
+ }
+}

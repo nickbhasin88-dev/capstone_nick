@@ -5,7 +5,7 @@ sudden path, death-rate trends on, 400 draws, seed 7). Nothing the model reads i
 (a copy of country_inputs with mou_us_<year> replaced before scenarios.build_scenario builds the yearly cuts).
 
     .venv/bin/python audit/reallocation/run_reallocation_2027.py [--year 2027] [--alloc allocations_2027.csv]
-                                                               [--draws 400] [--notes notes_2027.md]
+                                                               [--draws 400] [--notes notes_2027.md] [--tag _v2]
 
 Inputs:  <alloc>: iso3, country, then one column per scenario (the first scenario column is the reference, "Baseline");
          nominal US$ of US MOU funding in <year>. Countries not in the file keep their schedule unchanged and are left
@@ -145,6 +145,7 @@ def main():
     ap.add_argument("--draws", type=int, default=scn.ALL_COUNTRY_DRAWS)
     ap.add_argument("--notes", default=None, help="markdown appended as the explanation section (default notes_<year>.md)")
     ap.add_argument("--marginal-usd", type=float, default=1e6)
+    ap.add_argument("--tag", default="", help="suffix for the output files, e.g. _v2 -> results_<year>_v2.csv (keeps earlier runs)")
     ap.add_argument("--with-multilateral-exits", action="store_true",
                     help="keep the preset's US exits from WHO, Gavi, UNFPA and 23%% of the Global Fund (default: MOU bilateral schedule only)")
     a = ap.parse_args()
@@ -513,10 +514,11 @@ def main():
     # ------------------------------------------------------------------ explanation (notes) and files
     if notes_path.exists():
         md += ["## Step 5 (continued). Explanation", "", notes_path.read_text().strip(), ""]
-    out.to_csv(HERE / f"results_{year}.csv", index=False)
-    M.to_csv(HERE / f"marginal_{year}.csv")
-    (HERE / f"RESULTS_{year}.md").write_text("\n".join(md))
-    print(f"wrote results_{year}.csv ({len(out)} rows), marginal_{year}.csv, RESULTS_{year}.md")
+    t = a.tag
+    out.to_csv(HERE / f"results_{year}{t}.csv", index=False)
+    M.to_csv(HERE / f"marginal_{year}{t}.csv")
+    (HERE / f"RESULTS_{year}{t}.md").write_text("\n".join(md))
+    print(f"wrote results_{year}{t}.csv ({len(out)} rows), marginal_{year}{t}.csv, RESULTS_{year}{t}.md")
     for c in scen_cols[1:]:
         D = deltas[c]["TOTAL"]
         print(f"{c}: deaths 2026-30 {D['deaths_5y']:+,.0f} ({D['deaths_5y_lo']:+,.0f} to {D['deaths_5y_hi']:+,.0f}); "
