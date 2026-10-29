@@ -44,7 +44,7 @@ precomputed_draw_totals_match_fresh_run,7,7,0,0
 precomputed_draw_totals_present,7,7,0,0
 range_lo_le_central_le_hi,2028,2028,0,0
 replaced_le_fiscal_capacity,1014,1014,0,0
-section1_2023_matches_raw_IHME_file_SKIPPED,1,1,0,0
+section1_2023_matches_raw_IHME_file,71,71,0,0
 section1_components_sum_to_total,71,71,0,0
 section3_central_breakdown_not_rescaled,1567,1567,0,0
 section3_cofog_shares_sum_to_100,46,46,0,0

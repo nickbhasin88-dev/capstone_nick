@@ -83132,8 +83132,8 @@ VEN,,,gdp_constant2023_equals_nominal_in_2023,True,False,1,
 VNM,,,gdp_constant2023_equals_nominal_in_2023,True,False,1,
 ZMB,,,gdp_constant2023_equals_nominal_in_2023,True,False,1,
 ZWE,,,gdp_constant2023_equals_nominal_in_2023,True,False,1,
-ALL,,,section1_2023_matches_raw_IHME_file_SKIPPED,True,False,,skipped: IHME_HEALTH_SPENDING_1995_2023_Y2026M09D21.CSV not found
 AGO,,,section1_components_sum_to_total,True,False,3.91162e-07,
+AGO,,,section1_2023_matches_raw_IHME_file,True,False,0,
 AGO,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998725,Section 2 169.22M vs Section 1 169.43M
 AGO,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999042,Section 2 224.30M vs Section 1 224.51M
 AGO,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999149,Section 2 213.76M vs Section 1 213.94M
@@ -83144,6 +83144,7 @@ AGO,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999486,Section
 AGO,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999249,Section 2 371.32M vs Section 1 371.60M
 AGO,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998794,Section 2 194.55M vs Section 1 194.79M
 AZE,,,section1_components_sum_to_total,True,False,3.69634e-07,
+AZE,,,section1_2023_matches_raw_IHME_file,True,False,0,
 AZE,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.989758,Section 2 15.07M vs Section 1 15.23M
 AZE,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.990514,Section 2 12.84M vs Section 1 12.97M
 AZE,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.992465,Section 2 17.39M vs Section 1 17.52M
@@ -83154,6 +83155,7 @@ AZE,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.99147,Section 
 AZE,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.989959,Section 2 17.94M vs Section 1 18.13M
 AZE,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.989456,Section 2 15.77M vs Section 1 15.93M
 BGD,,,section1_components_sum_to_total,True,False,1.33413e-07,
+BGD,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BGD,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999532,Section 2 529.59M vs Section 1 529.84M
 BGD,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999642,Section 2 589.94M vs Section 1 590.15M
 BGD,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999711,Section 2 658.23M vs Section 1 658.42M
@@ -83164,6 +83166,7 @@ BGD,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999914,Section
 BGD,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999865,Section 2 1998.02M vs Section 1 1998.29M
 BGD,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999739,Section 2 957.30M vs Section 1 957.55M
 BLZ,,,section1_components_sum_to_total,True,False,7.32644e-06,
+BLZ,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BLZ,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.992946,Section 2 16.19M vs Section 1 16.30M
 BLZ,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.991749,Section 2 16.23M vs Section 1 16.36M
 BLZ,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.991297,Section 2 14.69M vs Section 1 14.82M
@@ -83174,6 +83177,7 @@ BLZ,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.98811,Section 
 BLZ,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.988196,Section 2 17.50M vs Section 1 17.71M
 BLZ,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.98802,Section 2 14.85M vs Section 1 15.03M
 BEN,,,section1_components_sum_to_total,True,False,2.14361e-06,
+BEN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BEN,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998646,Section 2 165.26M vs Section 1 165.49M
 BEN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999084,Section 2 207.21M vs Section 1 207.40M
 BEN,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999294,Section 2 252.07M vs Section 1 252.25M
@@ -83184,6 +83188,7 @@ BEN,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999232,Section
 BEN,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999241,Section 2 350.06M vs Section 1 350.32M
 BEN,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.99893,Section 2 217.50M vs Section 1 217.73M
 BOL,,,section1_components_sum_to_total,True,False,3.89366e-07,
+BOL,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BOL,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998805,Section 2 152.91M vs Section 1 153.09M
 BOL,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998859,Section 2 163.73M vs Section 1 163.92M
 BOL,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998961,Section 2 178.85M vs Section 1 179.04M
@@ -83194,6 +83199,7 @@ BOL,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999445,Section
 BOL,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.997836,Section 2 116.21M vs Section 1 116.46M
 BOL,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.997466,Section 2 79.52M vs Section 1 79.72M
 BWA,,,section1_components_sum_to_total,True,False,1.0065e-06,
+BWA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BWA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998173,Section 2 104.36M vs Section 1 104.55M
 BWA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999059,Section 2 152.88M vs Section 1 153.03M
 BWA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998963,Section 2 140.59M vs Section 1 140.73M
@@ -83204,6 +83210,7 @@ BWA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998056,Section
 BWA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998213,Section 2 120.65M vs Section 1 120.87M
 BWA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.997763,Section 2 86.53M vs Section 1 86.73M
 BFA,,,section1_components_sum_to_total,True,False,0,
+BFA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BFA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999154,Section 2 288.11M vs Section 1 288.36M
 BFA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999407,Section 2 335.11M vs Section 1 335.31M
 BFA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99943,Section 2 333.43M vs Section 1 333.62M
@@ -83214,6 +83221,7 @@ BFA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999611,Section
 BFA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999574,Section 2 679.99M vs Section 1 680.28M
 BFA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999512,Section 2 515.66M vs Section 1 515.92M
 BDI,,,section1_components_sum_to_total,True,False,4.41033e-06,
+BDI,,,section1_2023_matches_raw_IHME_file,True,False,0,
 BDI,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998659,Section 2 169.83M vs Section 1 170.06M
 BDI,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999276,Section 2 271.84M vs Section 1 272.04M
 BDI,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999249,Section 2 250.13M vs Section 1 250.32M
@@ -83224,6 +83232,7 @@ BDI,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999103,Section
 BDI,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99903,Section 2 280.13M vs Section 1 280.40M
 BDI,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998944,Section 2 226.00M vs Section 1 226.24M
 KHM,,,section1_components_sum_to_total,True,False,5.36387e-07,
+KHM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 KHM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999,Section 2 224.72M vs Section 1 224.94M
 KHM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999249,Section 2 256.88M vs Section 1 257.07M
 KHM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999241,Section 2 223.88M vs Section 1 224.05M
@@ -83234,6 +83243,7 @@ KHM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999168,Section
 KHM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998931,Section 2 213.93M vs Section 1 214.16M
 KHM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998892,Section 2 203.72M vs Section 1 203.94M
 CMR,,,section1_components_sum_to_total,True,False,6.24791e-07,
+CMR,,,section1_2023_matches_raw_IHME_file,True,False,0,
 CMR,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999041,Section 2 257.28M vs Section 1 257.52M
 CMR,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999163,Section 2 264.91M vs Section 1 265.13M
 CMR,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999518,Section 2 392.11M vs Section 1 392.30M
@@ -83244,6 +83254,7 @@ CMR,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999523,Section
 CMR,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999352,Section 2 442.57M vs Section 1 442.86M
 CMR,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999372,Section 2 401.01M vs Section 1 401.26M
 CAF,,,section1_components_sum_to_total,True,False,6.66738e-06,
+CAF,,,section1_2023_matches_raw_IHME_file,True,False,0,
 CAF,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.996558,Section 2 75.57M vs Section 1 75.83M
 CAF,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998182,Section 2 122.96M vs Section 1 123.18M
 CAF,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998352,Section 2 118.72M vs Section 1 118.91M
@@ -83254,6 +83265,7 @@ CAF,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998887,Section
 CAF,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998359,Section 2 177.62M vs Section 1 177.91M
 CAF,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998903,Section 2 217.64M vs Section 1 217.88M
 CIV,,,section1_components_sum_to_total,True,False,5.67211e-07,
+CIV,,,section1_2023_matches_raw_IHME_file,True,False,0,
 CIV,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999133,Section 2 268.54M vs Section 1 268.78M
 CIV,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999557,Section 2 462.85M vs Section 1 463.05M
 CIV,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999605,Section 2 465.15M vs Section 1 465.33M
@@ -83264,6 +83276,7 @@ CIV,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999682,Section
 CIV,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999538,Section 2 598.96M vs Section 1 599.24M
 CIV,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999541,Section 2 550.60M vs Section 1 550.85M
 COD,,,section1_components_sum_to_total,True,False,3.3979e-07,
+COD,,,section1_2023_matches_raw_IHME_file,True,False,0,
 COD,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999842,Section 2 1495.97M vs Section 1 1496.21M
 COD,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999835,Section 2 1250.64M vs Section 1 1250.85M
 COD,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999843,Section 2 1308.50M vs Section 1 1308.71M
@@ -83274,6 +83287,7 @@ COD,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999813,Section
 COD,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999816,Section 2 1534.91M vs Section 1 1535.19M
 COD,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999833,Section 2 1410.42M vs Section 1 1410.66M
 DJI,,,section1_components_sum_to_total,True,False,1.97985e-05,
+DJI,,,section1_2023_matches_raw_IHME_file,True,False,0,
 DJI,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.993346,Section 2 30.01M vs Section 1 30.21M
 DJI,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.993301,Section 2 29.65M vs Section 1 29.85M
 DJI,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.993488,Section 2 25.02M vs Section 1 25.19M
@@ -83284,6 +83298,7 @@ DJI,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998596,Section
 DJI,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.995659,Section 2 55.05M vs Section 1 55.29M
 DJI,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.996249,Section 2 54.71M vs Section 1 54.92M
 DOM,,,section1_components_sum_to_total,True,False,2.29258e-07,
+DOM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 DOM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999675,Section 2 609.52M vs Section 1 609.72M
 DOM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999495,Section 2 361.94M vs Section 1 362.12M
 DOM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998948,Section 2 183.26M vs Section 1 183.45M
@@ -83294,6 +83309,7 @@ DOM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999418,Section
 DOM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998469,Section 2 134.38M vs Section 1 134.58M
 DOM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.997251,Section 2 76.19M vs Section 1 76.40M
 EGY,,,section1_components_sum_to_total,True,False,1.39894e-07,
+EGY,,,section1_2023_matches_raw_IHME_file,True,False,0,
 EGY,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.997216,Section 2 85.24M vs Section 1 85.48M
 EGY,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.997811,Section 2 89.81M vs Section 1 90.01M
 EGY,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998543,Section 2 126.12M vs Section 1 126.30M
@@ -83304,6 +83320,7 @@ EGY,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999627,Section
 EGY,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999426,Section 2 459.91M vs Section 1 460.17M
 EGY,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999417,Section 2 421.79M vs Section 1 422.04M
 SLV,,,section1_components_sum_to_total,True,False,4.02866e-07,
+SLV,,,section1_2023_matches_raw_IHME_file,True,False,0,
 SLV,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998244,Section 2 98.32M vs Section 1 98.50M
 SLV,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998708,Section 2 132.95M vs Section 1 133.12M
 SLV,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998858,Section 2 154.79M vs Section 1 154.96M
@@ -83314,6 +83331,7 @@ SLV,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999186,Section
 SLV,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999332,Section 2 305.01M vs Section 1 305.21M
 SLV,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998947,Section 2 210.56M vs Section 1 210.78M
 SWZ,,,section1_components_sum_to_total,True,False,3.68711e-06,
+SWZ,,,section1_2023_matches_raw_IHME_file,True,False,0,
 SWZ,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.997528,Section 2 73.05M vs Section 1 73.23M
 SWZ,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999001,Section 2 152.98M vs Section 1 153.13M
 SWZ,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99905,Section 2 148.29M vs Section 1 148.43M
@@ -83324,6 +83342,7 @@ SWZ,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998614,Section
 SWZ,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998639,Section 2 129.86M vs Section 1 130.04M
 SWZ,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998352,Section 2 113.88M vs Section 1 114.07M
 ETH,,,section1_components_sum_to_total,True,False,2.69817e-07,
+ETH,,,section1_2023_matches_raw_IHME_file,True,False,0,
 ETH,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999818,Section 2 1254.00M vs Section 1 1254.23M
 ETH,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99985,Section 2 1407.40M vs Section 1 1407.61M
 ETH,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99987,Section 2 1497.26M vs Section 1 1497.46M
@@ -83334,6 +83353,7 @@ ETH,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.99985,Section 
 ETH,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999833,Section 2 1690.28M vs Section 1 1690.56M
 ETH,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999849,Section 2 1497.29M vs Section 1 1497.51M
 FJI,,,section1_components_sum_to_total,True,False,6.11524e-06,
+FJI,,,section1_2023_matches_raw_IHME_file,True,False,0,
 FJI,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.991134,Section 2 20.12M vs Section 1 20.30M
 FJI,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99237,Section 2 22.24M vs Section 1 22.41M
 FJI,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.990484,Section 2 15.61M vs Section 1 15.76M
@@ -83344,6 +83364,7 @@ FJI,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.997234,Section
 FJI,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.995711,Section 2 40.86M vs Section 1 41.03M
 FJI,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.995299,Section 2 37.26M vs Section 1 37.44M
 GMB,,,section1_components_sum_to_total,True,False,1.24185e-05,
+GMB,,,section1_2023_matches_raw_IHME_file,True,False,0,
 GMB,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.996407,Section 2 45.75M vs Section 1 45.92M
 GMB,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.997299,Section 2 56.86M vs Section 1 57.02M
 GMB,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998444,Section 2 95.58M vs Section 1 95.73M
@@ -83354,6 +83375,7 @@ GMB,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998402,Section
 GMB,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998167,Section 2 102.39M vs Section 1 102.58M
 GMB,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.997973,Section 2 97.47M vs Section 1 97.66M
 GHA,,,section1_components_sum_to_total,True,False,4.40499e-07,
+GHA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 GHA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999433,Section 2 423.29M vs Section 1 423.53M
 GHA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999578,Section 2 459.07M vs Section 1 459.27M
 GHA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999549,Section 2 401.36M vs Section 1 401.54M
@@ -83364,6 +83386,7 @@ GHA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.99963,Section 
 GHA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999577,Section 2 635.95M vs Section 1 636.22M
 GHA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999528,Section 2 485.14M vs Section 1 485.37M
 GTM,,,section1_components_sum_to_total,True,False,1.85139e-07,
+GTM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 GTM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999707,Section 2 784.17M vs Section 1 784.40M
 GTM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999542,Section 2 438.78M vs Section 1 438.98M
 GTM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999257,Section 2 290.51M vs Section 1 290.73M
@@ -83374,6 +83397,7 @@ GTM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998532,Section
 GTM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999035,Section 2 248.37M vs Section 1 248.61M
 GTM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998737,Section 2 176.30M vs Section 1 176.52M
 GIN,,,section1_components_sum_to_total,True,False,1.19543e-06,
+GIN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 GIN,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999268,Section 2 319.40M vs Section 1 319.64M
 GIN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999277,Section 2 305.41M vs Section 1 305.63M
 GIN,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999266,Section 2 249.27M vs Section 1 249.45M
@@ -83384,6 +83408,7 @@ GIN,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999367,Section
 GIN,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99896,Section 2 262.35M vs Section 1 262.62M
 GIN,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998955,Section 2 229.41M vs Section 1 229.65M
 GUY,,,section1_components_sum_to_total,True,False,5.1505e-06,
+GUY,,,section1_2023_matches_raw_IHME_file,True,False,0,
 GUY,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.99434,Section 2 32.15M vs Section 1 32.33M
 GUY,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.994643,Section 2 32.49M vs Section 1 32.67M
 GUY,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.994366,Section 2 31.24M vs Section 1 31.42M
@@ -83392,6 +83417,7 @@ GUY,2019,,section1_dah_equals_section2_dah_same_year,True,False,0.990506,Section
 GUY,2020,,section1_dah_equals_section2_dah_same_year,True,False,0.990622,Section 2 19.75M vs Section 1 19.94M
 GUY,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.995212,Section 2 49.26M vs Section 1 49.50M
 HTI,,,section1_components_sum_to_total,True,False,1.13031e-06,
+HTI,,,section1_2023_matches_raw_IHME_file,True,False,0,
 HTI,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999691,Section 2 822.74M vs Section 1 822.99M
 HTI,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999773,Section 2 955.27M vs Section 1 955.49M
 HTI,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99978,Section 2 965.89M vs Section 1 966.10M
@@ -83402,6 +83428,7 @@ HTI,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999439,Section
 HTI,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999227,Section 2 392.91M vs Section 1 393.21M
 HTI,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999367,Section 2 443.94M vs Section 1 444.22M
 HND,,,section1_components_sum_to_total,True,False,4.73684e-07,
+HND,,,section1_2023_matches_raw_IHME_file,True,False,0,
 HND,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998773,Section 2 179.02M vs Section 1 179.24M
 HND,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999025,Section 2 182.39M vs Section 1 182.57M
 HND,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998848,Section 2 165.68M vs Section 1 165.87M
@@ -83412,6 +83439,7 @@ HND,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998922,Section
 HND,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998252,Section 2 131.33M vs Section 1 131.56M
 HND,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.99863,Section 2 160.38M vs Section 1 160.60M
 IND,,,section1_components_sum_to_total,True,False,1.2001e-08,
+IND,,,section1_2023_matches_raw_IHME_file,True,False,0,
 IND,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999823,Section 2 1353.50M vs Section 1 1353.74M
 IND,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999834,Section 2 1227.45M vs Section 1 1227.66M
 IND,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999864,Section 2 1290.62M vs Section 1 1290.79M
@@ -83422,6 +83450,7 @@ IND,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999886,Section
 IND,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999895,Section 2 2470.93M vs Section 1 2471.19M
 IND,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999838,Section 2 1433.09M vs Section 1 1433.32M
 IDN,,,section1_components_sum_to_total,True,False,3.14938e-08,
+IDN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 IDN,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999181,Section 2 271.91M vs Section 1 272.14M
 IDN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999384,Section 2 321.19M vs Section 1 321.38M
 IDN,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999534,Section 2 349.35M vs Section 1 349.51M
@@ -83432,6 +83461,7 @@ IDN,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.99982,Section 
 IDN,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999841,Section 2 1660.09M vs Section 1 1660.35M
 IDN,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999837,Section 2 1513.25M vs Section 1 1513.50M
 IRQ,,,section1_components_sum_to_total,True,False,8.96417e-08,
+IRQ,,,section1_2023_matches_raw_IHME_file,True,False,0,
 IRQ,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998515,Section 2 140.57M vs Section 1 140.78M
 IRQ,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998446,Section 2 140.06M vs Section 1 140.27M
 IRQ,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998816,Section 2 164.52M vs Section 1 164.71M
@@ -83442,6 +83472,7 @@ IRQ,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999011,Section
 IRQ,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998357,Section 2 149.45M vs Section 1 149.70M
 IRQ,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.9978,Section 2 102.07M vs Section 1 102.29M
 JAM,,,section1_components_sum_to_total,True,False,8.1576e-07,
+JAM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 JAM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.995701,Section 2 40.30M vs Section 1 40.47M
 JAM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.997313,Section 2 54.55M vs Section 1 54.70M
 JAM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998456,Section 2 107.36M vs Section 1 107.52M
@@ -83452,6 +83483,7 @@ JAM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.997218,Section
 JAM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99632,Section 2 61.19M vs Section 1 61.42M
 JAM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.995134,Section 2 48.26M vs Section 1 48.50M
 JOR,,,section1_components_sum_to_total,True,False,2.68402e-07,
+JOR,,,section1_2023_matches_raw_IHME_file,True,False,0,
 JOR,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998015,Section 2 95.53M vs Section 1 95.72M
 JOR,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998286,Section 2 110.05M vs Section 1 110.24M
 JOR,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998901,Section 2 162.71M vs Section 1 162.89M
@@ -83462,6 +83494,7 @@ JOR,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999255,Section
 JOR,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998519,Section 2 162.47M vs Section 1 162.71M
 JOR,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.99811,Section 2 119.89M vs Section 1 120.12M
 KEN,,,section1_components_sum_to_total,True,False,2.50313e-07,
+KEN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 KEN,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999773,Section 2 1163.74M vs Section 1 1164.01M
 KEN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999839,Section 2 1469.92M vs Section 1 1470.16M
 KEN,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999883,Section 2 1515.93M vs Section 1 1516.10M
@@ -83472,6 +83505,7 @@ KEN,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999812,Section
 KEN,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999781,Section 2 1296.24M vs Section 1 1296.52M
 KEN,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999739,Section 2 937.57M vs Section 1 937.82M
 KGZ,,,section1_components_sum_to_total,True,False,1.56358e-06,
+KGZ,,,section1_2023_matches_raw_IHME_file,True,False,0,
 KGZ,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.996769,Section 2 59.85M vs Section 1 60.05M
 KGZ,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99668,Section 2 51.33M vs Section 1 51.50M
 KGZ,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998157,Section 2 81.76M vs Section 1 81.91M
@@ -83482,6 +83516,7 @@ KGZ,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998539,Section
 KGZ,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.997495,Section 2 80.82M vs Section 1 81.03M
 KGZ,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.996854,Section 2 64.32M vs Section 1 64.52M
 LAO,,,section1_components_sum_to_total,True,False,3.23427e-06,
+LAO,,,section1_2023_matches_raw_IHME_file,True,False,0,
 LAO,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998171,Section 2 111.36M vs Section 1 111.57M
 LAO,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998036,Section 2 98.05M vs Section 1 98.24M
 LAO,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998412,Section 2 106.26M vs Section 1 106.43M
@@ -83492,6 +83527,7 @@ LAO,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999089,Section
 LAO,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.997947,Section 2 119.58M vs Section 1 119.82M
 LAO,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998283,Section 2 125.60M vs Section 1 125.82M
 LSO,,,section1_components_sum_to_total,True,False,3.22011e-06,
+LSO,,,section1_2023_matches_raw_IHME_file,True,False,0,
 LSO,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.997194,Section 2 71.43M vs Section 1 71.63M
 LSO,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998567,Section 2 115.66M vs Section 1 115.83M
 LSO,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998953,Section 2 158.31M vs Section 1 158.48M
@@ -83502,6 +83538,7 @@ LSO,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998777,Section
 LSO,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99836,Section 2 138.79M vs Section 1 139.02M
 LSO,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998653,Section 2 143.10M vs Section 1 143.29M
 LBR,,,section1_components_sum_to_total,True,False,2.22071e-06,
+LBR,,,section1_2023_matches_raw_IHME_file,True,False,0,
 LBR,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999607,Section 2 615.81M vs Section 1 616.05M
 LBR,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999294,Section 2 300.19M vs Section 1 300.41M
 LBR,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999141,Section 2 229.19M vs Section 1 229.39M
@@ -83512,6 +83549,7 @@ LBR,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998596,Section
 LBR,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998346,Section 2 176.84M vs Section 1 177.14M
 LBR,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998656,Section 2 160.52M vs Section 1 160.73M
 LBY,,,section1_components_sum_to_total,True,False,4.44144e-07,
+LBY,,,section1_2023_matches_raw_IHME_file,True,False,0,
 LBY,2015,,section1_dah_equals_section2_dah_same_year,True,True,0.977619,Section 2 7.82M vs Section 1 8.00M
 LBY,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.986929,Section 2 13.74M vs Section 1 13.92M
 LBY,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.990663,Section 2 19.95M vs Section 1 20.14M
@@ -83522,6 +83560,7 @@ LBY,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.996129,Section
 LBY,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.995067,Section 2 50.23M vs Section 1 50.48M
 LBY,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.995087,Section 2 38.69M vs Section 1 38.88M
 MDG,,,section1_components_sum_to_total,True,False,1.62291e-06,
+MDG,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MDG,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998822,Section 2 211.91M vs Section 1 212.16M
 MDG,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998988,Section 2 208.34M vs Section 1 208.55M
 MDG,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999059,Section 2 196.34M vs Section 1 196.52M
@@ -83532,6 +83571,7 @@ MDG,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999386,Section
 MDG,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999037,Section 2 302.97M vs Section 1 303.26M
 MDG,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999297,Section 2 342.36M vs Section 1 342.60M
 MWI,,,section1_components_sum_to_total,True,False,9.65739e-07,
+MWI,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MWI,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999569,Section 2 584.73M vs Section 1 584.98M
 MWI,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999707,Section 2 698.39M vs Section 1 698.59M
 MWI,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99976,Section 2 755.08M vs Section 1 755.26M
@@ -83542,6 +83582,7 @@ MWI,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999673,Section
 MWI,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999649,Section 2 790.99M vs Section 1 791.27M
 MWI,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999671,Section 2 760.06M vs Section 1 760.31M
 MLI,,,section1_components_sum_to_total,True,False,1.21612e-06,
+MLI,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MLI,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999298,Section 2 330.33M vs Section 1 330.56M
 MLI,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999513,Section 2 428.58M vs Section 1 428.79M
 MLI,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999527,Section 2 389.22M vs Section 1 389.40M
@@ -83552,6 +83593,7 @@ MLI,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999347,Section
 MLI,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99927,Section 2 381.72M vs Section 1 382.00M
 MLI,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999459,Section 2 467.52M vs Section 1 467.78M
 MUS,,,section1_components_sum_to_total,True,False,2.8725e-06,
+MUS,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MUS,2015,,section1_dah_equals_section2_dah_same_year,True,True,0.956033,Section 2 1.87M vs Section 1 1.96M
 MUS,2016,,section1_dah_equals_section2_dah_same_year,True,True,0.96636,Section 2 2.41M vs Section 1 2.50M
 MUS,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.984968,Section 2 5.63M vs Section 1 5.72M
@@ -83561,6 +83603,7 @@ MUS,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.98417,Section 
 MUS,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.996273,Section 2 37.42M vs Section 1 37.56M
 MUS,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.993926,Section 2 18.16M vs Section 1 18.27M
 MDA,,,section1_components_sum_to_total,True,False,9.28189e-07,
+MDA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MDA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.997481,Section 2 72.07M vs Section 1 72.25M
 MDA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.995649,Section 2 39.59M vs Section 1 39.77M
 MDA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.995526,Section 2 36.05M vs Section 1 36.21M
@@ -83571,6 +83614,7 @@ MDA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.99749,Section 
 MDA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.995042,Section 2 47.16M vs Section 1 47.40M
 MDA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.996083,Section 2 61.04M vs Section 1 61.28M
 MNG,,,section1_components_sum_to_total,True,False,1.55653e-06,
+MNG,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MNG,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.994943,Section 2 37.97M vs Section 1 38.16M
 MNG,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.996906,Section 2 56.07M vs Section 1 56.24M
 MNG,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998023,Section 2 81.76M vs Section 1 81.92M
@@ -83581,6 +83625,7 @@ MNG,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999233,Section
 MNG,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.996005,Section 2 50.36M vs Section 1 50.56M
 MNG,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.99449,Section 2 34.11M vs Section 1 34.30M
 MOZ,,,section1_components_sum_to_total,True,False,6.05187e-07,
+MOZ,,,section1_2023_matches_raw_IHME_file,True,False,0,
 MOZ,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999709,Section 2 835.89M vs Section 1 836.13M
 MOZ,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999815,Section 2 1107.41M vs Section 1 1107.61M
 MOZ,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999837,Section 2 1158.60M vs Section 1 1158.79M
@@ -83591,6 +83636,7 @@ MOZ,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999792,Section
 MOZ,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999783,Section 2 1333.75M vs Section 1 1334.04M
 MOZ,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999786,Section 2 1166.20M vs Section 1 1166.45M
 NAM,,,section1_components_sum_to_total,True,False,9.3197e-07,
+NAM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 NAM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.997892,Section 2 101.77M vs Section 1 101.98M
 NAM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99878,Section 2 142.48M vs Section 1 142.66M
 NAM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99903,Section 2 165.86M vs Section 1 166.03M
@@ -83601,6 +83647,7 @@ NAM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998297,Section
 NAM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998171,Section 2 123.34M vs Section 1 123.57M
 NAM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998602,Section 2 137.87M vs Section 1 138.07M
 NPL,,,section1_components_sum_to_total,True,False,5.88292e-07,
+NPL,,,section1_2023_matches_raw_IHME_file,True,False,0,
 NPL,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999141,Section 2 289.56M vs Section 1 289.80M
 NPL,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999172,Section 2 255.92M vs Section 1 256.13M
 NPL,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999166,Section 2 225.26M vs Section 1 225.45M
@@ -83611,6 +83658,7 @@ NPL,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999672,Section
 NPL,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999127,Section 2 293.04M vs Section 1 293.30M
 NPL,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999128,Section 2 279.49M vs Section 1 279.73M
 NIC,,,section1_components_sum_to_total,True,False,6.8741e-07,
+NIC,,,section1_2023_matches_raw_IHME_file,True,False,0,
 NIC,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999249,Section 2 255.56M vs Section 1 255.75M
 NIC,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999388,Section 2 316.81M vs Section 1 317.00M
 NIC,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999293,Section 2 265.56M vs Section 1 265.75M
@@ -83621,6 +83669,7 @@ NIC,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999227,Section
 NIC,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998823,Section 2 199.41M vs Section 1 199.65M
 NIC,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999075,Section 2 227.91M vs Section 1 228.12M
 NER,,,section1_components_sum_to_total,True,False,1.24267e-06,
+NER,,,section1_2023_matches_raw_IHME_file,True,False,0,
 NER,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998637,Section 2 179.55M vs Section 1 179.79M
 NER,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999114,Section 2 241.41M vs Section 1 241.63M
 NER,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999274,Section 2 264.41M vs Section 1 264.60M
@@ -83631,6 +83680,7 @@ NER,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999667,Section
 NER,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999314,Section 2 425.66M vs Section 1 425.95M
 NER,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999278,Section 2 338.92M vs Section 1 339.17M
 NGA,,,section1_components_sum_to_total,True,False,8.21003e-08,
+NGA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 NGA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999884,Section 2 1908.61M vs Section 1 1908.83M
 NGA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999894,Section 2 1966.22M vs Section 1 1966.43M
 NGA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999899,Section 2 1957.21M vs Section 1 1957.41M
@@ -83641,6 +83691,7 @@ NGA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999898,Section
 NGA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999889,Section 2 2548.78M vs Section 1 2549.06M
 NGA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999873,Section 2 1923.25M vs Section 1 1923.49M
 PAK,,,section1_components_sum_to_total,True,False,1.1898e-07,
+PAK,,,section1_2023_matches_raw_IHME_file,True,False,0,
 PAK,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.99972,Section 2 816.27M vs Section 1 816.50M
 PAK,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999849,Section 2 1207.98M vs Section 1 1208.17M
 PAK,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99983,Section 2 1111.31M vs Section 1 1111.49M
@@ -83651,10 +83702,12 @@ PAK,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999898,Section
 PAK,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999786,Section 2 1192.57M vs Section 1 1192.82M
 PAK,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999749,Section 2 944.02M vs Section 1 944.26M
 PAN,,,section1_components_sum_to_total,True,False,2.31148e-07,
+PAN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 PAN,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.997563,Section 2 59.77M vs Section 1 59.92M
 PAN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.994855,Section 2 30.36M vs Section 1 30.52M
 PAN,2020,,section1_dah_equals_section2_dah_same_year,True,False,0.998597,Section 2 108.19M vs Section 1 108.34M
 PNG,,,section1_components_sum_to_total,True,False,2.20098e-06,
+PNG,,,section1_2023_matches_raw_IHME_file,True,False,0,
 PNG,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998733,Section 2 175.81M vs Section 1 176.03M
 PNG,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.998651,Section 2 142.87M vs Section 1 143.06M
 PNG,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998904,Section 2 152.17M vs Section 1 152.34M
@@ -83665,6 +83718,7 @@ PNG,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999161,Section
 PNG,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99895,Section 2 238.78M vs Section 1 239.04M
 PNG,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998603,Section 2 175.86M vs Section 1 176.11M
 PHL,,,section1_components_sum_to_total,True,False,8.1023e-08,
+PHL,,,section1_2023_matches_raw_IHME_file,True,False,0,
 PHL,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999363,Section 2 368.46M vs Section 1 368.69M
 PHL,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999182,Section 2 235.71M vs Section 1 235.91M
 PHL,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999523,Section 2 381.54M vs Section 1 381.73M
@@ -83675,6 +83729,7 @@ PHL,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999899,Section
 PHL,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999833,Section 2 1427.05M vs Section 1 1427.28M
 PHL,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999168,Section 2 267.67M vs Section 1 267.89M
 RWA,,,section1_components_sum_to_total,True,False,1.61397e-06,
+RWA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 RWA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.99935,Section 2 361.20M vs Section 1 361.43M
 RWA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99949,Section 2 378.24M vs Section 1 378.43M
 RWA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.99953,Section 2 390.91M vs Section 1 391.10M
@@ -83685,6 +83740,7 @@ RWA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999621,Section
 RWA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999427,Section 2 453.14M vs Section 1 453.40M
 RWA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999519,Section 2 467.82M vs Section 1 468.04M
 STP,,,section1_components_sum_to_total,True,False,5.70093e-05,
+STP,,,section1_2023_matches_raw_IHME_file,True,False,0,
 STP,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.985807,Section 2 11.18M vs Section 1 11.34M
 STP,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.991002,Section 2 16.85M vs Section 1 17.00M
 STP,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.988266,Section 2 13.14M vs Section 1 13.29M
@@ -83695,6 +83751,7 @@ STP,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.995896,Section
 STP,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.989636,Section 2 21.20M vs Section 1 21.42M
 STP,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.990873,Section 2 21.17M vs Section 1 21.36M
 SEN,,,section1_components_sum_to_total,True,False,8.08543e-07,
+SEN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 SEN,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999109,Section 2 227.60M vs Section 1 227.81M
 SEN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999263,Section 2 267.13M vs Section 1 267.33M
 SEN,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999505,Section 2 333.36M vs Section 1 333.53M
@@ -83705,6 +83762,7 @@ SEN,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999341,Section
 SEN,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99926,Section 2 367.43M vs Section 1 367.70M
 SEN,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999395,Section 2 366.65M vs Section 1 366.87M
 SLE,,,section1_components_sum_to_total,True,False,2.30448e-06,
+SLE,,,section1_2023_matches_raw_IHME_file,True,False,0,
 SLE,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999614,Section 2 655.69M vs Section 1 655.94M
 SLE,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999379,Section 2 371.67M vs Section 1 371.90M
 SLE,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999303,Section 2 281.04M vs Section 1 281.24M
@@ -83715,6 +83773,7 @@ SLE,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998941,Section
 SLE,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.998731,Section 2 219.56M vs Section 1 219.84M
 SLE,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998956,Section 2 220.94M vs Section 1 221.17M
 SOM,,,section1_components_sum_to_total,True,False,3.20422e-06,
+SOM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 SOM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.998753,Section 2 200.25M vs Section 1 200.50M
 SOM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999004,Section 2 215.73M vs Section 1 215.94M
 SOM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998953,Section 2 202.36M vs Section 1 202.57M
@@ -83725,6 +83784,7 @@ SOM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999412,Section
 SOM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999291,Section 2 404.24M vs Section 1 404.53M
 SOM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999336,Section 2 340.08M vs Section 1 340.31M
 ZAF,,,section1_components_sum_to_total,True,False,3.0461e-08,
+ZAF,,,section1_2023_matches_raw_IHME_file,True,False,0,
 ZAF,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999687,Section 2 693.75M vs Section 1 693.97M
 ZAF,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999808,Section 2 967.76M vs Section 1 967.94M
 ZAF,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999835,Section 2 1040.74M vs Section 1 1040.91M
@@ -83735,6 +83795,7 @@ ZAF,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999799,Section
 ZAF,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999849,Section 2 1567.42M vs Section 1 1567.66M
 ZAF,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999793,Section 2 1015.61M vs Section 1 1015.82M
 SSD,,,section1_components_sum_to_total,True,False,1.14732e-06,
+SSD,,,section1_2023_matches_raw_IHME_file,True,False,0,
 SSD,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.99942,Section 2 416.72M vs Section 1 416.97M
 SSD,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999235,Section 2 297.87M vs Section 1 298.10M
 SSD,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999529,Section 2 443.56M vs Section 1 443.77M
@@ -83745,6 +83806,7 @@ SSD,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999521,Section
 SSD,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999621,Section 2 724.84M vs Section 1 725.11M
 SSD,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999499,Section 2 502.57M vs Section 1 502.82M
 TJK,,,section1_components_sum_to_total,True,False,1.87366e-06,
+TJK,,,section1_2023_matches_raw_IHME_file,True,False,0,
 TJK,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.995858,Section 2 49.28M vs Section 1 49.49M
 TJK,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.996319,Section 2 52.23M vs Section 1 52.42M
 TJK,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998092,Section 2 84.20M vs Section 1 84.36M
@@ -83755,6 +83817,7 @@ TJK,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998807,Section
 TJK,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.997822,Section 2 96.65M vs Section 1 96.86M
 TJK,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.997804,Section 2 101.76M vs Section 1 101.98M
 TZA,,,section1_components_sum_to_total,True,False,3.82211e-07,
+TZA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 TZA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999775,Section 2 1026.40M vs Section 1 1026.63M
 TZA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99985,Section 2 1415.73M vs Section 1 1415.95M
 TZA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999861,Section 2 1456.95M vs Section 1 1457.16M
@@ -83765,6 +83828,7 @@ TZA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999823,Section
 TZA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999797,Section 2 1357.32M vs Section 1 1357.59M
 TZA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999793,Section 2 1202.24M vs Section 1 1202.49M
 TLS,,,section1_components_sum_to_total,True,False,8.67393e-06,
+TLS,,,section1_2023_matches_raw_IHME_file,True,False,0,
 TLS,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.993962,Section 2 30.62M vs Section 1 30.81M
 TLS,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.995069,Section 2 38.34M vs Section 1 38.53M
 TLS,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.994789,Section 2 33.98M vs Section 1 34.16M
@@ -83775,6 +83839,7 @@ TLS,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.996681,Section
 TLS,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.994929,Section 2 42.58M vs Section 1 42.80M
 TLS,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.994576,Section 2 37.23M vs Section 1 37.43M
 TGO,,,section1_components_sum_to_total,True,False,2.242e-06,
+TGO,,,section1_2023_matches_raw_IHME_file,True,False,0,
 TGO,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.99614,Section 2 55.74M vs Section 1 55.96M
 TGO,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.997788,Section 2 89.30M vs Section 1 89.50M
 TGO,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.998433,Section 2 110.21M vs Section 1 110.38M
@@ -83785,6 +83850,7 @@ TGO,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.998867,Section
 TGO,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99819,Section 2 146.16M vs Section 1 146.43M
 TGO,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.99877,Section 2 165.62M vs Section 1 165.82M
 UGA,,,section1_components_sum_to_total,True,False,4.41629e-07,
+UGA,,,section1_2023_matches_raw_IHME_file,True,False,0,
 UGA,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999706,Section 2 868.27M vs Section 1 868.52M
 UGA,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999814,Section 2 1198.80M vs Section 1 1199.03M
 UGA,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999828,Section 2 1133.64M vs Section 1 1133.83M
@@ -83795,6 +83861,7 @@ UGA,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999802,Section
 UGA,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999796,Section 2 1386.24M vs Section 1 1386.53M
 UGA,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999767,Section 2 1160.98M vs Section 1 1161.25M
 VEN,,,section1_components_sum_to_total,True,False,1.37895e-07,
+VEN,,,section1_2023_matches_raw_IHME_file,True,False,0,
 VEN,2015,,section1_dah_equals_section2_dah_same_year,True,True,0.977225,Section 2 7.38M vs Section 1 7.55M
 VEN,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.98052,Section 2 7.65M vs Section 1 7.80M
 VEN,2017,,section1_dah_equals_section2_dah_same_year,True,True,0.979128,Section 2 7.93M vs Section 1 8.10M
@@ -83805,6 +83872,7 @@ VEN,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.997825,Section
 VEN,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.99724,Section 2 92.15M vs Section 1 92.40M
 VEN,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.998238,Section 2 135.98M vs Section 1 136.22M
 VNM,,,section1_components_sum_to_total,True,False,5.97566e-08,
+VNM,,,section1_2023_matches_raw_IHME_file,True,False,0,
 VNM,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999362,Section 2 339.75M vs Section 1 339.96M
 VNM,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999508,Section 2 408.02M vs Section 1 408.22M
 VNM,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999513,Section 2 377.38M vs Section 1 377.57M
@@ -83815,6 +83883,7 @@ VNM,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.999565,Section
 VNM,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999162,Section 2 281.38M vs Section 1 281.62M
 VNM,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999196,Section 2 251.12M vs Section 1 251.32M
 ZMB,,,section1_components_sum_to_total,True,False,9.36802e-07,
+ZMB,,,section1_2023_matches_raw_IHME_file,True,False,0,
 ZMB,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.999498,Section 2 486.19M vs Section 1 486.43M
 ZMB,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.99972,Section 2 745.38M vs Section 1 745.59M
 ZMB,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999798,Section 2 869.04M vs Section 1 869.22M
@@ -83825,6 +83894,7 @@ ZMB,2021,,section1_dah_equals_section2_dah_same_year,True,False,0.99969,Section 
 ZMB,2022,,section1_dah_equals_section2_dah_same_year,True,False,0.999735,Section 2 1037.83M vs Section 1 1038.10M
 ZMB,2023,,section1_dah_equals_section2_dah_same_year,True,False,0.999707,Section 2 834.79M vs Section 1 835.04M
 ZWE,,,section1_components_sum_to_total,True,False,8.76662e-07,
+ZWE,,,section1_2023_matches_raw_IHME_file,True,False,0,
 ZWE,2015,,section1_dah_equals_section2_dah_same_year,True,False,0.9996,Section 2 617.97M vs Section 1 618.21M
 ZWE,2016,,section1_dah_equals_section2_dah_same_year,True,False,0.999649,Section 2 577.43M vs Section 1 577.64M
 ZWE,2017,,section1_dah_equals_section2_dah_same_year,True,False,0.999643,Section 2 543.08M vs Section 1 543.27M
