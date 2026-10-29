@@ -41,3 +41,8 @@ audit/after_cleanup.csv
 
 # raw downloads waiting to be sorted into datasets/ (never committed)
 New Data/
+
+# Merge snapshots (regenerate with audit/merge/snapshot_merge.py; ~60 MB)
+audit/merge/snapshot_main.csv
+audit/merge/snapshot_tomato.csv
+audit/merge/snapshot_chipmunk.csv
