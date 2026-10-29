@@ -1142,15 +1142,22 @@ def _country_results(iso3, country_name, ctl, sk, imf):
     st.subheader("What Each Service Loses", help=_esc(" ".join(notes)))
     st.html(_service_table_html(rows, country_name, T, {b: float(B.loc[b, "gains_usd"]) for b in hm.BUCKETS}))
     ovc = show[show["line"] == "hiv_ovc"]
-    st.caption(_esc(
-        "Aid Lost here covers only HIV, TB, malaria and vaccine aid, the aid the model turns into services and deaths"
-        + (f"; the fiscal panel below counts all health aid lost under {title_case(scn.display_name(scn.ANNOUNCED))}, so its "
-           "figures are larger" if ap is not None and ap["all"] else "")
-        + ". Other Aid is money the model does not link to services or deaths: support for orphans and vulnerable "
-        "children" + (f" ({money(ovc['net_loss_usd'].sum())} a year lost)" if len(ovc) else "")
-        + f" and the {1 - float(ptab.loc['hss_service_share', 'central']):.0%} of lost systems money (labs, staff, "
-        "monitoring, supply chain) that does not cut services. The deaths range is for the total, so it is narrower "
-        "than adding the rows' ranges."))
+    all_aid = ap is not None and ap["all"]
+    # two short lines on the page; the full explanation is the tooltip
+    full = ("Aid Lost here covers only HIV, TB, malaria and vaccine aid, the aid the model turns into services and "
+            "deaths"
+            + (f"; the fiscal panel below counts all health aid lost under "
+               f"{title_case(scn.display_name(scn.ANNOUNCED))}, so its figures are larger" if all_aid else "")
+            + ". Other Aid is money the model does not link to services or deaths: support for orphans and vulnerable "
+            "children" + (f" ({money(ovc['net_loss_usd'].sum())} a year lost)" if len(ovc) else "")
+            + f" and the {1 - float(ptab.loc['hss_service_share', 'central']):.0%} of lost systems money (labs, staff, "
+            "monitoring, supply chain) that does not cut services. The deaths range is for the total, so it is "
+            "narrower than adding the rows' ranges.")
+    short = ("Aid Lost covers only HIV, TB, malaria and vaccine aid"
+             + ("; the fiscal panel below counts all health aid." if all_aid else ".")
+             + "<br>Other Aid is orphan support and systems money the model does not link to services or deaths.")
+    st.markdown(f"<div class='ed-cap' title='{html.escape(full, quote=True)}'>{short}{th.help_icon()}</div>"
+                .replace("$", "&#36;"), unsafe_allow_html=True)
 
     # ------------------------------ fiscal space ------------------------------ #
     _fiscal_panel(with_all_aid(res, ap["lost"], fiscal_t) if ap is not None and ap["all"] else res,
