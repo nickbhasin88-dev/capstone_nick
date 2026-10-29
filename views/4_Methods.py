@@ -259,7 +259,7 @@ with tabs[1]:
     | People Losing a Service (per Year) | People-equivalents losing a service each year, all four diseases: money lost ÷ cost per person, capped at the people donors fund. HIV prevention (counted in infections averted) and orphan support are left out |
     | Biggest risks (top of the Dashboard, Announced donor cuts) | The donor x channel flow with the largest loss in 2030 and whether it is published or predicted; the year the loss jumps most and the flow behind the jump; the service whose coverage falls the most |
     | What Every US$1 Million Cut Does, by Disease | Each card runs the full model for a US$1M-a-year loss to one disease, spread across all its service lines (including HIV testing and care, unspecified and systems money) in proportion to current aid: no government replacement, sudden cut. People losing the service and the coverage drop are for the main service (HIV: ART; TB: TB treatment; malaria: bednets; immunization: routine vaccines). Where a disease's aid is under US$1M a year, all of it is cut and the results are scaled to US$1M |
-    | What Each Service Loses | Per service line: baseline aid, aid lost after replacement, cost per person, people losing the service per year (average over 2026-2030), with the 5-year total of people affected underneath (the yearly numbers added up, following the funding path; for HIV treatment, mostly the same people stay off ART each year, so no total is added), and coverage before and after |
+    | What Each Service Loses | Per service line: baseline aid, aid lost after replacement, cost per person, people losing the service per year (average over 2026-2030), with the 5-year total of people affected underneath (the yearly numbers added up, following the funding path; for HIV treatment, mostly the same people stay off ART each year, so no total is added), coverage before and after, and extra deaths, 2026-2030 total (range; see *The Model, Step 4*). Aid Lost covers HIV, TB, malaria and vaccine aid only |
     | Can {{Country}} Fill the Gap? | The chart, from the same run as the headline, shows averages per year over 2026-2030 (and 2030 when it differs): the gap before the government steps in = aid lost (gross); filled by the government = the chosen response plus any gradual budget increase; gap left = the difference (= Net Aid Lost). The dashed line is backfill capacity (fiscal space), see *The Model, Step 2*. Aid Lost as % of Government Health Spending = average yearly gross loss ÷ government health spending in 2023; as % of revenue = that loss ÷ (GDP x revenue % of GDP, World Bank WDI). Health share of government spending: see *Gradual budget increase* |
     | All Countries | Totals add up country results; people losing a service per 100,000 = people-equivalents losing a service per year ÷ population x 100,000; budget exposure = gross loss ÷ government health spending |
     """)
@@ -477,6 +477,188 @@ with tabs[2]:
 
     Where nobody is counted as in need (for example malaria treatment in Iraq), coverage cannot be calculated and the
     dashboard shows "Not Modelled".
+    """)
+
+    th.section_header("favorite", "Step 4: Lives (Extra Deaths)")
+    md("Deaths = people losing a service x deaths per person who loses it, year by year over five years. The Dashboard "
+       "shows them in the last column of *What Each Service Loses*, as the 2026-2030 total.")
+    md(f"""
+    **HIV treatment.** The people counted are the people who stop ART: the full-cost equivalents of the lost money
+    (lost ART money ÷ full cost per patient-year), each treated as a person who actually stops treatment. Excess
+    deaths per person-year after stopping rise as CD4 falls: 1.3%, 2.5%, 3.7%, 4.9% and 6.0% in years 1-5 (6.8%,
+    7.2%, 7.3%, 7.1%, 6.7% in years 6-10, used after 2030), times an uncertain multiplier
+    {rng_txt('art_hazard_mult')}. These come from a CD4-stage cohort calculation: people start in the CD4
+    distribution of people on ART (ZIMPHIA 2020: median 528 cells/µL, quartiles 366-706), progress at untreated
+    rates and die at untreated stage-specific rates (Optima HIV, ten Brink et al. 2025, appendix Tables A1-A2), minus
+    the deaths they would have had on suppressive ART; 18.4% die over five years (range: women with the lower Optima
+    rates 12%, men with the higher rates 32%). Tracing studies of people lost to follow-up found higher mortality
+    (40% in 2000-07 cohorts, Brinkhof et al. 2009; 24% by 2011, Zürcher et al. 2017), from sicker, earlier
+    populations. People off ART also transmit HIV at the country's rate of new infections per person with
+    unsuppressed viral load (UNAIDS 2025: new infections ÷ (people living with HIV - people with suppressed viral
+    load); median 0.12 a year across the dashboard countries, Kenya 0.07, Mozambique 0.13; half in year 1), times
+    {rng_txt('art_transmission_mult')}. The people they infect are unsuppressed for about
+    {rng_txt('hiv_new_inf_unsup_years')} years on average (*assumption*, from the 2.6-year median time to diagnosis
+    in sub-Saharan Africa, Giguère et al. 2021) and transmit at the same rate: one further generation is counted.
+    """)
+    st.latex(r"\text{deaths}_{y}=\text{people who stop ART}\times h_y\times m,\qquad h=(0.013,\,0.025,\,0.037,\,0.049,\,0.060,\,0.068,\,0.072,\,0.073,\,0.071,\,0.067)")
+    md(f"""
+    **Mother-to-child transmission.** The PMTCT cost includes the mother's ART, so women on PMTCT are counted once:
+    PMTCT money pays for them, they are taken out of the people the HIV treatment line's money can pay for or lose
+    (people on ART minus women covered by PMTCT), and their own deaths are not added (conservative). IHME's program
+    areas are separate columns, so no dollar is in both lines. Deaths per mother losing PMTCT = transmission averted
+    {rng_txt('pmtct_vt_reduction')} (WHO: 15-45% without, under 5% with) x death by age 2 if infected
+    {rng_txt('pmtct_infant_mort')} (Newell et al. 2004).
+
+    **TB.** Deaths per patient untreated = case fatality untreated - case fatality treated, weighted by the share of
+    TB patients with HIV (h, WHO TB/HIV incidence ÷ TB incidence), with the HIV-positive values depending on ART
+    (a = ART coverage):
+    """)
+    st.latex(r"\Delta\text{CFR}=(1-h)\,(0.43-0.03)+h\,\big[0.78\,(1-a)+0.49\,a-0.06\,(1-0.3a)\big]")
+    md(f"""
+    with untreated / treated case fatality {rng_txt('tb_cfr_untreated_neg')} / {rng_txt('tb_cfr_treated_neg')}
+    (HIV-negative; WHO TB burden estimation methods, Table 4). For HIV-positive people, untreated case fatality is
+    {rng_txt('tb_cfr_untreated_pos')} off ART and {rng_txt('tb_cfr_untreated_pos_art')} on ART for a year or more
+    (WHO Table 5), weighted by ART coverage; treated, {rng_txt('tb_cfr_treated_pos')} x (1 - 0.3a). The TB case
+    detection rate (notifications ÷ WHO's incidence estimate) is capped at 100%. TB and HIV deaths are per patient,
+    so they have no baseline death-rate trend. Drug-resistant TB: {rng_txt('tb_dr_dcfr')} deaths averted per patient treated
+    (*assumption*).
+
+    **TB spread.** Each untreated TB patient (drug-sensitive or drug-resistant) causes {rng_txt('tb_secondary')}
+    further TB cases: about 10 people infected a year by an untreated smear-positive case (Styblo 1991) x ~60% of
+    pulmonary cases smear-positive (WHO) x 5-10% of those infected developing disease (Vynnycky & Fine 1997). Half the
+    new cases appear 1 year later and half 2 years later. They are treated at that year's (reduced) TB treatment
+    coverage, so each dies with probability coverage x treated CFR + (1 - coverage) x untreated CFR (same HIV mix as
+    above). Deaths before the end of 2030 are added to TB treatment; cases arriving in 2031-2032 are counted in
+    further deaths for 2031-2035, outside the 2026-2030 total. Only one year of infectiousness per untreated patient and no onward chains beyond
+    these secondary cases are modelled, so this is conservative (untreated TB typically lasts 2-3 years).
+
+    **Timing of TB deaths (logic review L-15).** The whole case-fatality difference for a patient who goes untreated is
+    placed in the year the treatment is lost, although WHO's burden-estimation methods describe untreated TB as
+    lasting about three years; and the secondary cases arrive one and two years later (half each), although
+    Vynnycky and Fine 1997 find that most progression to disease happens within two to five years of infection. Both
+    are *labelled assumptions* about timing, not about the number of deaths: they shift deaths within and just beyond
+    the 2026-2030 window (earlier than a three-year spread would), so the five-year TB total is somewhat high and the
+    2031-2035 TB part somewhat low. No rule change (Batch 7, item 13).
+
+    **Malaria** uses the Lives Saved Tool form. Coverage after the cut feeds a multiplicative death reduction:
+    """)
+    st.latex(r"D_1=D_0\times\frac{1-E_v C_{v,1}}{1-E_v C_{v,0}}\times\frac{1-E_c C_{c,1}}{1-E_c C_{c,0}}")
+    md(f"""
+    - D₀ = all-age malaria deaths, 2024, as estimated in WHO's World Malaria Report (GHO `MALARIA_EST_DEATHS`). Its
+      trend is the country's 2015-2024 trend in the same WHO death series: see *Already-falling death rates*
+      below.
+    - Vector control is one intervention: C_v = 1 - (1 - bednet use) x (1 - spraying coverage). Bednet use and
+      spraying coverage each fall by their own people losing the service ÷ population at risk, and the
+      vector-control deaths are split between them by how much each one's fall lowers C_v.
+    - E_v = {rng_txt('mal_vc_eff')}, the reduction in deaths at full vector-control coverage (Eisele et al. 2010);
+      E_c = {rng_txt('mal_cm_eff')} for case management: the effect of ACT treatment of uncomplicated malaria, 97%
+      (86-99%) at 24-59 months and 99% at 1-23 months; the low end is 82%, the effect for severe malaria (Thwing et
+      al. 2011).
+    - Both are effect sizes for children aged 1-59 months. They apply in full to under-5 malaria deaths and are
+      scaled by {rng_txt('mal_adult_effect_frac')} (`mal_adult_effect_frac`, an assumption: no published adult
+      effect was found) for deaths at age 5 and over. The formula runs once for each age group and the two are added.
+    - **Under-5 share of malaria deaths.** The share stated in WHO's *World Malaria Report 2025* for the country's WHO
+      region (rule a; table below), with its range across parameter values. The report gives no European Region or
+      global figure, so a rule-b fallback to a global share is not available; the countries with no WMR figure
+      (European Region) have no malaria deaths, so the share has no effect there. The earlier rule, WHO/MCEE child
+      malaria deaths (2021) ÷ WHO all-age deaths (2024), divided two estimation methods and years and gave implausible
+      values (Nigeria 0.98, Kenya 0.19, Ethiopia 0.11). It is kept only as a sensitivity switch,
+      `mal_u5_use_country_series` (off).
+    - C₀ = current coverage; C₁ = C₀ - people losing the service ÷ people in need. C_c is the share of malaria
+      cases that receive an effective drug (MAP), so E_c applies to treated cases only.
+    - Because the formula is multiplicative, each extra point of coverage lost costs slightly more lives.
+    - **Rebound.** Once bednets and spraying stop, malaria transmission recovers over several seasons rather than
+      returning at once to its old level (Cohen et al. 2012, *Malaria Journal* 11:122, review of 75 resurgence
+      events). Deaths from lost vector control are multiplied by (1 + r)^(years since the cut started), with r =
+      {rng_txt('mal_resurgence')} a year (*assumption*; the direction is documented, the speed varies widely). Lost
+      malaria treatment is not affected.
+    """)
+    st.table(_u5_share_table())
+    md(f"""
+    **Routine immunization.** Deaths averted per fully immunized child, by country, from the Vaccine Impact Modelling
+    Consortium estimates (Toor et al. 2021, *eLife* 10:e67635, supplementary data; Batch 5+6 of the logic review,
+    items V1-V2). For each routine infant antigen the country uses (WUENIC 2025 coverage above zero: hepatitis B,
+    Hib, pneumococcal, rotavirus, measles, rubella, yellow fever and meningitis A where in the schedule), deaths
+    averted per vaccinated child = VIMC deaths averted by year of vaccination ÷ vaccinated children (WHO/UNICEF
+    coverage x UN WPP 2024 surviving infants), averaged over the vaccination years 2015-2019 (the years VIMC based on
+    reported coverage); for measles, meningitis A and yellow fever the lowest of the five years is used because the
+    VIMC files do not separate campaigns from routine doses (campaigns inflate the mean by 10% for measles and yellow
+    fever and 3.9x for meningitis A). The values are summed over the antigens and multiplied by the ratio of the
+    country's WPP under-5 mortality (Q5) in 2026-2030 to 2015-2019 (*adjustment*, so they reflect current child
+    mortality: 0.84 in Kenya, 0.81 in Nigeria, 0.62 in India). Each country-antigen value is checked against Toor et
+    al. 2021 Table 3 (deaths averted per 1,000 fully vaccinated persons: measles 6.5, hepatitis B 7.7, Hib 2.4, PCV
+    2.3, yellow fever 2.1, meningitis A 1.0, rotavirus 0.8, rubella 0.3); values outside 0.1-10x take the WHO-region
+    median (38 of 620), as do the four dashboard countries VIMC does not cover (Botswana, Dominican Republic, Libya,
+    Mauritius). Result: median {C['imm_dpc'] if False else '0.025'} deaths per fully immunized child over a lifetime
+    across the dashboard countries (Kenya 0.021, Nigeria 0.059, Mozambique 0.030, South Africa 0.021, Uganda 0.027,
+    India 0.012), of which about two thirds fall within ten years of vaccination (the rest are adult hepatitis B,
+    meningitis A and yellow fever deaths, outside the model's window). Uncertainty: the VIMC 95% credible intervals,
+    through {rng_txt('imm_dpc_mult')}. **Not covered:** DTP (pertussis, tetanus, diphtheria), polio and BCG are not
+    in the VIMC estimates and no citable deaths-averted-per-child value by country or region was found (Shattock et
+    al. 2024, *Lancet*, report totals by pathogen and region only), so vaccine deaths exclude them and are a
+    conservative floor; HPV is an adolescent vaccine outside the infant schedule and the cost per child, and Japanese
+    encephalitis has no WUENIC antigen. The earlier rule (Gavi's 0.020 deaths averted per child x 0.65 before age 5 x
+    clip(U5MR / 50, 0.3, 2.5)) is kept as the sensitivity switch `imm_legacy_u5mr_scaling` (off).
+    """)
+    st.latex(r"\text{deaths per child}_{c}=\frac{Q5_{c,\,2026\text{-}30}}{Q5_{c,\,2015\text{-}19}}\sum_{a\in\text{antigens}_c}\ \overline{\left(\frac{\text{VIMC deaths averted}_{c,a,y}}{\text{coverage}_{c,a,y}\times\text{surviving infants}_{c,y}}\right)}_{y=2015..2019}")
+    md("""
+    **Timing.** Deaths build up over the five years. The share of the full yearly effect reached in years 1-5:
+
+    | Service | Year 1 | Year 2 | Year 3 | Year 4 | Year 5 |
+    |---|---|---|---|---|---|
+    | PMTCT | 60% | 100% | 100% | 100% | 100% |
+    | TB (both) | 70% | 100% | 100% | 100% | 100% |
+    | Bednets (nets keep protecting ~1 year) | 50% | 100% | 100% | 100% | 100% |
+    | Indoor spraying | 80% | 100% | 100% | 100% | 100% |
+    | Malaria treatment | 100% | 100% | 100% | 100% | 100% |
+    | Vaccines (unvaccinated cohorts add up) | 40% | 75% | 95% | 100% | 100% |
+
+    **Vaccines by birth cohort.** Each year's missed birth cohort dies over the following years, by the VIMC timing
+    for each pathogen: the distribution of deaths averted by years since vaccination, fitted by non-negative least
+    squares to the VIMC calendar-year and birth-cohort series (2000-2019, all 112 VIMC countries). Of the under-5
+    deaths averted, measles has 77% in the vaccination year and 23% the year after; rotavirus 64% / 36%; Hib and PCV
+    57-59% / 23-24% / 7-9% / 4-8% / 3-6% over years 0-4; rubella 100% in year 0 (congenital rubella); hepatitis B
+    42% / 21% / 16% / 13% / 9%; meningitis A 0% / 13% / 71% / 16% / 0%; yellow fever about 20% a year. The under-5
+    share of each pathogen's lifetime deaths averted is the country's own (VIMC cohort file: 100% for Hib, PCV,
+    rotavirus and rubella, 94% measles, 15% meningitis A, 8% yellow fever, 1.5% hepatitis B). Deaths in years 5-9
+    after vaccination are counted where the fit identifies them (measles 1%, hepatitis B 0.4% of lifetime deaths);
+    for meningitis A and yellow fever the deaths after age 5 are left outside the window (*assumption*, conservative).
+    The vaccine row in the timing table above is therefore no longer a fixed ramp: for a sudden cut the deaths in
+    year t are the children missed in each year up to t times the per-child deaths at the matching lag. Deaths of
+    cohorts missed in 2026-2030 that fall in 2031-2035 are counted as further deaths, outside the 2026-2030 total; lifetime deaths
+    after 2035 (mostly adult hepatitis B) are not counted anywhere.
+
+    **Already-changing death rates** (on by default). Baseline deaths are multiplied in year y by (1 + trend)^(y-1).
+    - **Under-5 mortality** (vaccines): the VIMC per-child values already carry the country's 2026-2030 child
+      mortality (the WPP Q5 ratio above), so no further trend is applied to vaccine deaths and the switch does not
+      change them. Under the legacy vaccine rule (sensitivity switch) the earlier trend applies: the country's
+      average annual change over 2010-2019 from a log-linear fit (at least 5 years of data), clipped to -8% to +2% a
+      year; countries without data get the median; if still missing, -0.9% a year (Cavalcanti et al. 2025, Lancet,
+      appendix 10.2).
+    - **Malaria**: malaria has not kept falling. WHO's World Malaria Report 2025: "Between 2015 and 2024, malaria case
+      incidence increased by 8.5%; in 2024 there were an estimated 610,000 malaria deaths, 12,000 more than in 2023,
+      with Ethiopia among the largest increases." So each country's trend is the annual change in WHO's estimated
+      malaria deaths over 2015-2024 (World Malaria Report, GHO `MALARIA_EST_DEATHS`; log-linear fit, at least 5
+      years), clipped to ±5% a year; 0 where WHO has no series. The ±5% clip is an *assumption* (no published source),
+      which keeps short, noisy series from projecting far. 12 of the 46 malaria countries reach it (4 at +5%:
+      Madagascar, Pakistan, Djibouti, Bolivia; 8 at -5%, including India, Indonesia and Bangladesh).
+    - The malaria rebound after vector control stops (`mal_resurgence`, see Step 4) is a separate *assumption*,
+      applied only to deaths from lost bednets and spraying, on top of this baseline trend.
+    - TB and HIV effects are per patient and unchanged.
+
+    **New HIV infections.** HIV prevention turns money into infections averted, and people off ART transmit HIV
+    (see *Funding Paths*). Deaths from these adult infections are counted in the year they happen, up to 2035. Without
+    treatment, time from infection to death follows a Weibull curve with shape {hm.HIV_WEIBULL_SHAPE} and median
+    {rng_txt('hiv_survival_median')} years (Todd et al. 2007, *AIDS*, ALPHA network: 12.5 years if infected at 15-24,
+    10.5 at 25-34, 8.6 at 35-44; the shape used in UNAIDS Spectrum), so about 2% of these deaths fall within 2 years
+    of infection and about 10% within 4.5 years. The deaths in a year are scaled by that year's ART coverage: ART
+    coverage x {rng_txt('hiv_inf_death_treated')} + (1 - coverage) x {rng_txt('hiv_inf_death_untreated')}, the chance
+    of eventually dying of HIV with and without treatment (untreated: Todd et al. 2007 and CASCADE; treated:
+    *assumption* allowing for late diagnosis and interruptions). Deaths up to 2030 are added to the line that caused
+    the infection (HIV treatment for infections from people off ART, HIV prevention for lost prevention); deaths in
+    2031-2035 are counted as further deaths, outside the 2026-2030 total. Infant infections from lost PMTCT are not included here
+    because their deaths are already counted under PMTCT. **Orphans and
+    vulnerable children** support has no modelled effect on deaths.
     """)
 
     th.section_header("timeline", "Funding Paths Over 2026-2030")
