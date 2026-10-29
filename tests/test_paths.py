@@ -137,14 +137,31 @@ def run_p(iso, ptab, **kw):
     return hm.run_country(iso, sc, NONE, I, ptab, n_draws=N_DRAWS, **kw)
 
 
-# (g) a vaccine cut in 2030 only: most of that birth cohort's deaths come after 2030 and are counted as committed
+# (g) a vaccine cut in 2030 only: the share of that birth cohort's deaths counted as committed (2031-2035) must equal
+# the share implied by the model's own timing distribution (Batch 5+6 V1 step 7: country_inputs.csv imm_dpc_lag0..9,
+# deaths per fully immunized child by years since vaccination; lags 1-5 fall in 2031-2035, lags 6-9 after the window)
 @pytest.mark.parametrize("iso", COUNTRIES)
 def test_late_vaccine_cut_committed(iso):
+    row = I["ci"].loc[iso]
+    lag = np.array([float(row[f"imm_dpc_lag{k}"]) for k in range(10)])        # the timing inputs, read directly
+    assert not np.isnan(lag).any() and (lag >= 0).all()
+    within, committed = lag[0], lag[1:6].sum()                                # 2030 cohort: year 2030; years 2031-2035
+    expected_share = committed / (within + committed) if within + committed > 0 else 0.0
     late = run(iso, cut_path=[0, 0, 0, 0, 1])
-    imm5 = late["lines"].set_index("line").loc["imm", "deaths_5y"]
+    Lx = late["lines"].set_index("line")
+    imm5 = Lx.loc["imm", "deaths_5y"]
     after = late["committed"]["after_parts"]["imm"]
-    if imm5 > 1:
-        assert after > imm5                                 # 60% of the cohort's deaths fall after its first year
+    units_2030 = Lx.loc["imm", "units_lost_5y"]                                # only the 2030 cohort is cut
+    total = imm5 + after
+    if total > 1e-9:
+        share = after / total
+        assert 0.0 <= share <= 1.0
+        assert close(share, expected_share), (iso, share, expected_share)      # a: matches the timing distribution
+        assert close(total, units_2030 * (within + committed)), (iso, total, units_2030 * (within + committed))  # b
+        if committed > 0:
+            assert after > 0                                                   # c: a late cut still commits deaths
+        else:
+            assert close(after, 0.0)
     early = run(iso)
     assert early["committed"]["after_parts"]["imm"] >= after - 1e-6   # a 2026 cut leaves 5 cohorts, 4 with a tail
 

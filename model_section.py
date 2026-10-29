@@ -2207,19 +2207,28 @@ def _crosscheck_summary(res, I, ptab, country_name) -> str:
 
 
 def deaths_per_child_immunised(isos, I, ptab) -> tuple:
-    """The model's future deaths averted per child immunised, births-weighted across countries, at today's mortality:
-    (over a lifetime, before age 5)."""
+    """The model's deaths averted per fully immunized child, births-weighted across countries: (over a lifetime,
+    within ten years of vaccination). Batch 5+6: the VIMC-based country values (imm_dpc, imm_dpc_lag0-9); under the
+    legacy switch, the old rule (lifetime = under-5 value / imm_u5_share)."""
     Pc = hm.draw_params(ptab, 0)
-    per_child, births = [], []
+    life, window, births = [], [], []
     for c in isos:
         row = I["ci"].loc[c]
         b = row.get("births", np.nan)
         if pd.isna(b) or b <= 0:
             continue
-        per_child.append(float(hm.per_unit_deaths(row, Pc, np.nan, trend=False)["imm"][0, -1]))
+        if hm.imm_legacy(row, Pc):
+            u5 = float(hm.per_unit_deaths(row, Pc, np.nan, trend=False)["imm"][0, -1])
+            life.append(u5 / float(Pc["imm_u5_share"][0]))
+            window.append(u5)
+        else:
+            w = hm.imm_per_child(row, Pc)[0]
+            life.append(float(row["imm_dpc"]))
+            window.append(float(w.sum()))
         births.append(float(b))
-    u5 = float(np.average(per_child, weights=births)) if births else np.nan
-    return u5 / float(Pc["imm_u5_share"][0]), u5
+    if not births:
+        return np.nan, np.nan
+    return float(np.average(life, weights=births)), float(np.average(window, weights=births))
 
 
 def _published_estimates(A: pd.DataFrame, I, ptab):
@@ -2243,7 +2252,7 @@ def _published_estimates(A: pd.DataFrame, I, ptab):
         {"Study": "Gavi (2000-2024)",
          "What It Covers": "Future deaths averted per child immunised",
          "Published": "About 0.017 (20.6M deaths averted / 1.2B children)",
-         "This Model (Current Scenario)": f"{lifetime:.3f} per child over a lifetime, of which {model_per_child:.3f} before age 5 (births-weighted across countries)"},
+         "This Model (Current Scenario)": f"{lifetime:.3f} per child over a lifetime (VIMC, Toor et al. 2021, by country and antigen), of which {model_per_child:.3f} within ten years of vaccination (births-weighted across countries; excludes DTP, polio and BCG)"},
     ])
     st.table(tbl.set_index("Study"))
     st.markdown("The published studies cover more causes, programs, countries or years than this model, which counts "
