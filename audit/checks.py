@@ -87,6 +87,9 @@ OECD = {"United States": 0.57, "Germany": 0.174, "France": 0.109, "United Kingdo
 def expected_cut(preset, iso, src, chan, bucket, opts):
     if preset == "IHME 2025 preliminary estimates":
         return 1.0 - I["trend_map"].get((src, chan, bucket), 1.0)
+    if preset == scn.ANNOUNCED:                     # cells show the average of the cell's five yearly announced cuts
+        v = hm.announcement_lookup(I["announce_map"], iso, src, chan)
+        return 0.0 if v is None else float(np.mean(np.clip(v, -1, 1)))
     direct = chan in DIRECT
     a, pair, ch = 0.0, {}, {}
     if preset in ("Full US exit", "Combined retreat"):
@@ -107,6 +110,19 @@ def expected_cut(preset, iso, src, chan, bucket, opts):
     a = pair.get((src, chan), a)
     b = ch.get(chan, 0.0)
     return float(np.clip(1 - (1 - a) * (1 - b), -1, 1))
+
+
+def yearly_line_loss(iso, preset, opts, cells) -> pd.Series:
+    """Average yearly loss by line as the model defines it (sudden path): each year's line loss, a rise counted as no
+    loss (I-15), averaged over 2026-2030. Equal to the cells' average-cut loss when cuts are the same every year; the
+    Announced donor cuts preset changes cuts by year, so a line can gain in one year and lose in another."""
+    if not len(cells):
+        return pd.Series(dtype=float)
+    sc = scn.build_scenario(preset, opts, CI)
+    cy = sc.cuts_by_year(cells, iso, I["trend_map"], I["announce_map"])
+    yl = [pd.Series(cells["usd"].to_numpy() * cy[:, t], index=cells.index).groupby(cells["line"]).sum().clip(lower=0)
+          for t in range(cy.shape[1])]
+    return sum(yl) / len(yl)
 
 
 # --------------------------------------------------------------------------- #
@@ -247,10 +263,11 @@ def per_run(iso, preset, resp, res, fiscal_t, opts):
     # unspecified) + programme-management share of unspecified + prevention share where the bucket has no prevention
     # line (TB) + (1 - kappa) x testing share where it has no linked line (TB, malaria)
     cells = res["cells"]
+    yl = yearly_line_loss(iso, preset, opts, cells)
     kb = []
     for b in ("HIV", "TB", "Malaria"):
-        hss = cells.loc[cells["line"] == hm.HSS[b], "loss"].sum()
-        unspec = cells.loc[cells["line"] == hm.UNSPEC[b], "loss"].sum()
+        hss = float(yl.get(hm.HSS[b], 0.0))
+        unspec = float(yl.get(hm.UNSPEC[b], 0.0))
         tag = hm.UNSPEC_TAG[b]
         sh = {c: float(CI.loc[iso, f"unspec_{tag}_{c}"]) for c in ("treatment", "prevention", "testing", "rssh", "pm")}
         ns = (1 - SIGMA) * (hss + unspec * sh["rssh"]) + unspec * sh["pm"]
@@ -284,7 +301,7 @@ def per_run(iso, preset, resp, res, fiscal_t, opts):
     rec(iso, preset, resp, "hero_people_equals_table_people", close(care, ppl, 1e-9, 0.5), care - ppl,
         f"hero {care:.0f} table {ppl:.0f}")
     # per-year label: aid at risk per year equals the scenario's yearly loss
-    G = float(np.clip(cells.groupby("line")["loss"].sum(), 0, None).sum()) if len(cells) else 0.0
+    G = float(yl.sum()) if len(cells) else 0.0
     rec(iso, preset, resp, "aid_at_risk_is_per_year_not_5yr_total", close(G, T["gross"], 1e-9, 1.0), T["gross"] / G if G else 1)
     # coverage shown as fraction (not percent)
     pct_bad = [r.line for r in show.itertuples() if r.cov0 == r.cov0 and r.cov0 > 1.0 + TOL]
