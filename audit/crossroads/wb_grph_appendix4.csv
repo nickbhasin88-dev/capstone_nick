@@ -1,0 +1,208 @@
+country,iso3,income_group,year,population_thousands,gge_pc,phe_pc,offbudget_dah_pc,who_benchmark_pc,who_gov_gap_pc,page
+Burkina Faso,BFA,low_income,2018,20438.0,216.0,16.0,5.5,59.0,37.0,74
+Burkina Faso,BFA,low_income,2024,23549.0,273.0,16.2,7.1,59.0,35.0,74
+Burkina Faso,BFA,low_income,2030,26730.0,288.0,17.0,3.6,59.0,38.0,74
+Burundi,BDI,low_income,2018,11859.0,93.0,5.2,13.7,90.0,71.0,74
+Burundi,BDI,low_income,2024,14048.0,77.0,4.7,7.6,90.0,77.0,74
+Burundi,BDI,low_income,2030,16182.0,90.0,5.5,3.3,90.0,81.0,74
+Central African Republic,CAF,low_income,2018,4879.0,91.0,3.6,8.7,61.0,49.0,74
+Central African Republic,CAF,low_income,2024,5331.0,104.0,3.3,19.8,61.0,38.0,74
+Central African Republic,CAF,low_income,2030,6478.0,82.0,2.7,10.3,61.0,48.0,74
+Chad,TCD,low_income,2018,16157.0,97.0,6.3,3.8,48.0,38.0,74
+Chad,TCD,low_income,2024,20299.0,184.0,9.3,4.6,48.0,35.0,74
+Chad,TCD,low_income,2030,24207.0,179.0,9.0,3.0,48.0,36.0,74
+"Congo, Dem. Rep.",COD,low_income,2018,90048.0,72.0,4.1,6.4,69.0,58.0,74
+"Congo, Dem. Rep.",COD,low_income,2024,109276.0,114.0,4.8,7.1,69.0,57.0,74
+"Congo, Dem. Rep.",COD,low_income,2030,131532.0,128.0,5.4,4.3,69.0,59.0,74
+Ethiopia,ETH,low_income,2018,112664.0,134.0,7.8,5.8,68.0,55.0,74
+Ethiopia,ETH,low_income,2024,132060.0,103.0,5.6,5.1,68.0,58.0,74
+Ethiopia,ETH,low_income,2030,152855.0,196.0,10.7,3.6,68.0,55.0,74
+"Gambia, The",GMB,low_income,2018,2400.0,142.0,7.6,15.0,68.0,46.0,74
+"Gambia, The",GMB,low_income,2024,2760.0,220.0,9.3,10.0,68.0,49.0,74
+"Gambia, The",GMB,low_income,2030,3130.0,235.0,9.9,5.9,68.0,52.0,74
+Guinea-Bissau,GNB,low_income,2018,1922.0,171.0,17.4,11.8,68.0,39.0,74
+Guinea-Bissau,GNB,low_income,2024,2201.0,202.0,29.1,17.2,68.0,22.0,74
+Guinea-Bissau,GNB,low_income,2030,2489.0,223.0,32.2,11.9,68.0,23.0,74
+Liberia,LBR,low_income,2018,4945.0,279.0,19.1,22.5,75.0,33.0,74
+Liberia,LBR,low_income,2024,5613.0,207.0,12.5,14.8,75.0,47.0,74
+Liberia,LBR,low_income,2030,6366.0,221.0,13.3,7.8,75.0,54.0,74
+Madagascar,MDG,low_income,2018,27495.0,79.0,4.3,4.7,59.0,50.0,74
+Madagascar,MDG,low_income,2024,31965.0,88.0,3.5,6.3,59.0,49.0,74
+Madagascar,MDG,low_income,2030,36693.0,107.0,4.3,3.3,59.0,51.0,74
+Malawi,MWI,low_income,2018,18528.0,106.0,10.4,17.7,58.0,30.0,74
+Malawi,MWI,low_income,2024,21655.0,161.0,11.8,16.6,58.0,30.0,74
+Malawi,MWI,low_income,2030,25160.0,158.0,11.6,3.8,58.0,45.0,75
+Mali,MLI,low_income,2018,20442.0,187.0,13.2,9.5,59.0,36.0,75
+Mali,MLI,low_income,2024,24479.0,230.0,14.2,9.8,59.0,35.0,75
+Mali,MLI,low_income,2030,29003.0,280.0,17.3,5.5,59.0,37.0,75
+Mozambique,MOZ,low_income,2018,29019.0,221.0,12.6,27.1,51.0,11.0,75
+Mozambique,MOZ,low_income,2024,34632.0,218.0,13.2,17.3,51.0,20.0,75
+Mozambique,MOZ,low_income,2030,40847.0,219.0,13.2,7.6,51.0,30.0,75
+Niger,NER,low_income,2018,22188.0,135.0,9.5,5.7,59.0,44.0,75
+Niger,NER,low_income,2024,27032.0,99.0,7.4,5.7,59.0,46.0,75
+Niger,NER,low_income,2030,32518.0,132.0,9.9,3.0,59.0,45.0,75
+Rwanda,RWA,low_income,2018,12488.0,201.0,23.3,10.1,50.0,16.0,75
+Rwanda,RWA,low_income,2024,14257.0,288.0,26.9,14.3,50.0,9.0,75
+Rwanda,RWA,low_income,2030,16155.0,335.0,31.3,10.6,50.0,9.0,75
+Sierra Leone,SLE,low_income,2018,7555.0,110.0,4.9,13.5,48.0,29.0,75
+Sierra Leone,SLE,low_income,2024,8642.0,141.0,6.1,13.4,48.0,28.0,75
+Sierra Leone,SLE,low_income,2030,9695.0,142.0,6.2,7.9,48.0,33.0,75
+Somalia,SOM,low_income,2018,15452.0,23.0,0.9,8.7,80.0,70.0,75
+Somalia,SOM,low_income,2024,19009.0,47.0,1.7,7.3,80.0,71.0,75
+Somalia,SOM,low_income,2030,22915.0,49.0,1.7,4.5,80.0,74.0,75
+South Sudan,SSD,low_income,2018,10123.0,349.0,7.4,38.6,30.0,-16.0,75
+South Sudan,SSD,low_income,2024,11943.0,70.0,1.5,22.2,30.0,6.0,75
+South Sudan,SSD,low_income,2030,13457.0,137.0,2.9,16.2,30.0,11.0,75
+Sudan,SDN,low_income,2018,44231.0,199.0,12.3,3.4,62.0,46.0,75
+Sudan,SDN,low_income,2024,50449.0,37.0,3.1,2.8,62.0,56.0,75
+Sudan,SDN,low_income,2030,58572.0,109.0,9.2,1.9,62.0,51.0,75
+Togo,TGO,low_income,2018,8259.0,167.0,12.8,2.8,53.0,37.0,75
+Togo,TGO,low_income,2024,9515.0,271.0,17.7,4.5,53.0,31.0,75
+Togo,TGO,low_income,2030,10793.0,290.0,18.8,2.6,53.0,31.0,75
+Uganda,UGA,low_income,2018,41566.0,165.0,6.7,18.2,56.0,31.0,75
+Uganda,UGA,low_income,2024,50015.0,210.0,12.5,13.5,56.0,30.0,75
+Uganda,UGA,low_income,2030,58313.0,326.0,19.4,5.6,56.0,32.0,75
+"Yemen, Rep.",YEM,low_income,2018,34085.0,88.0,6.6,3.2,61.0,51.0,75
+"Yemen, Rep.",YEM,low_income,2024,40583.0,42.0,3.8,8.0,61.0,50.0,75
+"Yemen, Rep.",YEM,low_income,2030,47668.0,106.0,9.6,5.9,61.0,45.0,75
+Angola,AGO,lower_middle_income,2018,31297.0,624.0,30.2,1.8,189.0,157.0,76
+Angola,AGO,lower_middle_income,2024,37886.0,560.0,39.8,2.1,189.0,147.0,76
+Angola,AGO,lower_middle_income,2030,45160.0,483.0,34.3,1.2,189.0,153.0,76
+Bangladesh,BGD,lower_middle_income,2018,163523.0,253.0,9.8,1.9,92.0,81.0,76
+Bangladesh,BGD,lower_middle_income,2024,173562.0,312.0,9.6,1.8,92.0,81.0,76
+Bangladesh,BGD,lower_middle_income,2030,186072.0,490.0,15.0,1.2,92.0,76.0,76
+Benin,BEN,lower_middle_income,2018,12383.0,198.0,10.2,5.7,53.0,37.0,76
+Benin,BEN,lower_middle_income,2024,14463.0,268.0,15.0,6.1,53.0,32.0,76
+Benin,BEN,lower_middle_income,2030,16619.0,384.0,21.5,3.6,53.0,27.0,76
+Bhutan,BTN,lower_middle_income,2018,760.0,1140.0,101.3,1.8,87.0,-16.0,76
+Bhutan,BTN,lower_middle_income,2024,792.0,1062.0,128.8,8.3,87.0,-50.0,76
+Bhutan,BTN,lower_middle_income,2030,821.0,1812.0,219.7,6.6,87.0,-122.0,76
+Cabo Verde,CPV,lower_middle_income,2018,513.0,1239.0,142.9,9.1,77.0,-75.0,76
+Cabo Verde,CPV,lower_middle_income,2024,525.0,1355.0,180.5,10.2,77.0,-113.0,76
+Cabo Verde,CPV,lower_middle_income,2030,539.0,1744.0,232.3,8.7,77.0,-174.0,76
+Cambodia,KHM,lower_middle_income,2018,16275.0,362.0,27.2,5.0,68.0,36.0,76
+Cambodia,KHM,lower_middle_income,2024,17639.0,451.0,27.5,5.0,68.0,36.0,76
+Cambodia,KHM,lower_middle_income,2030,18827.0,574.0,35.0,3.2,68.0,30.0,76
+Cameroon,CMR,lower_middle_income,2018,24806.0,332.0,6.2,5.0,83.0,71.0,76
+Cameroon,CMR,lower_middle_income,2024,29124.0,312.0,9.5,7.0,83.0,66.0,76
+Cameroon,CMR,lower_middle_income,2030,33777.0,342.0,10.4,3.1,83.0,69.0,76
+Comoros,COM,lower_middle_income,2018,772.0,317.0,16.0,7.3,55.0,32.0,76
+Comoros,COM,lower_middle_income,2024,867.0,319.0,17.0,3.6,55.0,34.0,76
+Comoros,COM,lower_middle_income,2030,964.0,361.0,19.3,2.6,55.0,33.0,76
+"Congo, Rep.",COG,lower_middle_income,2018,5483.0,472.0,33.4,2.6,75.0,39.0,76
+"Congo, Rep.",COG,lower_middle_income,2024,6333.0,505.0,29.8,7.3,75.0,38.0,76
+"Congo, Rep.",COG,lower_middle_income,2030,7282.0,470.0,27.7,5.2,75.0,38.0,76
+Côte d'Ivoire,CIV,lower_middle_income,2018,27464.0,403.0,22.2,9.1,77.0,45.0,76
+Côte d'Ivoire,CIV,lower_middle_income,2024,31934.0,556.0,31.4,7.1,77.0,38.0,76
+Côte d'Ivoire,CIV,lower_middle_income,2030,36699.0,788.0,44.6,3.1,77.0,27.0,76
+Djibouti,DJI,lower_middle_income,2018,1072.0,774.0,43.3,10.1,88.0,35.0,76
+Djibouti,DJI,lower_middle_income,2024,1169.0,757.0,49.9,18.9,88.0,18.0,76
+Djibouti,DJI,lower_middle_income,2030,1263.0,862.0,56.8,14.6,88.0,15.0,76
+"Egypt, Arab Rep.",EGY,lower_middle_income,2018,105682.0,811.0,43.9,0.3,61.0,17.0,76
+"Egypt, Arab Rep.",EGY,lower_middle_income,2024,116538.0,754.0,42.0,0.5,61.0,18.0,76
+"Egypt, Arab Rep.",EGY,lower_middle_income,2030,127139.0,860.0,47.9,0.3,61.0,8.0,76
+Eswatini,SWZ,lower_middle_income,2018,1169.0,1189.0,145.1,47.4,72.0,-120.0,76
+Eswatini,SWZ,lower_middle_income,2024,1243.0,1325.0,120.5,54.8,72.0,-103.0,76
+Eswatini,SWZ,lower_middle_income,2030,1321.0,1424.0,129.6,24.0,72.0,-80.0,76
+Ghana,GHA,lower_middle_income,2018,30638.0,444.0,32.2,5.1,77.0,39.0,76
+Ghana,GHA,lower_middle_income,2024,34427.0,558.0,33.6,6.1,77.0,37.0,76
+Ghana,GHA,lower_middle_income,2030,38222.0,563.0,33.9,3.2,77.0,40.0,76
+Guinea,GIN,lower_middle_income,2018,12705.0,222.0,10.7,10.9,84.0,62.0,76
+Guinea,GIN,lower_middle_income,2024,14755.0,338.0,7.0,6.8,84.0,70.0,76
+Guinea,GIN,lower_middle_income,2030,16807.0,471.0,9.8,4.2,84.0,70.0,76
+Haiti,HTI,lower_middle_income,2018,10962.0,301.0,13.5,38.1,99.0,48.0,76
+Haiti,HTI,lower_middle_income,2024,11773.0,113.0,4.9,15.1,99.0,79.0,76
+Haiti,HTI,lower_middle_income,2030,12552.0,173.0,7.6,7.5,99.0,84.0,76
+Honduras,HND,lower_middle_income,2018,9765.0,846.0,108.4,1.6,106.0,-4.0,76
+Honduras,HND,lower_middle_income,2024,10826.0,880.0,127.6,4.6,106.0,-26.0,76
+Honduras,HND,lower_middle_income,2030,11885.0,1002.0,145.4,3.0,106.0,-41.0,77
+India,IND,lower_middle_income,2018,1374659.0,557.0,19.8,0.4,84.0,64.0,77
+India,IND,lower_middle_income,2024,1450936.0,765.0,24.3,0.3,84.0,59.0,77
+India,IND,lower_middle_income,2030,1525139.0,1016.0,32.3,0.2,84.0,52.0,77
+Jordan,JOR,lower_middle_income,2018,10462.0,1446.0,158.5,8.3,336.0,170.0,77
+Jordan,JOR,lower_middle_income,2024,11553.0,1528.0,142.4,6.7,336.0,187.0,77
+Jordan,JOR,lower_middle_income,2030,12449.0,1540.0,143.5,4.3,336.0,182.0,77
+Kenya,KEN,lower_middle_income,2018,50207.0,444.0,19.9,13.4,87.0,53.0,77
+Kenya,KEN,lower_middle_income,2024,56433.0,492.0,19.6,12.3,87.0,55.0,77
+Kenya,KEN,lower_middle_income,2030,63102.0,576.0,23.0,7.0,87.0,57.0,77
+Kiribati,KIR,lower_middle_income,2018,122.0,2195.0,186.9,20.6,75.0,-133.0,77
+Kiribati,KIR,lower_middle_income,2024,135.0,2246.0,205.0,52.9,75.0,-183.0,77
+Kiribati,KIR,lower_middle_income,2030,146.0,2487.0,227.1,43.3,75.0,-195.0,77
+Kyrgyz Republic,KGZ,lower_middle_income,2018,6342.0,687.0,58.4,9.1,117.0,50.0,77
+Kyrgyz Republic,KGZ,lower_middle_income,2024,7186.0,820.0,59.3,5.5,117.0,52.0,77
+Kyrgyz Republic,KGZ,lower_middle_income,2030,7804.0,1107.0,80.0,3.5,117.0,36.0,77
+Lao PDR,LAO,lower_middle_income,2018,7128.0,393.0,19.2,4.0,61.0,38.0,77
+Lao PDR,LAO,lower_middle_income,2024,7770.0,320.0,15.6,7.2,61.0,38.0,77
+Lao PDR,LAO,lower_middle_income,2030,8357.0,341.0,16.5,4.7,61.0,38.0,77
+Lesotho,LSO,lower_middle_income,2018,2184.0,548.0,59.9,38.6,72.0,-26.0,77
+Lesotho,LSO,lower_middle_income,2024,2337.0,526.0,49.6,31.5,72.0,-9.0,77
+Lesotho,LSO,lower_middle_income,2030,2494.0,557.0,52.6,11.5,72.0,9.0,77
+Mauritania,MRT,lower_middle_income,2018,4338.0,384.0,27.4,2.9,87.0,57.0,77
+Mauritania,MRT,lower_middle_income,2024,5169.0,501.0,23.1,4.6,87.0,59.0,77
+Mauritania,MRT,lower_middle_income,2030,6063.0,650.0,29.9,3.2,87.0,54.0,77
+"Micronesia, Fed. Sts.",FSM,lower_middle_income,2018,110.0,2359.0,449.2,10.8,104.0,-356.0,77
+"Micronesia, Fed. Sts.",FSM,lower_middle_income,2024,113.0,2377.0,404.1,29.6,104.0,-329.0,77
+"Micronesia, Fed. Sts.",FSM,lower_middle_income,2030,116.0,2893.0,491.8,23.8,104.0,-412.0,77
+Morocco,MAR,lower_middle_income,2018,35840.0,1100.0,67.8,0.3,82.0,14.0,77
+Morocco,MAR,lower_middle_income,2024,38081.0,1394.0,72.9,0.3,82.0,9.0,77
+Morocco,MAR,lower_middle_income,2030,39953.0,1597.0,83.5,0.2,82.0,-1.0,77
+Myanmar,MMR,lower_middle_income,2018,52272.0,249.0,8.8,3.8,65.0,52.0,77
+Myanmar,MMR,lower_middle_income,2024,54500.0,234.0,5.5,3.4,65.0,56.0,77
+Myanmar,MMR,lower_middle_income,2030,56351.0,261.0,6.2,2.3,65.0,57.0,77
+Nepal,NPL,lower_middle_income,2018,28080.0,351.0,10.2,4.5,71.0,56.0,77
+Nepal,NPL,lower_middle_income,2024,29651.0,320.0,13.8,4.2,71.0,53.0,77
+Nepal,NPL,lower_middle_income,2030,30510.0,488.0,21.0,2.5,71.0,47.0,77
+Nicaragua,NIC,lower_middle_income,2018,6400.0,725.0,137.4,2.8,99.0,-41.0,77
+Nicaragua,NIC,lower_middle_income,2024,6916.0,772.0,145.0,6.8,99.0,-52.0,77
+Nicaragua,NIC,lower_middle_income,2030,7442.0,887.0,166.7,5.1,99.0,-71.0,77
+Nigeria,NGA,lower_middle_income,2018,204939.0,103.0,3.6,1.7,22.0,16.0,77
+Nigeria,NGA,lower_middle_income,2024,232679.0,134.0,3.6,4.6,22.0,13.0,77
+Nigeria,NGA,lower_middle_income,2030,262381.0,152.0,4.1,2.0,22.0,16.0,77
+Pakistan,PAK,lower_middle_income,2018,226929.0,266.0,9.0,1.9,76.0,65.0,77
+Pakistan,PAK,lower_middle_income,2024,251269.0,288.0,10.0,1.5,76.0,64.0,77
+Pakistan,PAK,lower_middle_income,2030,276883.0,318.0,11.1,0.9,76.0,61.0,77
+Papua New Guinea,PNG,lower_middle_income,2018,9395.0,594.0,50.7,12.2,80.0,17.0,77
+Papua New Guinea,PNG,lower_middle_income,2024,10577.0,607.0,47.0,11.4,80.0,21.0,77
+Papua New Guinea,PNG,lower_middle_income,2030,11671.0,628.0,48.6,10.0,80.0,19.0,77
+Philippines,PHL,lower_middle_income,2018,109465.0,724.0,45.7,0.9,77.0,30.0,77
+Philippines,PHL,lower_middle_income,2024,115844.0,994.0,63.1,1.5,77.0,12.0,77
+Philippines,PHL,lower_middle_income,2030,121409.0,1194.0,75.7,1.0,77.0,1.0,77
+Samoa,WSM,lower_middle_income,2018,208.0,1435.0,176.9,35.0,86.0,-126.0,77
+Samoa,WSM,lower_middle_income,2024,218.0,1422.0,222.1,36.0,86.0,-172.0,78
+Samoa,WSM,lower_middle_income,2030,226.0,1941.0,303.2,29.4,86.0,,78
+Senegal,SEN,lower_middle_income,2018,15914.0,357.0,14.3,9.0,77.0,54.0,78
+Senegal,SEN,lower_middle_income,2024,18502.0,595.0,15.0,8.3,77.0,53.0,78
+Senegal,SEN,lower_middle_income,2030,21163.0,512.0,12.9,4.4,77.0,60.0,78
+Solomon Islands,SLB,lower_middle_income,2018,709.0,803.0,79.2,8.9,84.0,-4.0,78
+Solomon Islands,SLB,lower_middle_income,2024,819.0,777.0,74.8,13.8,84.0,-5.0,78
+Solomon Islands,SLB,lower_middle_income,2030,938.0,806.0,77.6,10.0,84.0,-3.0,78
+São Tomé and Príncipe,STP,lower_middle_income,2018,210.0,1016.0,176.9,61.4,174.0,-64.0,78
+São Tomé and Príncipe,STP,lower_middle_income,2024,236.0,868.0,91.3,22.5,174.0,60.0,78
+São Tomé and Príncipe,STP,lower_middle_income,2030,265.0,701.0,73.7,12.7,174.0,88.0,78
+Tajikistan,TJK,lower_middle_income,2018,9307.0,303.0,21.4,3.4,59.0,34.0,78
+Tajikistan,TJK,lower_middle_income,2024,10591.0,371.0,32.7,5.6,59.0,21.0,78
+Tajikistan,TJK,lower_middle_income,2030,11733.0,492.0,43.4,3.1,59.0,12.0,78
+Tanzania,TZA,lower_middle_income,2018,57437.0,175.0,11.4,13.3,50.0,26.0,78
+Tanzania,TZA,lower_middle_income,2024,68560.0,221.0,12.1,9.8,50.0,28.0,78
+Tanzania,TZA,lower_middle_income,2030,80913.0,295.0,16.2,3.8,50.0,30.0,78
+Timor-Leste,TLS,lower_middle_income,2018,1276.0,1261.0,51.0,13.7,100.0,35.0,78
+Timor-Leste,TLS,lower_middle_income,2024,1401.0,1306.0,53.2,15.9,100.0,30.0,78
+Timor-Leste,TLS,lower_middle_income,2030,1520.0,1344.0,54.8,11.4,100.0,33.0,78
+Tunisia,TUN,lower_middle_income,2018,11766.0,1275.0,136.8,0.4,278.0,141.0,78
+Tunisia,TUN,lower_middle_income,2024,12277.0,1458.0,145.2,0.9,278.0,132.0,78
+Tunisia,TUN,lower_middle_income,2030,12628.0,1631.0,162.4,0.7,278.0,120.0,78
+Uzbekistan,UZB,lower_middle_income,2018,32373.0,560.0,50.1,1.3,63.0,12.0,78
+Uzbekistan,UZB,lower_middle_income,2024,36362.0,872.0,68.7,0.8,63.0,-6.0,78
+Uzbekistan,UZB,lower_middle_income,2030,40248.0,1144.0,90.0,0.3,63.0,-27.0,78
+Vanuatu,VUT,lower_middle_income,2018,285.0,1214.0,112.5,22.9,91.0,-45.0,78
+Vanuatu,VUT,lower_middle_income,2024,328.0,1366.0,116.5,24.5,91.0,-50.0,78
+Vanuatu,VUT,lower_middle_income,2030,372.0,1166.0,99.5,18.6,91.0,-23.0,78
+Viet Nam,VNM,lower_middle_income,2018,96237.0,707.0,56.7,0.9,85.0,27.0,78
+Viet Nam,VNM,lower_middle_income,2024,100988.0,870.0,61.6,0.8,85.0,22.0,78
+Viet Nam,VNM,lower_middle_income,2030,104255.0,1228.0,86.9,0.4,85.0,-2.0,78
+Zambia,ZMB,lower_middle_income,2018,17974.0,336.0,24.0,20.1,54.0,10.0,78
+Zambia,ZMB,lower_middle_income,2024,21315.0,315.0,27.1,21.0,54.0,6.0,78
+Zambia,ZMB,lower_middle_income,2030,25025.0,364.0,31.3,7.6,54.0,12.0,78
+Zimbabwe,ZWE,lower_middle_income,2018,15034.0,418.0,37.3,24.0,81.0,19.0,78
+Zimbabwe,ZWE,lower_middle_income,2024,16634.0,382.0,25.4,21.5,81.0,35.0,78
+Zimbabwe,ZWE,lower_middle_income,2030,18610.0,512.0,34.0,13.5,81.0,34.0,78
