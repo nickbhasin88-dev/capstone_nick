@@ -10,7 +10,7 @@ decisions 1-7. main, tomato, nyt and real-modeling-check were not touched. Nothi
 | c. Accuracy | **Pass**: no negative deaths; zero deaths with no cut; coverage never below 0; people losing a service never above people covered; table deaths = total; years 2026-2030, constant 2023 US$ |
 | d. Full US Exit vs tomato | 1,777,774 vs 1,928,289; the whole gap of 150,515 is explained by R1, R2, R3, R5, R6, R7 (zero residual) |
 | e. Tests | 408 passed, 0 failed (" 2" files skipped) |
-| f. `audit/checks.py --full` | 87,799 of 88,091 pass; **292 fail, all pre-existing on main** (Announced donor cuts in 3 money checks that predate the preset; section 6) |
+| f. `audit/checks.py --full` | **Pass: 88,091 of 88,091**, 6 known warnings (IHME spending comparison skipped). The first run found 292 failures pre-existing on main (section 6), fixed in the checks tool |
 | g. Dashboard pages | Dashboard, All Countries, Methods (and the Validation file) load with no exception or error |
 
 ## 1. Commits (on top of a33fefb and the two Step 0-1 commits)
@@ -29,7 +29,8 @@ decisions 1-7. main, tomato, nyt and real-modeling-check were not touched. Nothi
 | e6a1dce | 2.7 merge tests a-d; conftest skip of " 2" files; one main test narrowed (section 5) |
 | 6b03602 | caption: preset name title-cased |
 | 6ec03eb | Validation page: main's text where tomato's described rules chipmunk does not use |
-| (this commit) | VERIFICATION.md, `verify_inventory.py`, `verification_items.csv`, `fue_chain.py`, `fue_chain.csv`, chipmunk headline snapshot |
+| 4ec481f | checks.py: Announced donor cuts preset in three money checks (tooling only) |
+| bc3d91b + final | VERIFICATION.md, `verify_inventory.py`, `verification_items.csv`, `fue_chain.py`, `fue_chain.csv`, chipmunk headline snapshot |
 
 Notes against the plan: PLAN.md said 26 vaccine columns; tomato's V2 added 19 (`imm_dpc`, `_lo`, `_hi`, `imm_q5_ratio`,
 `imm_dpc_beyond_window`, `imm_dpc_lag0-9`, `imm_antigens`, `imm_antigens_excluded_zero_coverage`, `imm_dpc_source`,
@@ -175,18 +176,18 @@ differ for R2 (+50,592 HIV alone vs +89,312 after R1: the lower ART cost and the
   `test_announcement.py::test_dashboard_is_coverage_only` now expects exactly one deaths column in the service table
   ("Extra Deaths, 2026-2030 Total", decisions 2-3); its headline and lede assertions are unchanged.
 - `audit/checks.py --full` (IHME health spending comparison skipped: the file is not in `datasets/`):
-  88,091 runs in 942 s: **87,799 passed, 292 failed, 6 warnings**; `section1_2023_matches_raw_IHME_file_SKIPPED`
-  recorded. Every deaths, coverage, table and precomputed check passes (e.g. `deaths_nonnegative` 2,028,
-  `zero_cut_gives_zero` 1,014, `table_total_row_equals_headline` 2,028, `card_deaths_equal_full_model_1M_uniform_cut`
-  280, `precomputed_csv_matches_fresh_run` 437, `coverage_in_0_1_and_after_le_before` 2,028). **All 292 failures are
-  main's "Announced donor cuts" preset, in three money checks written before that preset existed**:
-  `cut_formula_matches_documented_scenario` 280 (`expected_cut` has no branch for the preset, so it expects a zero cut),
-  `aid_at_risk_is_per_year_not_5yr_total` 8 (DJI, GUY) and `unspec_and_kappa_conserve_money` 4 (DJI malaria): both
-  compare one year's cell loss with the 2026-2030 average, which differ when the cut changes by year. They are
-  pre-existing on main: the checked money values are identical to main (section 3), and the same cut-formula (70 of
-  70 countries) and aid-at-risk (DJI, GUY) failures reproduce on main's own code. They never showed because checks.py
-  stopped at the card check (C7) on main. The 6 warnings are the known Section 1 vs Section 2 DAH gaps of 2-5%.
-  Fixing the three checks means teaching checks.py the Announced preset, which is outside decision 7 (not done).
+  **final run (after commit 4ec481f): 88,091 runs, 88,091 passed, 0 failed, 6 warnings** (the known Section 1 vs
+  Section 2 DAH gaps of 2-5%); `section1_2023_matches_raw_IHME_file_SKIPPED` recorded. Every deaths, coverage, table
+  and precomputed check passes (e.g. `deaths_nonnegative` 2,028, `zero_cut_gives_zero` 1,014,
+  `table_total_row_equals_headline` 2,028, `card_deaths_equal_full_model_1M_uniform_cut` 280,
+  `precomputed_csv_matches_fresh_run` 437).
+- The first `--full` run (942 s) had 87,799 passed and 292 failed, all in main's "Announced donor cuts" preset in
+  three money checks written before that preset existed: `cut_formula_matches_documented_scenario` 280
+  (`expected_cut` had no branch for the preset), `aid_at_risk_is_per_year_not_5yr_total` 8 (DJI, GUY) and
+  `unspec_and_kappa_conserve_money` 4 (DJI malaria), which compared the average-cut loss with the model's yearly
+  definition (each year's line loss, a rise counted as no loss, averaged), and these differ when cuts change by year.
+  The failures already existed on main: the money values match main exactly, and the same failures reproduce on main's
+  own code. With your approval, commit 4ec481f taught the checks this preset (tooling only, no model change).
 
 ## 7. Dashboard
 

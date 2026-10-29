@@ -1,12 +1,11 @@
 check,runs,passed,failed,warnings
-cut_formula_matches_documented_scenario,2028,1748,280,0
-aid_at_risk_is_per_year_not_5yr_total,2028,2020,8,0
-unspec_and_kappa_conserve_money,2028,2024,4,0
 section1_dah_equals_section2_dah_same_year,630,630,0,6
+aid_at_risk_is_per_year_not_5yr_total,2028,2028,0,0
 all_country_range_brackets_total,7,7,0,0
 card_deaths_equal_full_model_1M_uniform_cut,280,280,0,0
 coverage_in_0_1_and_after_le_before,2028,2028,0,0
 coverage_is_fraction_not_percent,2028,2028,0,0
+cut_formula_matches_documented_scenario,2028,2028,0,0
 dashboard_country_equals_all_countries_row,33,33,0,0
 deaths_le_people_affected,11896,11896,0,0
 deaths_nonnegative,2028,2028,0,0
@@ -56,5 +55,6 @@ section3_spending_breakdown_levels,1,1,0,0
 section3_weo_spending_minus_revenue_equals_borrowing,71,71,0,0
 table_total_row_equals_headline,2028,2028,0,0
 unit_costs_inside_parameter_range,71,71,0,0
+unspec_and_kappa_conserve_money,2028,2028,0,0
 year1_le_5year,2028,2028,0,0
 zero_cut_gives_zero,1014,1014,0,0
