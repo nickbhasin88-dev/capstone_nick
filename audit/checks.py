@@ -406,7 +406,9 @@ def main():
             Bx = r["buckets"].set_index("bucket")
             lost = float(Bx.loc[b, "gross_loss_usd"])
             want = float(Bx.loc[b, "deaths_5y"]) * 1e6 / lost
-            shown = float(c["deaths"].replace(",", "")) if c["deaths"] else 0.0
+            # the cards no longer show deaths (main 5c7241a): check the model value they are built from instead
+            pm = hm.per_million_card(iso, b, I, P, scn.DEFAULT_MORTALITY_TREND)
+            shown = float(pm["deaths_5y"]) if pm else 0.0
             ok = abs(shown - want) <= max(0.01 * want, 0.5) and (cut == 1.0 or abs(lost - 1e6) < 1.0)
             rec(iso, b, "", "card_deaths_equal_full_model_1M_uniform_cut", ok, shown - want,
                 f"card {shown:.0f}, model {want:.1f}, aid lost {lost:,.0f} of {aid:,.0f}")
@@ -526,10 +528,15 @@ def main():
         else:
             rec(iso, "", "", "gdp_constant2023_equals_nominal_in_2023", False, "", "2023 GDP missing")
     # Section 1: stacked components = total; 2023 matches the raw IHME file
-    raw = pd.read_csv(ROOT / "datasets" / "IHME_HEALTH_SPENDING_1995_2023_Y2026M09D21.CSV", encoding="utf-8-sig",
-                      usecols=["iso3", "level", "year", "the_total_mean", "ghes_total_mean", "ppp_total_mean",
-                               "oop_total_mean", "dah_total_mean"])
-    raw = raw[raw.level == "Country"].set_index(["iso3", "year"])
+    # the raw IHME health spending file is not in the repo; when it is absent the 2023 comparison is skipped and reported
+    raw_hs = ROOT / "datasets" / "IHME_HEALTH_SPENDING_1995_2023_Y2026M09D21.CSV"
+    if raw_hs.exists():
+        raw = pd.read_csv(raw_hs, encoding="utf-8-sig", usecols=["iso3", "level", "year", "the_total_mean",
+                          "ghes_total_mean", "ppp_total_mean", "oop_total_mean", "dah_total_mean"])
+        raw = raw[raw.level == "Country"].set_index(["iso3", "year"])
+    else:
+        raw = pd.DataFrame(index=pd.MultiIndex.from_tuples([], names=["iso3", "year"]))
+        rec("ALL", "", "", "section1_2023_matches_raw_IHME_file_SKIPPED", True, "", f"skipped: {raw_hs.name} not found")
     for iso in CI.index:
         f = ROOT / "spending_data" / f"{iso}.csv"
         if not f.exists():

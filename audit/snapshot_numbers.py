@@ -76,7 +76,7 @@ def flatten(res, P, iso, I, cut_path, sc, ft):
     for c in ms._per_million_cards(iso, P.to_json(orient="split"), True, iso):
         d[f"card.{c['bucket']}.people"] = c["people_n"]
         d[f"card.{c['bucket']}.cov"] = c["cov_n"]
-        d[f"card.{c['bucket']}.deaths"] = c["deaths"]
+        d[f"card.{c['bucket']}.deaths"] = c.get("deaths")   # cards carry no deaths on main (5c7241a)
         # the footer's dollar amounts (unit cost, aid per death); "US$1M ... 5 years" in the I-24 wording is fixed text
         d[f"card.{c['bucket']}.foot_numbers"] = " ".join(__import__("re").findall(r"(?<!US)\$([\d.,]+[KMB]?)", c["foot"]))
     return d
