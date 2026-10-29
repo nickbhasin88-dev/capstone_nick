@@ -1,9 +1,5 @@
 import pytest
 
-# the " 2" files (main a33fefb) are macOS duplicates of tomato and shared-base test files; they stay in the repo but
-# are not collected (merge decision C8)
-collect_ignore_glob = ["* 2.py"]
-
 
 @pytest.fixture
 def ihme_split(monkeypatch):

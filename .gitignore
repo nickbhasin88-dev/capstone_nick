@@ -46,3 +46,7 @@ New Data/
 audit/merge/snapshot_main.csv
 audit/merge/snapshot_tomato.csv
 audit/merge/snapshot_chipmunk.csv
+
+# macOS duplicate copies ("file 2.py", "folder 2"); never commit them
+* 2.*
+* 2

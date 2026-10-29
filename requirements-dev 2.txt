@@ -1,3 +1,0 @@
-# Development only: tests and audit checks (python -m pytest tests; python audit/checks.py)
--r requirements.txt
-pytest
