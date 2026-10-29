@@ -107,13 +107,14 @@ def test_known_loss_is_part_of_total_loss():
 
 
 def test_dashboard_is_coverage_only():
-    """No deaths in the headline numbers or the service table; the lede names each country's biggest risks."""
+    """No deaths in the headline numbers; the lede names each country's biggest risks. The service table's only deaths
+    are its last column (merge decision 2-3, chipmunk: 'Extra Deaths, 2026-2030 Total')."""
     import model_section as ms
     r = hm.run_country("KEN", SC, NONE, I, P, n_draws=0)
     labels = " ".join(lbl for lbl, *_ in ms._headline_items(r, P))
     assert "Death" not in labels and "People Losing a Service" in labels
     table = ms._service_table_html(ms._service_rows(r["lines"]), "Kenya", r["totals"])
-    assert "Deaths" not in table
+    assert table.count("Deaths") == 1 and "Extra Deaths, 2026-2030 Total" in table
     for iso in ("KEN", "ZMB"):
         risks = ms.risk_lines(iso, hm.run_country(iso, SC, NONE, I, P, n_draws=0))
         assert risks[0].startswith("Biggest risk:") and any(t.startswith("Hardest-hit service:") for t in risks)
