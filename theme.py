@@ -358,6 +358,9 @@ hr {{ border-color: {RULE} !important; }}
 .ed-pills.lg .l {{ font-size: 15px; line-height: 1.3; }}
 .ed-pills.lg .n {{ font-size: 13.5px; }}
 .ed-pills.lg .v {{ font-family: {SERIF}; font-size: 31px; font-weight: 600; line-height: 1.15; margin-top: 8px; }}
+.ed-pills.lg .v small {{ font-family: {SANS}; font-size: 14px; font-weight: 500; color: {MUTED}; }}
+.ed-hero {{ grid-template-columns: repeat(4, minmax(0, 1fr)); cursor: help; }}
+.ed-hero .ed-help {{ font-size: 14px; margin-left: 4px; }}
 @media (max-width: 720px) {{
   .st-key-hdr {{ padding: 0.3rem 14px 14px !important; }}
   .ed-country {{ font-size: 26px; margin-bottom: 0.35rem; }}
@@ -530,11 +533,17 @@ def shared_select(label, options, widget_key, shared_key, default, **kw):
     return val
 
 
+def help_icon(help: str = "") -> str:
+    """The small info icon that marks a tooltip (with `help` as its own tooltip, or inheriting its parent's)."""
+    tip = f" title='{html.escape(help, quote=True)}'" if help else ""
+    return (f"<span class='ed-help material-symbols-rounded'{tip} "
+            f"style=\"font-family:'Material Symbols Rounded'\">info</span>")
+
+
 def section_header(icon: str, title: str, help: str | None = None, rule: bool = True):
     """Round BRAND badge with a Material icon and a serif title (an info icon carries `help` as a tooltip)."""
     e = html.escape
-    tip = (f"<span class='ed-help material-symbols-rounded' title='{e(help, quote=True)}' "
-           f"style=\"font-family:'Material Symbols Rounded'\">info</span>") if help else ""
+    tip = help_icon(help) if help else ""
     st.markdown(
         f"<div class='ed-sec{' rule' if rule else ''}'><div class='ed-sec-row'>"
         f"<div class='ed-badge'><span class='material-symbols-rounded'>{e(icon)}</span></div>"

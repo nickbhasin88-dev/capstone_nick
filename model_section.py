@@ -905,51 +905,104 @@ def money_words(x: float) -> str:
 
 
 def story_lede(iso3: str, country_name: str, ctl: dict, sk: str) -> str:
-    """HTML for the top of the Dashboard: kicker, headline, dek and three big numbers."""
+    """HTML for the top of the Dashboard: a one-sentence headline and four cards (aid lost, people losing a service,
+    largest coverage drop, extra deaths) with the same numbers as the service table and the coverage charts."""
     I = _inputs()
     e = html.escape
-    # the controls sit in the scenario bar just below; the link jumps there (same cached run as Section 4)
-    kick_html = ""
     if iso3 not in I["ci"].index or iso3 not in set(I["lines"].iso3):
         head = f"{country_name} receives no recorded HIV, TB, malaria or vaccine aid"
         dek = "There is nothing for a donor cut to remove here; the spending and budget charts below still apply."
-        return (f"<div class='ed-lede'>{kick_html}<div class='ed-headline'>{e(head)}</div>"
+        return (f"<div class='ed-lede'><div class='ed-headline'>{e(head)}</div>"
                 f"<p class='ed-dek'>{e(dek)}</p></div>")
     res = run_ctl(iso3, sk, ctl)
+    T = res["totals"]
     if ctl["preset"] == scn.ANNOUNCED:
-        return _money_lede(iso3, country_name, ctl, res, kick_html)
-    T, B, L = res["totals"], res["buckets"].set_index("bucket"), res["lines"].set_index("line")
-    phrase = scenario_phrase(ctl["preset"], ctl.get("opts"))
-    if T["gross"] <= 1e4:
-        head = f"{phrase}, {country_name} would lose almost no aid for HIV, TB, malaria or vaccines"
-        dek = "The services these programs pay for would carry on unchanged."
+        head, dek = _money_head(iso3, country_name)
     else:
-        head = (f"{phrase}, {country_name} would lose {money_words(T['gross'])} a year of HIV, TB, malaria and vaccine "
-                f"aid, and about {approx_words(people_lost(res))} people a year would lose a service")
-        if T["replaced"] > 0:
-            dek = (f"The government could replace {money_words(T['replaced'])} of the {money_words(T['gross'])} lost "
-                   "each year; the rest is lost to services.")
+        phrase = scenario_phrase(ctl["preset"], ctl.get("opts"))
+        if T["gross"] <= 1e4:
+            head = f"{phrase}, {country_name} would lose almost no aid for HIV, TB, malaria or vaccines"
+            dek = "The services these programs pay for would carry on unchanged."
         else:
-            dek = ("In past aid declines (2001-2023), governments on average did not increase their own health "
-                   "spending to compensate.")
+            head = (f"{phrase}, {country_name} would lose {money_words(T['gross'])} a year of HIV, TB, malaria and "
+                    f"vaccine aid, and about {approx_words(people_lost(res))} people a year would lose a service")
+            dek = ""
+    lede = (f"<div class='ed-lede'><div class='ed-headline'>{e(head)}</div>"
+            + (f"<p class='ed-dek'>{e(dek)}</p>" if dek else "") + "</div>")
+    if dek:                                    # nothing is lost: no cards
+        return lede.replace("$", "&#36;")
+    return (lede + _hero_cards_html(iso3, res, ctl)).replace("$", "&#36;")
+
+
+def service_rows(res) -> tuple:
+    """(show, rows): the lines shown in the service table and the rows built from them. The headline cards, the
+    coverage charts and the table all start from these."""
+    L = res["lines"]
+    show = L[(L["base_usd"] > 0) | (L["net_loss_usd"] != 0)].copy()
+    return show, _service_rows(show)
+
+
+def _hero_cards_html(iso3: str, res: dict, ctl: dict) -> str:
+    """The four headline cards. Each number is computed exactly as the table's Total row (aid lost, people, deaths)
+    or the coverage charts (largest drop by the last year) compute it; the detail is in each card's tooltip."""
+    e = html.escape
+    T, L = res["totals"], res["lines"].set_index("line")
+    _, rows = service_rows(res)
+    # 1. aid lost: the table's Aid Lost total (after government replacement, average per year 2026-2030)
+    aid_tip = (f"HIV, TB, malaria and vaccine aid lost, average per year {FIRST_YEAR}-{scn.YEARS[-1]}, after "
+               f"government replacement: the Aid Lost total in the service table. Before replacement "
+               f"{money(T['gross'])} a year"
+               + (f" ({T['gross'] / T['base']:.0%} of the {money(T['base'])} a year these four diseases receive now)"
+                  if T["base"] else "") + f"; the government replaces {money(T['replaced'])} a year. ")
+    aid_tip += ("The rest is lost to services. " if T["replaced"] > 0 else
+                "In past aid declines (2001-2023), governments on average did not increase their own health spending "
+                "to compensate. ")
+    if ctl["preset"] == scn.ANNOUNCED:
+        ap = announced_path(iso3)
+        if ap["all"]:
+            aid_tip += (f"All health aid lost (the chart below) is larger: {money(ap['lost'][0])} in {scn.YEARS[0]} to "
+                        f"{money(ap['lost'][-1])} in {scn.YEARS[-1]}.")
+    # 2. people losing a service: the table's People Losing Service total; treatment and prevention in the tooltip
+    ppl = rows.loc[rows["line"] != "hiv_prev", "units_lost"].sum()
+    _, parts = care_breakdown(L)
     split = care_split(L)
 
-    def brk(parts):
-        """'452K HIV treatment* · 466K malaria patients' (top 2, then '+ others')."""
-        return (" · ".join(f"{num(v)} {lbl}" for v, lbl in parts[:2]) + (" + others" if len(parts) > 2 else "")) or "none"
-    tr, pv = split["treatment"], split["prevention"]
-    tr_note = brk(tr[1]) + (" · *full-cost equivalents of the lost money" if any(l == CARE_LABELS["hiv_art"] for _, l in tr[1])
-                            else "")
-    nums = [
-        (money(T["gross"]), "Health Aid Lost Each Year",
-         f"{T['gross'] / T['base']:.0%} of aid for these four diseases" if T["base"] else "", False, ""),
-        (num(tr[0]) if tr[0] >= 1 else "0", "Treatment Lost Each Year", tr_note, False, TREATMENT_TIP),
-        (num(pv[0]) if pv[0] >= 1 else "0", "Prevention Lost Each Year", brk(pv[1]), False, PREVENTION_TIP),
+    def brk(k):
+        tot, ps = split[k]
+        return f"{num(tot)} ({', '.join(f'{num(v)} {lbl.rstrip(chr(42))}' for v, lbl in ps) or 'none'})"
+    ppl_tip = (f"Treatment {brk('treatment')}. Prevention {brk('prevention')}. Average per year "
+               f"{FIRST_YEAR}-{scn.YEARS[-1]}. " + CARE_TIP + " " + TREATMENT_TIP + " " + PREVENTION_TIP)
+    # 3. largest coverage drop by the last year, as in the coverage charts and the table's Coverage column
+    paths = sorted(_service_paths(rows), key=lambda p: -p[3])
+    if paths and paths[0][3] > 0:
+        r, yrs, cov, d = paths[0]
+        cov_v, cov_n = cov_pair(r.cov0, cov[-1] / 100), f"{r.name}, by {yrs[-1]}"
+        cov_tip = (f"Coverage now → {yrs[-1]}, as in the coverage charts and the table: {r.name} {cov_v} ({_pts(d)})."
+                   + "".join(f" {'Next' if i == 0 else 'Then'}: {p[0].name} {cov_pair(p[0].cov0, p[2][-1] / 100)} "
+                             f"({_pts(p[3])})." for i, p in enumerate(q for q in paths[1:3] if q[3] > 0)))
+    else:
+        cov_v, cov_n, cov_tip = "None", "no service loses coverage", ""
+    # 4. extra deaths 2026-2030: the table's Total row
+    C = res["committed"]
+    death_tip = ((f"+{num(C['after_2030'])} more in 2031-2035 (assumption-driven). " if C["after_2030"] >= 0.5 else "")
+                 + (f"Follows the announced cuts, {FIRST_YEAR}-{scn.YEARS[-1]}." if ctl["preset"] == scn.ANNOUNCED
+                    else deaths_basis_text(ctl["preset"], ctl.get("cut_path"))) + " " + after_2030_help(C))
+    span = f"{FIRST_YEAR}-{str(scn.YEARS[-1])[2:]}"          # '2026-30'
+    cards = [
+        ("Aid Lost", money(T["net"]), "a year", f"HIV, TB, malaria & vaccines, {span} avg", aid_tip),
+        ("People Losing a Service", num(ppl), "a year",
+         f"incl. {num(parts[0][0])} {parts[0][1].rstrip('*')}" if parts else "", ppl_tip),
+        ("Largest Coverage Drop", cov_v, "", cov_n, cov_tip),
+        ("Extra Deaths", num(rows["deaths_5y"].sum()), "",
+         f"{span} (range {rng(T['deaths_5y_lo'], T['deaths_5y_hi'])})", death_tip),
     ]
-    big = "".join(f"<div class='ed-bignum' title='{e(tip, quote=True)}'><div class='v{' hl' if hl else ''}'>{e(v)}</div>"
-                  f"<div class='l'>{e(lbl)}</div><div class='n'>{e(note)}</div></div>" for v, lbl, note, hl, tip in nums)
-    return (f"<div class='ed-lede'>{kick_html}<div class='ed-headline'>{e(head)}</div>"
-            f"<p class='ed-dek'>{e(dek)}</p></div><div class='ed-bignums'>{big}</div>").replace("$", "&#36;")
+    cells = "".join(
+        f"<div class='ed-pill' title='{e(tip, quote=True)}'><span class='l'>{e(lbl)}"
+        + (f"{th.help_icon()}" if tip else "") + f"</span><span><span class='v'>{e(v)}"
+        + (f" <small>{e(unit)}</small>" if unit else "") + "</span>"
+        + (f"<span class='n'>{e(note)}</span>" if note else "") + "</span></div>"
+        for lbl, v, unit, note, tip in cards)
+    return f"<div class='ed-pills lg ed-hero'>{cells}</div>"
 
 
 def _risk_source(src: str, chan: str) -> str:
@@ -996,29 +1049,17 @@ def risk_lines(iso3: str, res: dict) -> list:
     return out
 
 
-def _money_lede(iso3: str, country_name: str, ctl: dict, res: dict, kick_html: str) -> str:
-    """Top of the Dashboard for Announced donor cuts: the money lost."""
-    e = html.escape
-    T, ap = res["totals"], announced_path(iso3)
-    lost, known, pred = ap["lost"], ap["known"], ap["predicted"]
+def _money_head(iso3: str, country_name: str) -> tuple:
+    """(headline, dek) for Announced donor cuts: the money lost. The dek is only set when almost nothing is lost.
+    (The policy money against the 2030 loss is in the budget section's Added for Health by 2030 pill.)"""
+    ap = announced_path(iso3)
+    lost = ap["lost"]
     what = "health aid" if ap["all"] else "HIV, TB, malaria and vaccine aid"
     if lost.sum() <= 1e4 * len(lost):
-        head = f"If donors cut aid as announced, {country_name} would lose almost no {what}"
-        dek = "None of the announced cuts falls on this aid here."
-    else:
-        head = (f"If donors cut aid as announced, {country_name} would lose {money_words(lost[0])} of {what} in "
-                f"{scn.YEARS[0]}, rising to {money_words(lost[-1])} by {scn.YEARS[-1]}")
-        dek = ""
-    pol = ctl.get("policy")
-    if pol is not None and pol["full_usd"] > 0 and lost[-1] > 0:
-        what_gov = " and ".join(w for w, v in (("a bigger health budget", pol["abuja_usd"]),
-                                               ("higher tax revenue", pol["tax_usd"])) if v > 0)
-        cover = pol["full_usd"] / lost[-1]
-        dek = (f"{what_gov[0].upper() + what_gov[1:]} would add {money_words(pol['full_usd'])} a year for health by "
-               f"{scn.YEARS[-1]}, " + (f"more than the {money_words(lost[-1])} of aid lost that year."
-                                      if cover >= 1 else f"{cover:.0%} of the {money_words(lost[-1])} of aid lost that year."))
-    return (f"<div class='ed-lede'>{kick_html}<div class='ed-headline'>{e(head)}</div>"
-            + (f"<p class='ed-dek'>{e(dek)}</p>" if dek else "") + "</div>").replace("$", "&#36;")
+        return (f"If donors cut aid as announced, {country_name} would lose almost no {what}",
+                "None of the announced cuts falls on this aid here.")
+    return (f"If donors cut aid as announced, {country_name} would lose {money_words(lost[0])} of {what} in "
+            f"{scn.YEARS[0]}, rising to {money_words(lost[-1])} by {scn.YEARS[-1]}"), ""
 
 
 def render_model_section(iso3: str, country_name: str, imf: dict | None, ctl: dict, sk: str):
@@ -1046,8 +1087,7 @@ def _country_results(iso3, country_name, ctl, sk, imf):
                         + (f" (aid rises by {money(T['gains'])} a year; gains aren't modelled)." if T.get("gains", 0) >= 0.5
                            else ".")))
 
-    show = L[(L["base_usd"] > 0) | (L["net_loss_usd"] != 0)].copy()
-    rows = _service_rows(show)
+    show, rows = service_rows(res)                # the same rows as the headline cards
     items = _headline_items(res, ptab)
 
     if ctl["cmp"]:

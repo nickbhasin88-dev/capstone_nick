@@ -314,7 +314,7 @@ with hdr_map:
     st.plotly_chart(_mf, config={"displayModeBar": False, "staticPlot": True}, use_container_width=True,
                     theme=None, key="hdr_map")
 
-# ---- story lede: headline, summary and three big numbers from the model, with the scenario bar under it ---- #
+# ---- story lede: one-sentence headline, four cards, then the aid-lost chart; the scenario bar under it ---- #
 lede = st.container()                    # filled after the scenario bar has run (it decides the numbers)
 ctl, sk = ms.scenario_bar(crow["iso3"], country_name)
 with lede:
