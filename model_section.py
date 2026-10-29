@@ -1100,7 +1100,7 @@ def _country_results(iso3, country_name, ctl, sk, imf):
     ovc = show[show["line"] == "hiv_ovc"]
     st.caption(_esc(
         "Aid Lost here covers only HIV, TB, malaria and vaccine aid, the aid the model turns into services and deaths"
-        + (f"; the fiscal panel below counts all health aid lost under {scn.display_name(scn.ANNOUNCED)}, so its "
+        + (f"; the fiscal panel below counts all health aid lost under {title_case(scn.display_name(scn.ANNOUNCED))}, so its "
            "figures are larger" if ap is not None and ap["all"] else "")
         + ". Other Aid is money the model does not link to services or deaths: support for orphans and vulnerable "
         "children" + (f" ({money(ovc['net_loss_usd'].sum())} a year lost)" if len(ovc) else "")
