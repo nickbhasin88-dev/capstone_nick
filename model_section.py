@@ -584,7 +584,7 @@ def _controls(iso3, country_name, I) -> dict:
                                         help="How hard can the health budget be pushed? Capacity = government health "
                                              "spending x (that growth rate minus the country's typical growth) x a "
                                              "debt-stress factor, every year.")]
-            cap = st.checkbox("Cap Replacement at Fiscal Space", value=True, key="m_cap",
+            cap = st.checkbox("Cap Replacement at Fiscal Space", value=False, key="m_cap",   # off unless ticked
                               disabled=(mode in ("none", "max")))
             abuja = taxup = False
             if SHOW_GOV_OPTIONS:
