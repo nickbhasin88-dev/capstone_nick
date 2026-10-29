@@ -385,8 +385,10 @@ def known_vs_predicted_chart(iso3: str, country_name: str):
     ap = announced_path(iso3)
     if ap["lost"].sum() <= 0:
         return
+    what = "All health aid" if ap["all"] else "HIV, TB, malaria & vaccine aid"
     st.markdown(f"<div class='ed-kicker' style='margin:0.6rem 0 0'>Aid lost each year in {html.escape(country_name)}"
-                "</div>", unsafe_allow_html=True)
+                f"</div><div class='ed-source' style='margin:2px 0 0'>{AID_LABEL['chart'](what)}</div>",
+                unsafe_allow_html=True)
     fig = go.Figure()
     parts = (("known", "Known (published cuts)", th.ROSE, ap["known"]),
              ("mou_pred", "Predicted MOU cut (no MOU)", th.BLUE, ap["mou_pred"]),
@@ -1378,8 +1380,8 @@ def _loss_by_bucket_fig(B: pd.DataFrame, any_replaced: bool = False, n_rows: int
                              text=["  " + money(t) for t in tot], textposition="middle right",
                              textfont=dict(color=INK), showlegend=False, hoverinfo="skip", cliponaxis=False))
     fig.update_layout(barmode="stack", bargap=gap)
-    _layout(fig, h=h, title=_title(th.title_sub("Aid Lost per Year", "Lighter = replaced by government")
-                                   if any_replaced else "Aid Lost per Year"),
+    _layout(fig, h=h, title=_title(th.title_sub("Aid Lost per Year", AID_LABEL["bucket"]
+                                                + ("<br>Lighter = replaced by government" if any_replaced else ""))),
             margin=dict(l=10, r=20, t=50, b=10), xaxis=dict(range=[0, xmax]))
     return fig
 
@@ -1510,7 +1512,7 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
     e = html.escape
     grey = lambda t: f"<span class='sub'>{t}</span>"
     nm = f"<span class='nm'>{e('Not Modelled')}</span>"
-    head = [("Service", ""), ("Donor Aid Now", "per year"), ("Aid Lost", "per year, after government replacement"),
+    head = [("Service", ""), ("Donor Aid Now", AID_LABEL["table_base"]), ("Aid Lost", AID_LABEL["table_lost"]),
             ("Cost per Person", ""), ("People Losing Service, per Year", ""), ("Coverage", f"now → {LAST_YEAR}"),
             ("Extra Deaths, 2026-2030 Total", "")]
     th_html = "".join(f"<th>{e(h)}" + (f"<br>{grey(e(s))}" if s else "") + "</th>" for h, s in head)
@@ -1601,6 +1603,16 @@ def _gain_rows(bucket, gains) -> list:
 
 
 AVG_LABEL = "Average 2026-2030"
+# short labels that say which aid figure is shown, so the headline chart, Aid Lost per Year, the table and the fiscal
+# panel can be told apart (which aid; one year or the 2026-2030 average; before or after government replacement)
+AID_LABEL = {
+    "chart": lambda what: f"{what} · each year {scn.YEARS[0]}-{scn.YEARS[-1]} · before government replacement",
+    "bucket": f"HIV, TB, malaria & vaccine aid · average per year {scn.YEARS[0]}-{str(scn.YEARS[-1])[2:]}",
+    "table_base": "per year, 2021-23 average",
+    "table_lost": f"per year, average {scn.YEARS[0]}-{str(scn.YEARS[-1])[2:]}, after government replacement",
+    "fiscal": lambda what: f"{what.lower() if what.startswith('All') else what}, average "
+                           f"{scn.YEARS[0]}-{str(scn.YEARS[-1])[2:]}, before government replacement",
+}
 AVG_SHORT = "2026-30"
 
 
@@ -1919,14 +1931,16 @@ def _fiscal_panel(res: dict, country_name: str, imf: dict, fiscal_t=scn.DEFAULT_
     if (pd.isna(rev) or not rev) and imf.get("revenue_pct_gdp") and F["gdp"]:
         rev = imf["revenue_pct_gdp"] / 100 * F["gdp"]
     G = avg["gap"]
+    what = "All health aid" if "all_aid" in res else "HIV, TB, malaria & vaccine aid"
+    aid_note = AID_LABEL["fiscal"](what)
     st.markdown(th.pills_html([
         ("Government Health Spending (2023)", money(F["ghes"]),
          "IHME, constant 2023 US$",
          f"{F['ghes_pct_gdp']:.1f}% of GDP" if not pd.isna(F["ghes_pct_gdp"]) else ""),
         ("Aid Lost as % of Government Health Spending", pct_smart(G / F["ghes"]) if F["ghes"] else "n/a",
-         "Aid lost per year (gross, average 2026-2030) ÷ government health spending, 2023", ""),
+         f"{what} lost per year (gross, average 2026-2030) ÷ government health spending, 2023", aid_note),
         ("Aid Lost as % of Government Revenue", pct_smart(G / rev) if rev and not pd.isna(rev) else "n/a",
-         "Aid lost per year (gross, average 2026-2030) ÷ total government revenue", ""),
+         f"{what} lost per year (gross, average 2026-2030) ÷ total government revenue", aid_note),
         health_share_pill(F),
     ], large=True), unsafe_allow_html=True)
     # the gap, what the government fills and what is left are shown in the chart below (no second pill row)
@@ -1964,7 +1978,7 @@ def _fiscal_panel(res: dict, country_name: str, imf: dict, fiscal_t=scn.DEFAULT_
                            bgcolor=th.tint(th.SURFACE, 0.85))
     fig.update_layout(barmode="overlay", bargap=0.35, legend=dict(orientation="h", y=-0.18, x=0))
     _layout(fig, h=190 + 70 * len(views),
-            title=_title(th.title_sub("The Gap and the Government Response", "US$ per year")),
+            title=_title(th.title_sub("The Gap and the Government Response", f"US$ per year; {aid_note}")),
             xaxis=dict(range=[0, xmax], nticks=4, tickangle=0), yaxis=dict(type="category"),
             margin=dict(l=10, r=90, t=70, b=10))
     note = (None if on_scale or cap <= 0 else
