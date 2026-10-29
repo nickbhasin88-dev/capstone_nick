@@ -1669,6 +1669,7 @@ def _coverage_path_fig(rows: pd.DataFrame):
     return fig
 
 
+COV_TICKS = [0, 25, 50, 75, 100]      # the same coverage axis on every service chart
 DROP_ALERT, DROP_WATCH = 10.0, 5.0     # coverage drop by the last year, percentage points: needs help / watch
 
 
@@ -1711,22 +1712,23 @@ def _drop_overview_html(rows: pd.DataFrame) -> str:
 
 def _service_fig(r, years: list, cov: list, drop: float):
     """One service: coverage each year (%, one axis; people covered in the hover), with the cost per person in the
-    title."""
+    title. Every service chart uses the same 0-100% axis, so small and large drops can be compared."""
     col = BUCKET_COLORS[r.bucket]
     need = float(r.need)
-    lo, hi = max(0.0, min(cov) - 8), min(100.0, max(cov) + 4)
+    low = cov[-1] < 15                             # the drop label goes above the point near the bottom of the axis
     people = [c / 100 * need for c in cov]
     fig = go.Figure()
     fig.add_scatter(x=years, y=cov, mode="lines+markers", line=dict(color=col, width=2.5), marker=dict(size=6),
                     customdata=[num(p) for p in people], showlegend=False,
                     hovertemplate="%{x}: %{y:.0f}% covered, %{customdata} people<extra></extra>")
     fig.add_annotation(x=years[-1], y=cov[-1], text=f"<b>{_pts(drop)}</b>", showarrow=False, xanchor="right",
-                       yanchor="top", yshift=-6, font=dict(color=_drop_color(drop), size=13))
+                       yanchor="bottom" if low else "top", yshift=6 if low else -6,
+                       font=dict(color=_drop_color(drop), size=13))
     cost = f"{money(r.unit_cost)} {r.cost_unit}"
     _layout(fig, h=250, title=_title(th.title_sub(r.name, cost)), margin=dict(l=58, r=6, t=56, b=0),
             xaxis=dict(tickvals=years, ticktext=[str(y) if i else "Now" for i, y in enumerate(years)]),
-            yaxis=dict(range=[lo, hi], ticksuffix="%", nticks=4, tickfont=dict(size=12),
-                       title=dict(text="Coverage", standoff=12, font=dict(size=12))))
+            yaxis=dict(range=[0, 100], tickvals=COV_TICKS, ticktext=[f"{v}%" for v in COV_TICKS],
+                       tickfont=dict(size=12), title=dict(text="Coverage", standoff=12, font=dict(size=12))))
     return fig
 
 
