@@ -1433,6 +1433,8 @@ LINE_SHORT = {"hiv_art": ("HIV Treatment", "antiretroviral therapy (ART)"),
 LINE_ORDER = ["hiv_art", "hiv_care_ct", "hiv_pmtct", "hiv_prev", "hiv_ovc", "tb_ds", "tb_dr", "mal_itn", "mal_irs",
               "mal_cm", "imm"]
 COST_UNIT = {"hiv_pmtct": "per woman per year, including her ART"}
+# the service table's narrow cost cell: (short text, tooltip with the rest)
+COST_CELL = {"hiv_pmtct": ("per woman per year", "Per woman per year, including her ART.")}
 
 
 def care_ct_note() -> str:
@@ -1547,13 +1549,15 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
         people = num(r.units_lost) if r.units_lost > 0 or r.cov_ok else nm
         if r.units_lost > 0:                    # 5-year total under the yearly number (ART: mostly the same people)
             five = getattr(r, "units_lost_5y", np.nan)
-            people += "<br>" + grey(f"<span title='{e(ART_UNIT_NOTE, quote=True)}'>people who stop ART: full-cost "
-                                    "equivalents of the lost money; mostly the same people each year</span>"
-                                    if r.line == "hiv_art" else
+            art_tip = (ART_UNIT_NOTE + " Mostly the same people each year, so no 5-year total is shown.")
+            people += "<br>" + grey(f"<span title='{e(art_tip, quote=True)}'>full-cost equivalents{th.help_icon()}"
+                                    "</span>" if r.line == "hiv_art" else
                                     f"{num(five)} over 5 years" if five == five else "")
-        cells = [money(r.base_usd), money(r.net_loss_usd),
-                 f"<span class='big'>{e(r.cost_big)}</span><br>"
-                 f"{grey(e(r.cost_unit).replace('per infection averted', 'per infection<br>averted'))}", people, cov, deaths]
+        short, tip = COST_CELL.get(r.line, (r.cost_unit, ""))
+        unit = (f"<span title='{e(tip, quote=True)}'>{e(short)}{th.help_icon()}</span>" if tip
+                else e(short).replace('per infection averted', 'per infection<br>averted'))
+        cells = [money(r.base_usd), money(r.net_loss_usd), f"<span class='big'>{e(r.cost_big)}</span><br>{grey(unit)}",
+                 people, cov, deaths]
         body.append("<tr>" + service + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
     if prev is not None:
         body += _gain_rows(prev, gains)
