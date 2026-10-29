@@ -37,6 +37,7 @@ SCEN_A, SCEN_B = th.GRAPE, th.BLUE
 BUCKET_COLORS = th.DISEASE_COLORS
 REPLACED_ALPHA = 0.4                 # "replaced by government" = the disease color at this opacity
 FIRST_YEAR = 2026                    # year 1 after the cut
+LAST_YEAR = 2030                     # coverage "after" in the charts, cards and table
 MAIN_LINE = {"HIV": "hiv_art", "TB": "tb_ds", "Malaria": "mal_itn", "Immunization": "imm"}
 BUCKET_WORD = {"HIV": "HIV", "TB": "TB", "Malaria": "malaria", "Immunization": "immunization"}
 
@@ -1128,7 +1129,8 @@ def _country_results(iso3, country_name, ctl, sk, imf):
                      "external share of the country's spending on the disease), the loss is that pool x the share of "
                      "money lost.")
     notes += [f"{f[0].upper() + f[1:]}." for f in res["flags"]]
-    notes.append("Money and people are yearly averages over 2026-2030 (constant 2023 US$); extra deaths are the total "
+    notes.append("Money and people are yearly averages over 2026-2030 (constant 2023 US$); coverage is today -> 2030, "
+                 "as in the charts above, with the 2026-2030 average underneath; extra deaths are the total "
                  "over 2026-2030 (deaths set in motion that fall in 2031-2035 are not included). HIV prevention turns "
                  "money into infections averted; deaths from those infections are counted in the year they happen "
                  "(few before 2031). " + systems_note(ptab) + " HIV Testing & Care has no patients of its own: "
@@ -1450,7 +1452,8 @@ def _service_rows(show: pd.DataFrame) -> pd.DataFrame:
     """Lines as shown to readers: support for orphans and vulnerable children dropped (it has no modelled effect on
     deaths). Bednets and indoor spraying are separate rows, each with its own coverage (MAP ITN use and MAP household
     IRS coverage). Adds the short name, the cost text, the coverage source and whether coverage can be shown (it can't
-    when nobody is in need, e.g. malaria treatment in Iraq: the drop would be 0 / 0)."""
+    when nobody is in need, e.g. malaria treatment in Iraq: the drop would be 0 / 0). Coverage "after" and "drop" are
+    by the last year (2030), as in the coverage charts; "after_avg" and "drop_avg" are the 2026-2030 average."""
     d = show[show["line"] != "hiv_ovc"].copy()
     d["cost_big"] = [("–" if r.line in hm.LINKED else money(r.unit_cost)) for r in d.itertuples()]
     d["cost_unit"] = [("" if r.line in hm.LINKED else COST_UNIT.get(r.line, f"per {hm.UNIT_SINGULAR[r.line]}"))
@@ -1461,7 +1464,11 @@ def _service_rows(show: pd.DataFrame) -> pd.DataFrame:
     d["name"] = d["line"].map(lambda l: LINE_SHORT.get(l, (l, ""))[0])
     d["detail"] = d["line"].map(lambda l: LINE_SHORT.get(l, ("", ""))[1])
     d["cov_ok"] = (d["need"] > 0) & d["cov0"].notna() & np.isfinite(d["cov_drop_pp"].astype(float))
-    d["after"] = np.where(d["cov_ok"], (d["cov0"] - d["cov_drop_pp"].fillna(0) / 100).clip(0, 1), np.nan)
+    d["after_avg"] = np.where(d["cov_ok"], (d["cov0"] - d["cov_drop_pp"].fillna(0) / 100).clip(0, 1), np.nan)
+    d["drop_avg"] = np.where(d["cov_ok"], (d["cov0"] - d["after_avg"]) * 100, np.nan)
+    years = _model_years(d)
+    last = d[f"cov_drop_pp_{years[-1]}"] if years else d["cov_drop_pp"]
+    d["after"] = np.where(d["cov_ok"], (d["cov0"] - last.fillna(0) / 100).clip(0, 1), np.nan)
     d["drop"] = np.where(d["cov_ok"], (d["cov0"] - d["after"]) * 100, np.nan)
     order = {b: i for i, b in enumerate(hm.BUCKETS)}
     lo = {l: i for i, l in enumerate(LINE_ORDER)}
@@ -1496,12 +1503,13 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
     """'What Each Service Loses': NYT-style HTML table, grouped by disease, with a Total row. With the run's totals T,
     an Other Aid row (orphan support and systems money not modelled as services) makes the money columns add up to
     the headline figures, and the Total deaths range is the run's own range across parameter values. Money and people are
-    yearly averages 2026-2030; deaths are the 2026-2030 total."""
+    yearly averages 2026-2030; coverage is now -> 2030 (the 2026-2030 average under it); deaths are the 2026-2030
+    total."""
     e = html.escape
     grey = lambda t: f"<span class='sub'>{t}</span>"
     nm = f"<span class='nm'>{e('Not Modelled')}</span>"
     head = [("Service", ""), ("Donor Aid Now", "per year"), ("Aid Lost", "per year, after government replacement"),
-            ("Cost per Person", ""), ("People Losing Service, per Year", ""), ("Coverage", ""),
+            ("Cost per Person", ""), ("People Losing Service, per Year", ""), ("Coverage", f"now → {LAST_YEAR}"),
             ("Extra Deaths, 2026-2030 Total", "")]
     th_html = "".join(f"<th>{e(h)}" + (f"<br>{grey(e(s))}" if s else "") + "</th>" for h, s in head)
     body, prev = [], None
@@ -1521,7 +1529,8 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
             continue
         if r.cov_ok:
             src = f"<br>{grey(e('(' + r.cov_source + ')'))}" if r.cov_source else ""
-            cov = f"{cov_pair(r.cov0, r.after)}{src}<br><span class='drop'>{_pts(r.drop)}</span>"
+            avg = grey(f"avg {AVG_SHORT}: {cov_pair(r.cov0, r.after_avg).split(' → ')[1]}")
+            cov = f"{cov_pair(r.cov0, r.after)}{src}<br><span class='drop'>{_pts(r.drop)}</span><br>{avg}"
         elif r.line == "hiv_prev":
             cov = "<span class='nm'>No Single<br>Target Group</span>"
         else:
@@ -1588,6 +1597,7 @@ def _gain_rows(bucket, gains) -> list:
 
 
 AVG_LABEL = "Average 2026-2030"
+AVG_SHORT = "2026-30"
 
 
 def _model_years(rows: pd.DataFrame) -> list:
@@ -1674,7 +1684,7 @@ def _drop_overview_html(rows: pd.DataFrame) -> str:
     li = "".join(
         f"<tr><td style='padding:2px 10px 2px 0'><span style='display:inline-block;width:10px;height:10px;"
         f"border-radius:50%;background:{_drop_color(d)};margin-right:6px'></span><b>{html.escape(r.name)}</b></td>"
-        f"<td style='padding:2px 10px;white-space:nowrap'>{cov[0]:.0f}% → {cov[-1]:.0f}%</td>"
+        f"<td style='padding:2px 10px;white-space:nowrap'>{cov_pair(r.cov0, cov[-1] / 100)}</td>"
         f"<td style='padding:2px 10px;white-space:nowrap;color:{_drop_color(d)};font-weight:600'>{_pts(d)}</td>"
         f"<td style='padding:2px 0;color:{MUTED}'>{tag(d)}</td></tr>"
         for r, _, cov, d in paths)
