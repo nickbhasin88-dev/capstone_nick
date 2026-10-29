@@ -7,6 +7,9 @@ from the evidence tables in audit/logic_review/ (which are built from the raw da
     python batch34_inputs.py --tb         # item 5 (IMP-11): TB course costs (DS, DR) and the MDR/RR share and enrolment
     python batch34_inputs.py --donor      # item 6 (IMP-04): external (donor) share of disease spending, for the cap rule
     python batch34_inputs.py --art-full   # Batch 4b item 2 (L-50): ART cost per patient-year = min(GHCC-based, observed spending), floored and gated
+    python batch34_inputs.py --art-full56 # Batch 5+6 item A1: the same with the observed-spending validity test, the Rosen-based floor and the gate on the final value
+    python batch34_inputs.py --donor56    # Batch 5+6 items A2-A3: external share of PUBLIC spending for HIV and immunization; intervention-specific donor shares for the malaria lines
+    python batch34_inputs.py --vaccines   # Batch 5+6 item V2: deaths averted per fully immunized child (VIMC) and their timing
 
 Columns written (all with a `_source` column saying whether the value is the country's own or a fallback):
   unspec_<disease>_{treatment,prevention,testing,rssh,pm}   shares of unspecified money by purpose (sum to 1)
@@ -16,6 +19,12 @@ Columns written (all with a `_source` column saying whether the value is the cou
   tb_rr_share, tb_rr_cov                                     RR-TB incidence / all-forms incidence; RR enrolment / RR incidence (WHO 2024)
   donor_share_{hiv,tb,malaria,imm}                           external share of spending on the disease (0-1)
   donor_share_malaria_prev                                   external share of public malaria spending (bednets, spraying; Batch 4b item 3)
+  donor_share_hiv, donor_share_imm (Batch 5+6 item A2)       external share of PUBLIC spending on HIV / immunization (replaces the all-source share)
+  donor_share_mal_itn, _mal_irs, _mal_cm (Batch 5+6 item A3) intervention-specific donor share = donor money for the line / (people covered x unit cost), capped at 1
+  imm_dpc, imm_dpc_lo, imm_dpc_hi, imm_dpc_lag0..lag9, imm_dpc_beyond_window, imm_q5_ratio, imm_antigens (Batch 5+6 item V2)
+                                                             deaths averted per fully immunized child (VIMC, 2015-19, x Q5 ratio) and by years since vaccination
+  flag_itn_default, flag_irs_household, flag_irs_implied, flag_map_who_gap (Batch 7 item 14)
+                                                             malaria-input caveats L-07, L-21, L-22, L-23 (audit/batch7_flags.py)
 Called on its own after the evidence tables change; prepare_model.py (full rebuild) does not rebuild these columns.
 """
 from __future__ import annotations
@@ -75,6 +84,52 @@ def apply_art_full(ci: pd.DataFrame) -> pd.DataFrame:
     return ci
 
 
+def apply_art_full56(ci: pd.DataFrame) -> pd.DataFrame:
+    t = pd.read_csv(EV / "batch56_art_cost.csv").set_index("iso3").reindex(ci.index)
+    ci["art_cost_full"], ci["art_cost_full_lo"], ci["art_cost_full_hi"] = t.new_cost, t.new_lo, t.new_hi
+    ci["art_cost_full_source"] = t.new_source
+    ci["art_cost_full_year"] = 2023
+    return ci
+
+
+def apply_donor56_hiv_imm(ci: pd.DataFrame) -> pd.DataFrame:
+    """Batch 5+6 item A2 (L-51): the HIV and immunization pools use the external share of PUBLIC spending."""
+    t = pd.read_csv(EV / "batch56_donor_share.csv").set_index("iso3").reindex(ci.index)
+    for b, tag in (("HIV", "hiv"), ("Imm", "imm")):
+        ci[f"donor_share_{tag}"] = t[f"{b}_pub_share"]
+        ci[f"donor_share_{tag}_source"] = t[f"{b}_pub_source"]
+        ci[f"donor_share_{tag}_year"] = t[f"{b}_year"]
+    return ci
+
+
+def apply_donor56_malaria(ci: pd.DataFrame) -> pd.DataFrame:
+    """Batch 5+6 item A3: intervention-specific donor shares for bednets, spraying and case management."""
+    t = pd.read_csv(EV / "batch56_donor_share.csv").set_index("iso3").reindex(ci.index)
+    for l in ("mal_itn", "mal_irs", "mal_cm"):
+        ci[f"donor_share_{l}"] = t[f"{l}_share"]
+        ci[f"donor_share_{l}_source"] = t[f"{l}_share_source"]
+    return ci
+
+
+def apply_vaccines(ci: pd.DataFrame) -> pd.DataFrame:
+    """Batch 5+6 item V2: deaths averted per fully immunized child (VIMC) and their timing by years since vaccination."""
+    t = pd.read_csv(EV / "batch56_vaccine_country.csv").set_index("iso3").reindex(ci.index)
+    cols = ["imm_dpc", "imm_dpc_lo", "imm_dpc_hi", "imm_q5_ratio", "imm_dpc_beyond_window"] + [f"imm_dpc_lag{k}" for k in range(10)]
+    for c in cols:
+        ci[c] = t[c]
+    ci["imm_antigens"], ci["imm_antigens_excluded_zero_coverage"] = t.imm_antigens, t.imm_antigens_excluded_zero_coverage
+    ci["imm_dpc_source"], ci["imm_in_vimc"] = t.imm_dpc_source, t.imm_in_vimc
+    return ci
+
+
+def apply_flags(ci: pd.DataFrame) -> pd.DataFrame:
+    """Batch 7 item 14: per-country flags for the malaria-input caveats L-07, L-21, L-22, L-23 (audit/batch7_flags.py)."""
+    t = pd.read_csv(EV / "batch7_flags.csv").set_index("iso3").reindex(ci.index)
+    for c in ("flag_itn_default", "flag_irs_household", "flag_irs_implied", "flag_map_who_gap"):
+        ci[c] = t[c].fillna(False).astype(bool)
+    return ci
+
+
 def apply_donor(ci: pd.DataFrame) -> pd.DataFrame:
     t = pd.read_csv(EV / "batch34_donor_share.csv").set_index("iso3").reindex(ci.index)
     for b, tag in (("HIV", "hiv"), ("TB", "tb"), ("Malaria", "malaria"), ("Malaria_prev", "malaria_prev"), ("Immunization", "imm")):
@@ -97,6 +152,16 @@ def main():
         ci, done = apply_donor(ci), done + ["donor"]
     if "--art-full" in sys.argv:
         ci, done = apply_art_full(ci), done + ["art-full"]
+    if "--art-full56" in sys.argv:
+        ci, done = apply_art_full56(ci), done + ["art-full56"]
+    if "--donor56-hiv-imm" in sys.argv:
+        ci, done = apply_donor56_hiv_imm(ci), done + ["donor56-hiv-imm"]
+    if "--donor56-malaria" in sys.argv:
+        ci, done = apply_donor56_malaria(ci), done + ["donor56-malaria"]
+    if "--vaccines" in sys.argv:
+        ci, done = apply_vaccines(ci), done + ["vaccines"]
+    if "--flags" in sys.argv:
+        ci, done = apply_flags(ci), done + ["flags"]
     if not done:
         raise SystemExit(__doc__)
     ci.copy().reset_index().to_csv(CI_PATH, index=False)

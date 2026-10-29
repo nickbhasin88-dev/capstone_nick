@@ -80,8 +80,11 @@ shares). PEPFAR Expenditure Analysis per patient (DR-01) was not available. `bat
 
 ### IMP-04. Cap the donor-funded share of covered people (Do before presenting)
 
-**Status: ✅ done (Batch 3+4 item 6, 14 October 2026).** External shares from WHO GHED disease accounts (HIV, malaria,
-immunization) and WHO TB financing; `batch34_evidence.md` F.
+**Status: ✅ done (Batch 3+4 item 6, 14 October 2026; shares revised in Batch 4b item 3 and Batch 5+6 items A2-A3).**
+External shares from WHO GHED disease accounts (HIV, malaria, immunization) and WHO TB financing; `batch34_evidence.md`
+F. Batch 4b: bednets and spraying use the external share of public malaria spending. Batch 5+6: HIV and immunization
+use the external share of public spending (A2, L-51); the three malaria lines use an intervention-specific share, the
+people the donor money for that intervention pays for as a share of the people covered (A3); `batch56_evidence.md`.
 
 - **Addresses:** L-44 (red-team point 9). The proportional-cap rule treats all covered people as donor-funded in 160
   of 695 country-service lines; Tajikistan's extra TB deaths reach 108% of current TB deaths.
@@ -186,6 +189,9 @@ batch's scope, which was treatment costs). `batch34_evidence.md` E.
   - Archive the exact downloaded series with dates (a `datasets/manifest.csv` with URL, date and checksum).
   - Download WDI from the World Bank API, not the open-numbers mirror.
   - Restore or rewrite the scripts that built `country_data/`, `spending_data/`, `revenue_data/` and `cofog_all/`.
+    **Batch 7 item 15:** `build_sections.py` rebuilds `country_data/` and `spending_data/` (71 of 71 files each within
+    0.5%); `macro_data/`, `revenue_data/` and `cofog_all/` remain BLOCKED (full WEO series, WoRLD code mapping and
+    general-government totals, COFOG data are not on disk).
 - **Effort:** medium. **Risk:** none for results.
 
 ### IMP-13. Country-level Global Fund GC8 vs GC7 allocations for the Global Fund & Gavi preset (Do before presenting)
@@ -211,6 +217,11 @@ batch's scope, which was treatment costs). `batch34_evidence.md` E.
 - **Effort:** small (labels); medium (new preset). **Risk:** low.
 
 ### IMP-15. Vaccine pathway by antigen (Nice to have)
+
+**Status: ◐ partly done (Batch 5+6 items V1-V2, 14 October 2026).** Deaths averted per fully immunized child are now
+VIMC values by country, summed over the antigens the country uses, with VIMC timing by years since vaccination
+(`batch56_evidence.md` V1-V3). Not done: a cost per child by antigen (Gavi country financial data) and WUENIC coverage
+per antigen as the unit; the unit is still a full-schedule child at `uc_imm`; DTP, polio and BCG remain excluded.
 
 - **Addresses:** L-18, L-19, L-42.
 - **What to do:**
@@ -259,6 +270,11 @@ was not available. `batch34_evidence.md` G.
 
 ### IMP-19. Validation page: like-for-like benchmarks with stated acceptance bands (Do before presenting)
 
+**Status: ✅ done (Batch 5+6 item VAL1, 14 October 2026).** `audit/logic_review/validation.md` and the Validation
+section of the Methods page: acceptance band 0.5-2x stated first; HIV vs Optima Table C2 by country; people on ART vs
+UNAIDS; TB vs WHO deaths, notifications and budgets; malaria vs WMR 2025 deaths; vaccines vs Toor Table 3; context
+studies with their scopes. `hiv_deaths_est` (L-11) is still used by the Lancet rate-ratio method on the Validation page.
+
 - **Addresses:** L-47, L-11.
 - **What to do:**
   - Compare Full US Exit HIV with Optima scenario 5 (PEPFAR ends; about 2.9M) and with UNAIDS.
@@ -302,6 +318,8 @@ was not available. `batch34_evidence.md` G.
 - **Expected effect:** the all-country total rises; about +US$0.69B/yr aid at risk at most.
 
 ### IMP-24. Direct downloads from WUENIC and UNAIDS (Nice to have)
+
+**Status: ✅ done for the model inputs (Batch 7 items 3-4, 15 October 2026).** `immunization_inputs.py` and `unaids_inputs.py` read the files on disk; GHO and the WDI mirror remain as fallbacks and for adult prevalence and the committed regressions (`batch7_evidence.md`).
 
 - **Addresses:** L-17, L-11. **Effort:** small. **Data:** DR-05, DR-06.
 

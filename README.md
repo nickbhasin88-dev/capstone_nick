@@ -1,5 +1,14 @@
 # Health Financing Dashboard
 
+> **Branch chipmunk (merge of main and tomato, 29 Oct 2026).** This text comes from tomato. chipmunk runs main's
+> model except for the VIMC vaccine deaths (Batch 5+6 V2), which it takes from tomato. Where this text describes the
+> following tomato rules, chipmunk uses main's rule instead: ART cost per patient-year (Batch 5+6 A1), HIV and
+> immunization donor-funded pools (A2), the malaria intervention cap (A3), DTP3/MCV1 coverage from WUENIC (L-17),
+> UNAIDS HIV inputs (IMP-24), projected births (L-24), the interest definition (L-34), the Lancet comparison baseline
+> (L-11), wording changes, and the default-off switches (L-35, item 10, L-29, item 14). See `audit/merge/PLAN.md`
+> rows R1-R11. The dashboard shows coverage and the service-by-service table (with extra deaths); the other deaths
+> displays described here are not shown.
+
 A Streamlit dashboard on who pays for health in 71 low- and middle-income countries, and what happens to health
 coverage and lives if donors cut HIV, TB, malaria and immunization aid. All dollar figures are constant 2023 US$
 (except amounts quoted from MOUs, which are nominal).
@@ -79,6 +88,10 @@ python malaria_inputs.py
 
 # 2. IMF WEO fiscal balances (downloaded from the IMF API) -> macro_data/weo_fiscal/
 python fiscal_inputs.py --download
+
+# 2b. Sections 1-3 per-country files -> country_data/ and spending_data/ (macro_data/, revenue_data/, cofog_all/
+#     cannot be rebuilt from the files on disk; see build_sections.py's docstring)
+python build_sections.py --country-data --spending-data   # or --verify to compare with the committed files
 
 # 3. Model inputs, regressions and precomputed results -> model_data/
 #    (add --download to refresh ext_data/ from the World Bank / Gapminder mirrors and WHO GHO first)

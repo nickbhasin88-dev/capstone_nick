@@ -1,5 +1,14 @@
 # Model specification
 
+> **Branch chipmunk (merge of main and tomato, 29 Oct 2026).** This text comes from tomato. chipmunk runs main's
+> model except for the VIMC vaccine deaths (Batch 5+6 V2), which it takes from tomato. Where this text describes the
+> following tomato rules, chipmunk uses main's rule instead: ART cost per patient-year (Batch 5+6 A1), HIV and
+> immunization donor-funded pools (A2), the malaria intervention cap (A3), DTP3/MCV1 coverage from WUENIC (L-17),
+> UNAIDS HIV inputs (IMP-24), projected births (L-24), the interest definition (L-34), the Lancet comparison baseline
+> (L-11), wording changes, and the default-off switches (L-35, item 10, L-29, item 14). See `audit/merge/PLAN.md`
+> rows R1-R11. The dashboard shows coverage and the service-by-service table (with extra deaths); the other deaths
+> displays described here are not shown.
+
 This is the single, current specification of the funding-cut model behind Section 4 of the dashboard, the All
 Countries page and the Validation page. It replaces `audit/METHOD.md` and the specification part of
 `audit/logic_review/logic.md`. It is written so that every displayed Section 4 number can be recomputed with pandas
@@ -34,13 +43,14 @@ Country columns used (`country_inputs.csv`):
 
 | Symbol | Column | Notes |
 |---|---|---|
-| PLHIV | `plhiv` | people living with HIV |
-| ART % | `sh_hiv_artc_zs` | |
-| PMTCT % | `sh_hiv_pmtc_zs` | if missing, ART % is used |
-| HIV+ pregnancies | `hiv_pos_pregnancies` | |
-| new HIV infections | `sh_hiv_incd_tl` | number a year |
+| PLHIV | `plhiv` (`_year`, `_source`) | people living with HIV, all ages: UNAIDS AIDSinfo 2026 estimates, 2025 (`unaids_inputs.py`, Batch 7 item 4); WHO GHO or the derived value where UNAIDS has none |
+| ART % | `sh_hiv_artc_zs` (`_year`, `_source`) | UNAIDS 2026 estimates, all ages, 2025; GHO / WDI where missing |
+| PMTCT % | `sh_hiv_pmtc_zs` (`_year`, `_source`) | UNAIDS 2026 estimates (coverage of pregnant women receiving ARV), 2025; GHO where missing; if missing altogether, ART % is used |
+| HIV+ pregnancies | `hiv_pos_pregnancies` (`_year`, `_source`) | UNAIDS 2026 estimates, pregnant women needing ARV for PMTCT, 2025; the GHO-derived value where missing |
+| new HIV infections | `sh_hiv_incd_tl` (`_year`, `_source`) | number a year: UNAIDS 2026 estimates, all ages, 2025; the WDI mirror (2024) where missing |
 | HIV transmission rate per unsuppressed person | `art_transmission_rate` (`_lo`, `_hi`, `_year`, `_source`) | UNAIDS new infections / (PLHIV - suppressed), latest year with all three (`hiv_transmission_inputs.py`); WHO-region median of the dashboard countries where missing |
 | population | `sp_pop_totl` | |
+| AIDS-related deaths | `hiv_deaths_unaids` (`_year`, `_source`) | UNAIDS 2026 estimates, all ages, 2025 (`unaids_inputs.py`); Validation page only (Lancet rate-ratio baseline); `hiv_deaths_est` (GBD-2019 share x crude death rate) where missing |
 | TB incidence | `all_forms_of_tb_incidence_estimated` | number a year (not `sh_tbs_incd`, which is per 100,000) |
 | TB detection % | `sh_tbs_dtec_zs` | capped at 100 (flagged when above) |
 | h (TB-HIV share) | `tb_hiv_share` | 0 if missing |
@@ -51,22 +61,25 @@ Country columns used (`country_inputs.csv`):
 | sub-Saharan Africa | `is_ssa` | True / False (sensitivity switch only) |
 | WHO region; under-5 rule | `who_region`, `malaria_u5_share_rule`, `malaria_u5_share_param` | from `ext_data/who_regions.csv` (WHO TB data `g_whoregion`), written by `malaria_inputs.py` |
 | bednet use, spraying, treatment coverage | `mal_itn_cov`, `mal_irs_cov`, `mal_cm_cov` | shares 0-1 (not percentages); NaN = see section 5 |
-| births | `births` | |
-| DTP3 % | `sh_imm_idpt` | |
-| U5MR | `sh_dyn_mort` | 50 if missing |
+| births | `births`; `births_2026` .. `births_2030` (`births_proj_source`) | latest-year births = crude birth rate x population (WDI); projected births 2026-2030 from UN WPP 2024, medium variant (thousands x 1,000; `immunization_inputs.apply_births`, Batch 7 item 12), used for the immunization need year by year; the latest-year value is the fallback |
+| DTP3 % | `sh_imm_idpt` (`_year`, `_source`) | WHO/UNICEF WUENIC 2025 revision, latest year (2025 for every country), % of surviving infants (`immunization_inputs.py`; Batch 7 item 3; before: the World Bank WDI mirror) |
+| U5MR | `sh_dyn_mort` | 50 if missing (legacy vaccine rule only) |
+| deaths averted per fully immunized child | `imm_dpc` (`_lo`, `_hi`), `imm_dpc_lag0` .. `imm_dpc_lag9`, `imm_dpc_beyond_window`, `imm_q5_ratio`, `imm_antigens`, `imm_dpc_source` | Batch 5+6 V2: VIMC deaths averted per vaccinated child (Toor et al. 2021, supplementary data) summed over the routine antigens the country uses, x the WPP Q5 2026-30 / 2015-19 ratio; `_lag<k>` = the part falling k years after vaccination (`audit/batch56_vaccines.py`; `batch34_inputs.py --vaccines`); if missing, the legacy rule applies |
 | ART site cost | `art_site_cost` (`_lo`, `_hi`, `_source`, `_year`) | US$ per patient-year at site level, 2023 US$ (`batch34_inputs.py --art`; `audit/batch34_art_costs.py`) |
-| ART cost per patient-year used | `art_cost_full` (`_lo`, `_hi`, `_source`, `_year`) | 2023 US$: min(GHCC-based full cost, observed treatment spending per person on ART), floored at 57 and gated 50-600 (`batch34_inputs.py --art-full`; `audit/batch4b_art_check.py`) |
+| ART cost per patient-year used | `art_cost_full` (`_lo`, `_hi`, `_source`, `_year`) | 2023 US$: min(GHCC-based full cost, observed treatment spending per person on ART where valid), floored at 190.84 and gated 50-600 on the final value (`batch34_inputs.py --art-full56`; `audit/batch56_art_cost.py`) |
 | TB course costs | `tb_ds_cost`, `tb_dr_cost` (`_lo`, `_hi`, `_source`), `tb_cost_year` | US$ per treatment course, provider, 2023 US$ (`batch34_inputs.py --tb`; `audit/batch34_tb_costs.py`) |
 | RR-TB share and enrolment | `tb_rr_share`, `tb_rr_cov` (`tb_rr_source`) | WHO 2024: RR-TB incidence / all-forms incidence; RR patients started on treatment / RR incidence, capped at 1 |
-| external share of public malaria spending | `donor_share_malaria_prev` (`_source`, `_year`) | 0-1: GHED dis13_ext_usd / (dis13_ext_usd + dis13_gghed_usd), latest year; WHO-region median where missing; used for bednets and spraying |
-| external share of disease spending | `donor_share_<hiv|tb|malaria|imm>` (`_source`, `_year`) | 0-1: GHED external funding on the disease / spending on it (HIV dis11, malaria dis13, immunization hc62); TB: WHO TB financing, funding received from the Global Fund, USAID and other grants / all received (2024; 2025 expected funding if missing); WHO-region median where missing (`batch34_inputs.py --donor`; `audit/batch34_donor_share.py`) |
+| intervention-specific malaria donor share | `donor_share_mal_itn`, `donor_share_mal_irs`, `donor_share_mal_cm` (`_source`) | 0-1 (Batch 5+6 item A3): E_base[l] at the central run / (coverage x need x cost_l), capped at 1 (`audit/batch56_malaria_cap.py`; `batch34_inputs.py --donor56-malaria`); the WHO-region median where a country has no IHME malaria programme-area line (none) |
+| external share of public malaria spending | `donor_share_malaria_prev` (`_source`, `_year`) | 0-1: GHED dis13_ext_usd / (dis13_ext_usd + dis13_gghed_usd), latest year; WHO-region median where missing; Batch 4b rule for bednets and spraying, kept as the fallback only |
+| external share of disease spending | `donor_share_<hiv|tb|malaria|imm>` (`_source`, `_year`) | 0-1. HIV and immunization (Batch 5+6 item A2): the external share of PUBLIC spending, GHED dis11_ext_usd / (dis11_ext_usd + dis11_gghed_usd) and hc62_ext_usd / (hc62_ext_usd + hc62_gghed_usd), latest year (`batch34_inputs.py --donor56-hiv-imm`; `audit/batch56_donor_share.py`). Malaria (all-source, kept for reference only): GHED external funding on malaria / spending on it (dis13). TB: WHO TB financing, funding received from the Global Fund, USAID and other grants / all received (2024; 2025 expected funding if missing). WHO-region median where missing (`batch34_inputs.py --donor`; `audit/batch34_donor_share.py`) |
 | split of unspecified money | `unspec_<hiv|tb|malaria>_<treatment|prevention|testing|rssh|pm>` (`_source`) | shares 0-1 summing to 1 per disease: Global Fund grant budgets by module, GC7 (`batch34_inputs.py --shares`; `audit/batch34_gf_shares.py`); WHO-region median where the country has no grant |
 | trends | `trend_u5mr`, `trend_malaria_deaths` | yearly change (shares); -0.009 if missing. `trend_u5mr`: UN IGME under-5 mortality 2010-2019. `trend_malaria_deaths`: WHO estimated malaria deaths (GHO `MALARIA_EST_DEATHS`) 2015-2024, log-linear fit (at least 5 positive years), clipped to ±5% a year (the clip is an assumption); 0 where WHO has no series (built by `malaria_inputs.py`) |
 | GDP per person | `gdp_pc` | 1,000 if missing |
 | income group | `income_group` | `low_income`, `lower_middle_income`, `upper_middle_income` |
 | GHES | `ghes_2023` | government health spending, US$ |
+| WEO nominal GDP growth 2026-2030 | `gdp_growth_weo_2026_30` (`_source`) | mean year-on-year growth of nominal US$ GDP 2026-2030 in `macro_data/<ISO3>.csv` (IMF WEO projections); the upper end of the `budget_growth` sensitivity (Batch 7 item 10); 0 if missing |
 | growth | `ghes_growth_median`, `ghes_growth_p75`, `ghes_growth_p90` | shares a year; 0 if missing |
-| interest | `interest_pct_revenue` | % of revenue; never missing |
+| interest | `interest_pct_revenue` (`_year`, `_source`) | % of revenue; never missing. IMF World Economic Outlook, October 2026 release (`datasets/IMF_WEO_Oct2026_GG_balances_2026-10-13.csv`, downloaded 13 October 2026), with World Bank WDI as the fallback (Batch 7 item 7). The GDP, revenue and expenditure series in `macro_data/` carry no recorded WEO vintage; their projection horizon ends in 2031, consistent with the October 2026 release |
 | MOU | `mou_us_ref`, `mou_us_2026` .. `mou_us_2030` | nominal US$ |
 
 **Lines.**
@@ -101,7 +114,7 @@ Country columns used (`country_inputs.csv`):
 | mal_itn | 0.5 | 1 | 1 | 1 | 1 |
 | mal_irs | 0.8 | 1 | 1 | 1 | 1 |
 | mal_cm | 1 | 1 | 1 | 1 | 1 |
-| imm (cumulative) | 0.4 | 0.75 | 0.95 | 1 | 1 |
+| imm (cumulative; legacy vaccine rule only) | 0.4 | 0.75 | 0.95 | 1 | 1 |
 
 ## 2. Scenario cuts
 
@@ -117,7 +130,7 @@ For each row of `dah_lines` (donor s, channel c, bucket b):
            cut = 1 - (1 - x)(1 - y)
     cut = clip(cut, -1, 1)
 
-**Presets** (any donor or channel not listed: 0):
+**Presets** (any donor or channel not listed: 0; "US" below is the donor group `United States` in `dah_lines.csv`):
 
 | Preset | src_direct | src_multi | pair | chan |
 |---|---|---|---|---|
@@ -139,7 +152,10 @@ institutions) has cut 0.
 **MOU schedule** for country i (America First MOUs only; countries without a schedule cannot run this preset):
 - Requires `mou_us_ref` > 0 and `mou_us_2026` present.
 - For each year y = 2026..2030: if `mou_us_<y>` is present, cut_y = clip(1 - mou_us_<y> / mou_us_ref, 0, 1);
-  otherwise the last available year's cut is held.
+  otherwise the last available year's cut is held. Amounts are nominal US$ as written (default). With `mou_deflate`
+  = 1 (constant switch, `model_params.csv`; Batch 7 item 8), mou_us_<y> is first divided by (1 + mou_us_inflation)^(y -
+  2023), mou_us_inflation = 0.02 (0.01-0.04, labelled assumption), and the reference is unchanged (a 2021-25 average
+  centred on 2023). The switch is read from the parameter file at its central value, not from the dashboard editor.
 - On US direct-channel rows the yearly cut is x_t = pair[US, c] if defined, else cut_t; then
   1 - (1 - x_t)(1 - y), clipped to -1..1.
 - All other rows use the same cut every year.
@@ -210,6 +226,10 @@ amounts: the linked testing-and-care money has its own row, although its kappa s
     stress = clip(1 - (interest_pct_revenue - 10) / 40, 0.25, 1)
     capacity = ghes_2023 x surge x stress           (0 if ghes_2023 is missing)
 
+The stress thresholds 10 (range 5-15), 40 (30-50) and the floor 0.25 (0.15-0.50) are labelled assumptions held as
+constants (`health_model.STRESS_FREE_PCT`, `STRESS_SPAN_PCT`, `STRESS_FLOOR`; not drawn; Batch 7 item 9). Capacity is
+the same every year (one strong year's surge held flat); a cumulative alternative is noted, not implemented.
+
 **Wanted replacement** in year t for loss L_t:
 
 | Mode | Wanted | Paid R_t |
@@ -219,8 +239,12 @@ amounts: the linked testing-and-care money has its own row, although its kappa s
 | custom | theta x L_t | min(wanted, capacity) when "cap to fiscal space" is on, else wanted |
 | max | L_t | min(L_t, capacity) (always capped) |
 
-**Gradual Budget Increase:** gov_add_t = points_t / 100 x gov_spend.
-- gov_spend = ghes_2023 / (health share of government spending / 100).
+**Gradual Budget Increase:** gov_add_t = points_t / 100 x gov_spend x (1 + budget_growth x g)^(t + 1).
+- gov_spend = ghes_2023 / (health share of government spending / 100), in 2023 US$.
+- budget_growth (model_params.csv, constant, default 0) x g, with g = `gdp_growth_weo_2026_30` (the country's mean
+  nominal US$ GDP growth 2026-2030 from the WEO projections in `macro_data/`; 0 if missing): the default keeps the
+  budget at its 2023 level; 1 lets it grow with GDP (Batch 7 item 10). The same factors apply in the break-even
+  search.
 - points_t follow the chosen shape (Steady p x (t+1); Fast start 5p (1 - (1 - u)^2); Slow start 5p u^2), capped at
   the room to the Abuja 15% share.
 
@@ -257,7 +281,7 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
 | mal_itn | PAR | `mal_itn_cov`; if NaN, `mal_itn_default_use` |
 | mal_irs | PAR | see below |
 | mal_cm | malaria cases | `mal_cm_cov`; if NaN, `mal_cm_default_cov` |
-| imm | births | DTP3 % |
+| imm | births_t = `births_<2026+t>` (WPP 2024 projection) for year t; the displayed need is their mean; `births` if any projection is missing | DTP3 % |
 | hiv_prev, hiv_ovc | none | none |
 
 **Spraying coverage.**
@@ -268,21 +292,29 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
 
 **Covered** = coverage x need (NaN if either is missing).
 - For hiv_art: covered = max(ART % x PLHIV - PMTCT % x HIV+ pregnancies, 0). Women on PMTCT get their ART through the
-  PMTCT line and its cost.
+  PMTCT line and its cost. Covered is NaN only if ART % or PLHIV is missing; if PMTCT % or HIV+ pregnancies is
+  missing, nothing is subtracted.
 
 **Unit cost** (central run unless drawn):
 - markup = 1 / (1 - asd_share).
 - sc = (max(gdp_pc, 200) / 1000) ^ uc_scale_elast.
-- **hiv_art:** `art_cost_full` from `country_inputs.csv` (2023 US$; Batch 4b, L-50): the lower of (a) the
-  GHCC-based full cost = `art_site_cost` x markup (Batch 3+4, IMP-03) and (b) observed HIV treatment spending per
-  person on ART (total HIV spending from Optima Table B2 or GHED x the Global Fund treatment share
-  `unspec_hiv_treatment` / UNAIDS people on ART, same year, 2023 US$); where (b) is missing, (a) x the WHO-region
-  median of (b)/(a); floored at US$57 (first-line drugs + one viral load test) and clipped to 50-600. Draw: with
-  m = uc_art_mult, cost = art_cost_full x m if m <= 1, else art_cost_full x (1 + (m - 1) x (art_cost_full_hi /
-  art_cost_full - 1) / 0.38), where art_cost_full_hi = the higher of (a) and (b), clipped to [art_cost_full, 600];
-  no markup is applied again. Only if `art_cost_full` is missing: `art_site_cost` x uc_art_mult x markup; and if that
-  is missing too, (art_site_cost[country] from `unit_cost_reference.csv` inflated from its cost_year by CPI-U to
-  2023), or (arv default + non_arv default x sc) inflated from 2018.
+- **hiv_art:** `art_cost_full` from `country_inputs.csv` (2023 US$; Batch 4b, L-50; Batch 5+6 item A1): the lower of
+  (a) the GHCC-based full cost = `art_site_cost` x markup (Batch 3+4, IMP-03) and (b) observed HIV treatment spending
+  per person on ART (total HIV spending from Optima Table B2 or GHED x the Global Fund treatment share
+  `unspec_hiv_treatment` / UNAIDS people on ART, same year, 2023 US$). (b) is **valid** only where the Global Fund's
+  share of the country's total HIV spending (Global Fund HIV and TB/HIV disbursements, mean of the spending year and
+  the two years around it, / total HIV spending) is at least 0.10 (`audit/batch56_art_cost.py`); where (b) is missing
+  or invalid, the candidate is (a) x the WHO-region median of (b)/(a) over the valid countries (the median over all
+  valid countries where the region has fewer than 3). Floor = the lowest measured site-level ART delivery cost in
+  `unit_cost_reference.csv` (Malawi, Rosen et al. 2021, 86.50 in 2018 US$) inflated to 2023 US$ (104.96) x markup =
+  US$190.84 (asd_share 0.45), applied to min(a, candidate); then clipped to 50-600 (the gate is on the final value).
+  Draw: with m = uc_art_mult, cost = art_cost_full x m if m <= 1, else art_cost_full x (1 + (m - 1) x
+  (art_cost_full_hi / art_cost_full - 1) / 0.38), where art_cost_full_hi = the higher of (a) and the candidate,
+  clipped to [art_cost_full, 600]; no markup is applied again. Only if `art_cost_full` is missing: `art_site_cost` x
+  uc_art_mult x markup; and if that is missing too, the site cost in that expression is (art_site_cost[country] from
+  `unit_cost_reference.csv` inflated from its cost_year by CPI-U to 2023), or (arv default + non_arv default x sc)
+  inflated from 2018, each still x uc_art_mult x markup. The TB fallback values from `unit_cost_reference.csv` are
+  likewise x uc_tb_mult x markup.
 - **hiv_pmtct** = uc_pmtct (includes the mother's ART). **hiv_ovc** = uc_ovc.
 - **hiv_prev** = cpia_ref x (1 / inc)^0.5, with inc = new HIV infections / population x 1000, clipped to 0.05-10.
   inc = 0.3 if either input is missing. Unit: infection averted.
@@ -298,16 +330,23 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
   - For hiv_art, n = N_t[hiv_art] + N_t[hiv_care_ct], b = E_base[hiv_art] + E_base[hiv_care_ct], and
     tb = E_base[hiv_art] only.
 - **Donor-funded pool** (Batch 3+4, IMP-04 / L-44): pool = covered x d, with d = `donor_share_<hiv|tb|malaria|imm>`
-  for the line's disease from `country_inputs.csv` (clipped to 0-1; 1 if missing); for mal_itn and mal_irs,
-  d = `donor_share_malaria_prev` (the external share of public malaria spending; Batch 4b item 3).
+  for the line's disease from `country_inputs.csv` (clipped to 0-1; 1 if missing). For HIV and immunization d is
+  the external share of public spending (Batch 5+6 item A2: household spending on STI care and on private-sector
+  vaccination is not the service donors fund). For mal_itn, mal_irs and mal_cm, d = `donor_share_mal_<itn|irs|cm>`
+  (Batch 5+6 item A3): the people the donor money for that intervention pays for as a share of the people covered,
+  min(1, E_base[l] / cost_l / covered) at the central run, so the pool is min(covered, E_base[l] / cost_l) and the
+  cap binds only where donor money exceeds the full cost of current coverage. If the column is missing: for mal_itn
+  and mal_irs `donor_share_malaria_prev`, else `donor_share_malaria`.
 - **Two branches:**
   - If covered is NaN: raw = n / cost.
-  - Else, if tb / cost > pool (donor money would buy more than the donor-funded pool): raw = pool x n / b.
+  - Else, if tb / cost > pool (donor money would buy more than the donor-funded pool): raw = pool x n / b (0 if
+    b = 0, in which case n = 0 as well).
   - Else: raw = **n / cost**. (This is the usual case. There is no further scaling here.)
 - units = raw x (1 - continuity). continuity = 0.15 (0-0.30; assumption; Batch 3+4 IMP-16 found only indirect
   evidence, recorded with 0.30 as a sensitivity value).
 - If need and coverage both exist, units = min(units, cap), with cap = covered for hiv_art and coverage x need
-  otherwise.
+  otherwise; for imm, covered and the cap are coverage x births_t in year t (Batch 7 item 12), and the pool test
+  uses the same year's value.
 - units = max(units, 0).
 - hiv_prev and hiv_ovc have no cap (continuity applies).
 
@@ -327,8 +366,9 @@ and the positive nonservice amounts, each as a separate amount (nonservice[care]
 **Death-rate switch.** "Account for already-changing death rates" is on by default (the dashboard, the All Countries
 files and every audit run use it on). When it is off, every trend factor below is 1.
 
-**Duration.** first = the first year t with any non-zero cut in force on any row (t = 0 for a sudden cut). For
-t >= first, dur_t = t - first; otherwise dur_t = 0. LAG and the malaria rebound are indexed by dur_t. Mortality
+**Duration.** first = the first year t with any non-zero cut in force on any row of the country, in any bucket (t = 0
+for a sudden cut; also 0 if no row is ever cut, which then has no effect). For t >= first, dur_t = t - first;
+otherwise dur_t = 0. LAG and the malaria rebound are indexed by dur_t. Mortality
 trends are indexed by calendar t.
 
 **Trend factors.** Only malaria deaths and vaccine deaths have a baseline trend. TB and HIV deaths are per patient
@@ -355,6 +395,8 @@ trends are indexed by calendar t.
   in s+2.
 - Coverage c_t = clip(TB detection % / 100 - units_tb_ds,t / TB incidence, 0, 1) (0 if TB need or coverage is
   missing). A case arriving in year t uses c_t, the coverage of its **arrival** year; arrivals after 2030 use c_4.
+  The same c_t applies to the secondary cases generated by tb_dr patients (there is no DR-specific coverage in the
+  spread calculation).
 - An arriving case dies with probability c x cfr_t + (1 - c) x cfr_u, where:
 
       cfr_u = (1 - h) tb_cfr_untreated_neg + h [tb_cfr_untreated_pos (1 - a) + tb_cfr_untreated_pos_art a]
@@ -364,14 +406,23 @@ trends are indexed by calendar t.
   units_tb_ds, tb_dr for cases from units_tb_dr; Batch 3+4) in that year (no LAG). Arrivals in 2031-2032 count in
   further deaths (part "tb").
 
-**Vaccines.** (After 2030 the level is level_4 x the trend, without a new clip: a country on the 0.3 floor can fall
-below it.)
-- Each year s's lost children die over the following years with weights w = (0.40, 0.35, 0.20, 0.05) for k = 0..3
-  (k = 0 is the same year).
-- Deaths in year t <= 4 = sum over s <= t of units_imm,s x w_(t-s) x level_t.
-- For t >= 5 (2031 onward): units_imm,s x w_(t-s) x level_4 x (1 + u5trend)^(t-4). Here u5trend = trend_u5mr
-  (-0.009 if missing) when the switch is on, else 0, and these deaths count in further deaths (part "imm").
-- For a sudden cut this equals units x level_t x (0.4, 0.75, 0.95, 1, 1).
+**Vaccines** (Batch 5+6, item V2; `imm_legacy_u5mr_scaling` = 0).
+- Per-child deaths by years since vaccination, k = 0..9: dpc_k = `imm_dpc_lag<k>` (country_inputs.csv; sum over the
+  antigens the country uses of VIMC deaths averted per vaccinated child x the Q5 2026-30 / 2015-19 ratio x the
+  pathogen's timing weights; `audit/batch56_vaccines.py`), scaled by the draw: with m = imm_dpc_mult, lo =
+  `imm_dpc_lo` / `imm_dpc`, hi = `imm_dpc_hi` / `imm_dpc`, factor = 1 - (1 - m) (1 - lo) / (1 - 0.56) if m < 1,
+  else 1 + (m - 1) (hi - 1) / (1.64 - 1). No mortality trend applies (the Q5 ratio is already in the value, and the
+  "already-changing death rates" switch does not change vaccine deaths).
+- Deaths in year t <= 4 = sum over s <= t of units_imm,s x dpc_(t-s) x factor.
+- For 5 <= s + k <= 9 (2031-2035): units_imm,s x dpc_k x factor counts in further deaths (part "imm"); lags that fall
+  after 2035 and the lifetime remainder (`imm_dpc_beyond_window`) are not counted.
+- Lives-first ranking (section 4): dpd[imm] = (sum over t = 0..4 of the cumulative sum of dpc_0..dpc_t) / cost_imm.
+- **Legacy rule** (imm_legacy_u5mr_scaling = 1, or a row without `imm_dpc`): level_t = imm_deaths_per_child_ref x
+  imm_u5_share x clip(U5MR x f_u5,t / 50, 0.3, 2.5); each year s's lost children die with weights w = (0.40, 0.35,
+  0.20, 0.05) for k = 0..3; deaths in year t <= 4 = sum over s <= t of units_imm,s x w_(t-s) x level_t; for t >= 5:
+  units_imm,s x w_(t-s) x level_4 x (1 + u5trend)^(t-4), u5trend = trend_u5mr (-0.009 if missing) when the switch
+  is on, else 0 (after 2030 the level is level_4 x the trend without a new clip). For a sudden cut this equals units
+  x level_t x (0.4, 0.75, 0.95, 1, 1).
 
 **HIV treatment** (cohorts; Batch 2, L-01 / L-41):
 - **Inputs** (hiv_art_params): hazard h[a] = art_hazard_mult x ART_HAZARD[a], a = 1..10 (H = 10); transmission

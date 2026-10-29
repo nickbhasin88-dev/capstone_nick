@@ -1,282 +1,110 @@
 # Independent reproduction: notes
 
-Script: `repro.py`. Run it with no arguments to write `independent.csv`. It has no options; the old
-`--resurgence-exp` switch is gone. It computes central values only, for KEN, NGA, IND, HND and MOZ and cases 1-4:
+Script: `repro.py`. Run it with no arguments to write `independent.csv`. It implements the current `docs/SPEC.md`
+(sections 0-7 and the §6 "further deaths across the return-to-care assumption" range) from the SPEC text and the data
+files it names only; no model code was read. Central values only, for KEN, NGA, IND, HND and MOZ and cases 1-4:
 
-1. Full US Exit, no response, sudden.
-2. Full US Exit, custom theta = 0.25 capped at fiscal capacity (p75), pro rata, sudden.
-3. OECD 2025, no response, sudden.
-4. Full US Exit, no response, linear phase-out.
+1. Full US exit, no response, sudden.
+2. Full US exit, custom theta = 0.25 capped at fiscal capacity (p75), pro rata, sudden.
+3. OECD-reported 2025 aid cuts, no response, sudden.
+4. Full US exit, no response, linear phase-out.
 
-Money is conserved exactly in every run: the sum of E plus the nonservice amounts equals L_t. The column for deaths
-in 2031-2035 is now called `C.after_2030` (it was `C.deaths`). All other column names are unchanged.
+Money is conserved exactly in every run (the sum of E over the money lines plus the nonservice amounts equals L_t to
+machine precision). `first` = 0 in every case (the linear path has p_0 = 0.2).
 
-## (a) Places where SPEC.md is ambiguous, incomplete or contradicts the data
+## (a) Places where SPEC.md is ambiguous, incomplete or contradicts the data, and the reading chosen
 
-1. **§1 Lines / §2 "Direct channels".** The spec lists `Other` as a direct channel and says itself that no such channel
-   is in the data. I confirmed this: the data has 11 channel groups and none is `Other`. This has no effect.
-2. **§2 Presets table, donor names.** The table writes "US"; in the data the donor is `United States`. I matched "US"
-   to `United States`. Germany, France, United Kingdom and Japan match exactly.
-3. **§6 "Trend factors": "equal 1 when the 'already-changing death rates' switch is off."** The spec never says
-   whether the switch is on or off for an ordinary run. It is only stated for the precomputed files ("trends on",
-   §10). I assumed it is on for all four cases.
-4. **§4 table, custom: "when 'cap to fiscal space' is on".** The spec gives no default. The task defines case 2 as
-   capped, so I capped it.
-5. **§4 "Allocation of B_t".** The pro-rata pool contains "positive nonservice amounts", but the spec does not say
-   whether nonservice is one amount per bucket or several. §3 defines two kinds: nonservice[care] and
-   nonservice[b]. I kept them as separate amounts. Under pro rata the result is the same either way. Because every
-   E and nonservice amount here is >= 0 and they add up to L_t, pro rata equals scaling every line by B_t / L_t.
-6. **§1 "growth ... 0 if missing" and §4 "capacity = ... (0 if ghes_2023 is missing)".** The spec does not say what
-   happens when only the median growth is missing. I set it to 0, which gives surge = g_top. Nothing is missing for
-   these countries.
-7. **§5 hiv_prev unit cost: "inc = new HIV infections / population x 1000, clipped to 0.05-10 (0.3 if missing)".**
-   It is not clear whether 0.3 applies when either input is missing, and the spec does not cover a population of 0.
-   I used 0.3 in both cases. Nothing is missing here. IND (0.044) and HND (0.046) hit the 0.05 floor.
-8. **§5 "Spraying coverage".**
-   - "If PAR is missing, the coverage stays NaN" contradicts the rule just before it, which uses `mal_irs_cov` when
-     the implied value is not larger. I read it as: PAR missing gives NaN even if `mal_irs_cov` exists.
-   - PAR = 0 is not covered, because the implied value divides by PAR. I treat the implied value as NaN and use
-     `mal_irs_cov`.
-   - Neither case occurs here. For NGA, `mal_irs_cov` = 0 and the implied value is about 1%, so the implied value is
-     used. IND and HND have no MAP value, so they use the implied value. KEN uses MAP (2.7%), which is above the
-     implied 1.8%.
-9. **§5 "Covered", hiv_art: max(ART % x PLHIV - PMTCT % x HIV+ pregnancies, 0).** The spec does not say what happens
-   when HIV+ pregnancies is missing. In that case I subtract nothing. It also says "Covered = ... NaN if either is
-   missing" without saying whether that applies here; I made covered NaN only when ART % or PLHIV is missing. Nothing
-   is missing here.
-10. **§5 TB unit cost, missing income group.** This is guessed from GDP per person. If GDP is also missing, the spec
-    does not say whether the 1,000 default from §1 is used before the guess. I used it, which gives `low_income`.
-    This does not occur here.
-11. **§5 / §1 data note.** `hiv_pos_pregnancies` is not a whole number (HND 292.857 = 164 / 0.56). It appears to be
-    derived as women on PMTCT / PMTCT %, so PMTCT % x need simply gives back the number on PMTCT. This is a data
-    observation, not a spec gap.
-12. **§6 "Duration": "first = the first year t with any non-zero cut in force on any row".** The spec does not say
-    what happens if no row is ever cut. I set first = 0, which has no effect because there are then no losses. In all
-    four cases first = 0; the linear path has p_0 = 0.2. "Any row" is read as any row of the country, in any bucket,
-    not per line.
-13. **§6 HIV treatment, "age a = min(age_at_end_2030 + k, 5)".** "age_at_end_2030" could mean the age used in 2030 or
-    the age after the 2030 increment ("then every cohort's age increases by 1"). I used the age after the increment:
-    - a cohort that starts in 2026 has age 6, so a = 5 from 2031;
-    - a cohort that starts in 2030 has age 2 in 2031.
+1. **§2 "Direct channels" lists `Other`.** The spec says itself that `Other` does not occur as a channel. Confirmed: the
+   data has 11 channel groups and none is `Other`. No effect.
+2. **§2 presets table writes "US".** The donor group in `dah_lines.csv` is `United States`; I matched "US" to it.
+   Germany, France, United Kingdom and Japan match exactly.
+3. **§6 "Death-rate switch".** It is "on by default" and every audit run uses it on, so trends are on in all four cases.
+   With the VIMC vaccine pathway the switch now only affects malaria (`f_mal,t`); `f_u5,t` is used by the legacy
+   vaccine rule only.
+4. **§4 custom response: "when 'cap to fiscal space' is on".** No default is given; the task defines case 2 as capped,
+   so it is capped. g_top = `ghes_growth_p75` (the "best years" p90 variant is not used).
+5. **§4 "Allocation of B_t" and §3 nonservice amounts.** §3 defines nonservice[care] (HIV only) and nonservice[b] per
+   bucket; §4 says each is a separate amount. I kept them separate. Under pro rata the result is the same either way:
+   every E and nonservice amount is >= 0 and they add up to L_t, so pro rata equals scaling every line by B_t / L_t.
+6. **§3 "if any is missing, the median of the countries' shares, renormalised".** Read as: for each disease, the median
+   of each of the five `unspec_*` shares over all 71 rows of `country_inputs.csv`, divided by the sum of the five
+   medians; used when any of the country's five shares is NaN. One country in the file needs it; none of the five here.
+7. **§3 "add[l] = sigma x S' x mix_l for every known line".** K_b includes `hiv_care_ct`, so with sigma > 0 the care
+   line would get its share of systems money in its pool. Central sigma = 0, so this does not matter here. I also read
+   "Immunization has neither" as U = S = 0 for that bucket, so E[imm] = X[imm] and nonservice[Immunization] = 0.
+8. **§5 ART unit cost fallback chain.** "Only if `art_cost_full` is missing: `art_site_cost` x uc_art_mult x markup; and
+   if that is missing too, (art_site_cost[country] from `unit_cost_reference.csv` inflated ...) or (arv default +
+   non_arv default x sc) inflated from 2018." It is not said whether the multiplier and markup apply to the
+   `unit_cost_reference.csv` values; I read the parenthetical as replacing `art_site_cost` in the expression, so they
+   do. All five countries have `art_cost_full`, so at the central run (m = 1) the cost is simply `art_cost_full`.
+   Likewise for TB: "Only if a column is missing: tb_ds_cost or tb_dr_cost for the income group from
+   `unit_cost_reference.csv`"; I apply uc_tb_mult x markup to the fallback as to the country value. Not exercised.
+9. **§5 TB cost, missing income group.** Guessed from GDP per person; if GDP is also missing the §1 default of 1,000 is
+   used first (gives `low_income`). Not exercised.
+10. **§5 "Covered" for hiv_art: max(ART % x PLHIV - PMTCT % x HIV+ pregnancies, 0).** Not said what happens when HIV+
+    pregnancies is missing: I subtract nothing. "NaN if either is missing" is applied to ART % and PLHIV only. Nothing
+    missing here.
+11. **§6 HIV cohorts, "age_at_end_2030 is the cohort's age after the 2030 increment".** Applied literally: a cohort
+    started at t = 0 has age 1 in 2026 and age 6 in 2031 (hazard index 6), reaching 10 in 2035. The negative-stock
+    rule ("stock_t x h[t + 1]") cannot occur because units >= 0; it is coded but unused.
+12. **§6 "Duration": no row ever cut.** Not covered; first = 0 (no losses then, so no effect). "Any row" is read as any
+    row of the country, in any bucket.
+13. **§6 TB spread, coverage c_t.** The spec defines one coverage, from TB detection % and `units_tb_ds,t`, and says
+    tb_dr cases add to the tb_dr line. I use the same c_t (the DS coverage) for both lines' arriving cases; the spec
+    gives no DR-specific coverage. The arrival year's c is used, c_4 after 2030. The arriving case's death probability
+    is counted in full (c x cfr_t + (1 - c) x cfr_u), as written, not as a difference against treatment.
+14. **§6 Malaria under-5 share.** s = the parameter named in `malaria_u5_share_param` (e.g. `mal_u5_share_afr`); if
+    the name is missing or not a parameter (rule "none"), s = 0. For HND D0 = 0, so no malaria deaths and s is unused.
+    The sensitivity switch `mal_u5_use_country_series` = 1 (old rule) is coded but off.
+15. **§6 Malaria "If both are 0, divide by 1" / "half each if both are 0".** fi + fr = 0 with fi, fr of opposite sign is
+    not covered; it cannot happen because units >= 0. Followed literally.
+16. **§6 Vaccines, "lags that fall after 2035 ... are not counted".** Deaths in year t = sum over s and k with s + k = t
+    for t <= 9; s + k > 9 is dropped. With m = 1 the draw factor is 1, so `imm_dpc_lo/hi` do not matter here. The §1
+    LAG row for imm is legacy-only and unused.
+17. **§6 Second-generation infections.** "first_s = the infections above in year s (s = 0..9)" is read as the
+    first-generation off-ART infections of 2026-2035 (cohorts in 2026-2030 and people still off care in 2031-2035);
+    the extra infections are added to the off-ART infections of the same years and therefore run through the
+    infection-death curve and count in Displayed New HIV Infections (L.hiv_art.infections_5y). w[0] =
+    F(0.5) - F(-0.5) = F(0.5) because F(x) = 0 for x <= 0.
+18. **§6 "Displayed New HIV Infections" by line.** `L.hiv_art.infections_5y` = off-ART infections 2026-2030 (first and
+    second generation); `L.hiv_prev.infections_5y` = lost-prevention infections; `L.hiv_pmtct.infections_5y` =
+    infant infections (units x pmtct_vt_reduction, no LAG).
+19. **§6 Further deaths part "hiv_art".** `C.after_2030` is the sum of the four parts: hiv_art (cohort hazard deaths
+    2031-2035), hiv_infections (2031-2035 Weibull deaths from both off-ART and prevention infections), imm, tb
+    (tb_ds and tb_dr arrivals in 2031-2032). The reengage range (`C.after_2030_reengage_min/max`) sets art_reengage to
+    its `high` / `low` column value and recomputes everything (the post-2030 people still off care also change
+    cov_t and so the risk of the infection deaths), every other parameter central.
+20. **§5 donor-funded pool, b = 0.** "raw = pool x n / b" divides by E_base; if a line has no baseline money it also has
+    no loss, so I return 0 there. Not exercised. Which branch binds at the central run (case 1): KEN hiv_pmtct and
+    mal_irs; NGA hiv_pmtct and mal_cm; IND imm; HND hiv_art, hiv_pmtct, tb_ds, tb_dr, mal_cm, imm; MOZ tb_dr, mal_itn,
+    mal_irs, mal_cm. All other lines use n / cost.
+21. **§5 hiv_prev unit cost.** inc = 0.3 if either input is missing or population is 0; then clipped to 0.05-10. IND
+    (0.044) and HND (0.046) hit the 0.05 floor.
+22. **§4 "Lives first" and §8 cards.** Not needed for the four cases (pro rata only) and not implemented; §4 gradual
+    budget increase and the MOU preset likewise (not used).
+23. **Output columns.** The task mentions `path.<bucket>.<t>` columns; the old script never wrote them and the spec
+    does not define a "path" quantity by bucket, so they are not written. `B.<bucket>.deaths_5y` (§7, sum over the
+    bucket's direct lines) is added. Everything else is the old script's column list.
 
-    This is consistent with ages continuing to count up one per year. With the other reading, the 2031 hazard would be
-    one step lower for cohorts younger than 5. For sudden cuts this has no effect (a = 5 either way). It matters only
-    for the newer cohorts of the linear path (case 4).
-14. **§6 TB spread: "An arriving case dies with probability c x cfr_t + (1 - c) x cfr_u".** The spec does not say
-    which year's c is used: the arrival year or the year the case was generated. "Years after 2030 use c_4" suggests
-    the arrival year, and I used that.
-15. **§6 Vaccines.** The spec defines "level_t" for t <= 4 only through the clipped formula. For t >= 5 it uses
-    level_4 x (1 + u5trend)^(t-4), with no clip. I applied that literally. It matters for HND, whose U5MR of 15 puts
-    level_t on the 0.3 floor: after 2030 its level keeps falling below the floor. The §1 LAG row for imm
-    ("cumulative") is not used for deaths. It is consistent with the weights for a sudden cut (§6, last bullet under
-    Vaccines).
-16. **§6 Malaria: "If both are 0, divide by 1" and "half each if both are 0".** For the itn/irs split, the spec does
-    not cover fi + fr = 0 with fi and fr non-zero and of opposite sign. That cannot happen because units >= 0. I
-    followed the text literally (both exactly 0 gives half each).
-17. **§6 "Displayed New HIV Infections" and the per-line `infections_5y` columns.** The spec defines only the total.
-    I report:
-    - `L.hiv_art.infections_5y` = off-ART infections 2026-2030;
-    - `L.hiv_prev.infections_5y` = lost-prevention infections;
-    - `L.hiv_pmtct.infections_5y` = infant infections (units x pmtct_vt_reduction, no LAG).
-18. **§6 Totals: "Further deaths 2031-2035 = parts hiv_art, hiv_infections, imm and tb".** I took
-    "hiv_infections" to mean the 2031-2035 deaths from both off-ART and prevention infections, as the bullet under
-    "Deaths" says. "tb" is the 2031-2032 TB-spread arrivals. Malaria and PMTCT have nothing after 2030.
-19. **§5 Units, `hiv_ovc`.** "hiv_prev and hiv_ovc have no cap (continuity applies)". The spec does not give the
-    hiv_ovc output, and it is not among the requested columns. I compute it but do not report it.
-20. **§5 "Coverage drop (points) = mean_t units / need x 100".** For hiv_prev the need is "none", so the drop is NaN.
-21. **§3 "Displayed per-line money".** For hiv_art, base, gross and net are E[hiv_art] only. The hiv_care_ct E (the
-    kappa x pool part) enters ART units through §5 but is not shown on the ART line. I followed this literally.
-22. **§1 constants / unit_cost_reference.csv.** The TB costs have `cost_year` 2023, consistent with §5 ("already 2023
-    US$"). The ART site costs are 2018 (ZWE 2020), and both years are in the CPI-U table. There is no conflict, but
-    `cost_year` for TB is not used.
-23. **§2 IHME and MOU, §4 "max", "gradual" and "lives first", §7-§9.** None of these are needed for the four cases,
-    so they are not exercised and not checked here. The government-response code includes "max" and "none"/"gradual"
-    for completeness, with gov_add = 0.
+## (b) What changed in repro.py versus the old version
 
-## (b) Changes made to repro.py to follow SPEC.md
-
-1. **Malaria resurgence exponent.** Changed from (t + 1), the previous default, to dur_t, following §6 "Year t: ...
-   (1 + mal_resurgence)^dur_t". The 2026 factor is now 1. The `--resurgence-exp` option and its alternative output
-   file were removed.
-   - Effect: 5-year deaths fall by about 4.2k in NGA case 1 (2.9-4.2k across NGA cases), 0.3-0.7k in KEN and MOZ, and almost nothing in IND
-     (HND has D0 = 0).
-2. **Vaccine deaths after 2030.** Changed from the clipped clip(U5MR x f_t / 50) level evaluated in years 5-9 to
-   level_4 x (1 + u5trend)^(t-4), following §6 "Vaccines".
-   - Effect: HND `C.after_2030` falls by about 0.5-0.9 deaths per case. Nothing else changes, because the clip does
-     not bind elsewhere.
-3. **Missing malaria trend default.** Changed from 0 to -0.009 (§1 table, §6 "Trend factors"). No effect here.
-4. **CPI.** Replaced the hand-coded 2018/2020 factors with the full CPI-U table from §1, used as CPI_2023 /
-   CPI_cost_year. No numerical effect.
-5. **Missing income group.** Now guessed from GDP per person (< 1,150 low, < 4,500 lower-middle, else upper-middle)
-   instead of falling through to upper-middle (§5). No effect here.
-6. **Fiscal capacity.** Growth figures that are missing are now 0, and a missing ghes_2023 gives capacity 0 (§1, §4).
-   The cap is applied only when "cap to fiscal space" is on, and a "max" mode was added. The budget is
-   B_t = min(R_t + gov_add_t, L_t) with gov_add = 0. No effect here.
-7. **Pro-rata allocation.** This now follows §4 literally: B_t x amount / sum of all positive E_t[l] (direct lines
-   and hiv_care_ct) and positive nonservice amounts. Previously the denominator was L_t. The result is identical here.
-8. **Spraying coverage.** Rewritten as §5 states it:
-   - implied = clip(E_base[mal_irs] / cost / PAR, 0, 1);
-   - use the implied value if `mal_irs_cov` is NaN or the implied value is larger, else `mal_irs_cov`;
-   - NaN if PAR is missing.
-
-   The result is identical here.
-9. **Malaria guards (§6).** r0 = 0 if the spraying coverage is NaN. The subtracted terms are 0 where PAR or cases are
-   missing or 0. A missing D0 now means no malaria deaths. Previously it was filled with 0, which has the same
-   effect. No effect here.
-10. **Unit cap (§5).** The cap now applies only "if need and coverage both exist". The cap is covered for hiv_art and
-    coverage x need otherwise. The result is identical here.
-11. **LAG and resurgence indexing.** These now use dur_t from the §6 "Duration" rule instead of the calendar t. The
-    result is identical in these cases, because first = 0. Trend factors stay on calendar t.
-12. **HIV cohorts.** These are now tracked as explicit (size, age) pairs, following §6:
-    - delta of the clipped stock;
-    - most recent cohorts leave first;
-    - hazard and infection lag indexed by min(age, 5) - 1;
-    - the ART_INFECT_LAG table is used in place of a hard-coded 0.5 in year 1;
-    - post-2030 age = min(age_at_end_2030 + k, 5), with ART_INFECT_LAG applied after 2030 (it is 1 there);
-    - a negative-stock branch is included.
-
-    The result is identical here.
-13. **Off-ART count for the infection-death risk.** For 2026-2030 this is now units_hiv_art,t, as stated in §6,
-    instead of the sum of cohort sizes. These are equal when the stock is >= 0. cov_t = 0 when PLHIV or ART % is
-    missing; previously that gave NaN.
-14. **TB spread coverage.** c_t = 0 when TB need or detection % is missing (§6). Previously that gave NaN.
-15. **ART % for TB and HIV formulas.** a = 0 if ART % is missing (§6). Previously the value was handled in two ways.
-16. **Output column renamed.** `C.deaths` is now `C.after_2030`. It is computed explicitly as the parts listed in §6
-    "Totals": hiv_art, hiv_prev (infection deaths), imm and tb_ds (spread). The value is the same as summing every
-    line after 2030.
-17. **Docstring and comments.** These now cite SPEC.md sections only. All references to logic.md and METHOD.md were
-    removed. The constants ART_INFECT_LAG, the Weibull shape and POST_YEARS are defined from §1.
-
-Compared with the previous `independent.csv`, the only values that changed are the following. Everything else
-matches to rounding.
-- Malaria itn/irs deaths and therefore T.deaths_5y, in all cases for KEN, NGA, IND and MOZ (change 1).
-- HND `C.after_2030` (change 2).
-
-## (c) What I consulted
-
-For this rebuild I read only:
-- `docs/SPEC.md`;
-- the data files `model_data/dah_lines.csv`, `model_data/country_inputs.csv`, `model_data/ihme_trend.csv` (header
-  only, since no case uses IHME), `model_params.csv` and `unit_cost_reference.csv`;
-- the previous `repro.py` and `notes.md` in this folder.
-
-I did not open `audit/METHOD.md`, `audit/logic_review/logic.md`, any model code (`health_model.py`, `scenarios.py`,
-`model_section.py`, `budget_section.py`, `paths_ui.py`, `prepare_model.py`, `views/`), any audit script or snapshot
-CSV, or `tests/`. I did not import any model module.
-
-The previous `repro.py` had been built partly from METHOD.md. I checked each of its rules against SPEC.md and kept a
-rule only where SPEC.md states it. Every rule taken from METHOD.md in the earlier notes is now written in SPEC.md:
-- Full US Exit with the other multilateral channels at 0;
-- the CPI table;
-- the hiv_prev incidence;
-- the TB income-group fallback;
-- the TB-spread CFRs and c_t;
-- the vaccine weight timing;
-- the ART post-2030 re-engagement;
-- the Weibull details.
-
-## (d) Result against the dashboard
-
-`compare.py` checks `independent.csv` against the dashboard's own values in an audit snapshot.
-- **Run:** `.venv/bin/python audit/logic_review/reproduction/compare.py audit/before_do_now.csv`, with the snapshot
-  taken on commit 2cfcb14 before any of the "Do now" changes.
-- **Result:** 1,860 cells compared, **1,860 within 0.5%**; largest difference 0.0000%.
-- **What changed in SPEC.md afterwards:** ambiguities 3, 5, 7, 8, 12, 13, 16, 17 and 20 above were clarified (the
-  default of the death-rate switch; nonservice amounts allocated separately; the prevention incidence fallback;
-  spraying coverage when PAR is missing; cohort age after 2030; TB arrival-year coverage; infections by line; the four
-  further-death parts; ART's own money in the table). In each case the reading taken here was the code's.
-
-## (e) Update to the current SPEC.md
-
-I re-read the whole of the current `docs/SPEC.md` and compared `repro.py` with it section by section. Parameters
-are still read from `model_params.csv`; the new rows `mal_adult_effect_frac` and `tb_cfr_untreated_pos_art` are read
-from it, and the `low` and `high` columns are now loaded too (for the art_reengage range). Countries, cases, the
-output file and the existing columns are unchanged. Two columns were added at the end.
-
-### Changes made to repro.py
-
-1. **Malaria effects by age (§6 "Age groups", L-04).** Malaria deaths are now split into two groups:
-   - under-5 share s = clip(`malaria_deaths_in_children_1_59_months_total_deaths` / D0, 0, 1), or 0.76 (`is_ssa`
-     True) / 0.40 (otherwise) when the child value is missing;
-   - under-5 deaths D0 s use Ev = mal_vc_eff and Ec = mal_cm_eff; deaths at 5+ D0 (1 - s) use both effects x
-     mal_adult_effect_frac;
-   - rv_g and rc_g are computed per group; total, dv and dc are sums over the groups, and the vector/treatment
-     split uses |dv| and |dc| of those sums.
-
-   The under-5 shares here are KEN 0.19, NGA 0.97, IND 0.24, MOZ 0.90 (HND has D0 = 0, so no malaria deaths).
-   No fallback is used for these countries. The new mal_cm_eff central (0.97) is picked up from `model_params.csv`
-   without a code change.
-2. **TB case fatality for HIV-positive untreated patients (§6 tb_ds and TB spread).** This is now the blend
-   cfr_u_pos = tb_cfr_untreated_pos (1 - a) + tb_cfr_untreated_pos_art a. It is used in both places:
-   - dCFR = (1 - h)(untreated_neg - treated_neg) + h [cfr_u_pos - tb_cfr_treated_pos (1 - 0.3a)]. Previously the
-     (1 - 0.3a) factor multiplied the whole HIV-positive difference; now it applies to the treated term only;
-   - cfr_u = (1 - h) untreated_neg + h cfr_u_pos (previously h x untreated_pos x (1 - 0.3a)). cfr_t is unchanged.
-3. **TB detection rate capped at 100 (§1).** The detection % is capped at 100 before it is used as tb_ds coverage,
-   and so also in the TB-spread coverage c_t. No effect here (KEN 81, NGA 79, IND 92, HND 65, MOZ 85).
-4. **Spraying coverage when PAR is missing (§5).** Now: if PAR is missing or 0, the implied value is not computed
-   and the coverage is `mal_irs_cov` (NaN if that is missing too). Previously a missing PAR gave NaN even when
-   `mal_irs_cov` existed (old ambiguity a.8, now resolved by the spec). No effect here: every country has PAR > 0.
-5. **Further deaths across the return-to-care assumption (§6 Totals, L-33).** `run()` takes an optional
-   art_reengage override (used only in the post-2030 off-care fraction; everything downstream of it, including
-   the ART-coverage risk for infection deaths after 2030, is recomputed). Two new columns:
-   - `C.after_2030_reengage_min` = `C.after_2030` with art_reengage at its `high` value (0.75, fewest deaths);
-   - `C.after_2030_reengage_max` = the same with its `low` value (0.25, most deaths).
-
-   Both values come from `model_params.csv`; every other parameter stays central. In every row
-   min < central < max (for example KEN case 1: 20,502 / 37,173 / 67,516).
-6. **Comments.** The death-rate switch comment now cites §6 ("on by default"; old ambiguity a.3 resolved). The
-   docstring mentions the further-deaths range.
-
-Checked and unchanged: §6 trend factors (only malaria and vaccine deaths have a trend; TB and HIV were already
-flat in repro.py), §2 cuts and paths, §3 effective money, §4 response and pro-rata allocation, §5 units and unit
-costs, vaccine timing, HIV cohorts and infection deaths. The malaria death trend input changed in the data only
-(`trend_malaria_deaths`, now from WHO malaria deaths); the code reads it as before.
-
-### Effect on independent.csv (compared with the previous run)
-
-Only these columns changed: `T.deaths_5y`, `C.after_2030`, `L.tb_ds.deaths_5y`, `L.mal_itn.deaths_5y`,
-`L.mal_irs.deaths_5y`, `L.mal_cm.deaths_5y` (plus the two new columns). Money, units, coverage and HIV values are
-identical.
-- TB (change 2): tb_ds deaths rise 1-4% (e.g. MOZ case 1 69.0k -> 71.8k); `C.after_2030` rises slightly through
-  the 2031-32 TB-spread arrivals (MOZ case 1 47,051 -> 47,184).
-- Malaria (change 1 and the new trend data): KEN falls (cm 11.8k -> 7.3k, itn 4.4k -> 2.3k in case 1, since only
-  19% of its deaths are under 5); NGA and MOZ rise (NGA case 1 cm 24.6k -> 33.2k, itn 40.6k -> 39.0k); IND falls.
-  I cannot separate the effect of the age split from that of the new trend data, since I do not have the old data.
-- `T.deaths_5y` case 1: KEN 126.1k -> 120.3k, NGA 217.9k -> 225.2k, IND 19.0k -> 19.0k, HND 1.82k -> 1.83k,
-  MOZ 184.3k -> 188.2k.
-
-### New ambiguities in SPEC.md
-
-24. **§6 "Age groups": "if the child value or D0 is missing".** A child value of 0 with D0 > 0 is not "missing",
-    so I used s = 0 (all deaths at adult effect sizes), not the 0.76 / 0.40 fallback. A missing `is_ssa` is treated
-    as not True (0.40). Neither case occurs here (HND has 0 / 0, but D0 = 0 gives no malaria deaths anyway).
-25. **§6 "Extra deaths" split.** The spec writes dv and dc as sums over groups and then uses |dv| and |dc|. I took
-    the absolute value of the sum (not the sum of absolute values per group). With units >= 0 every term is >= 0,
-    so the two readings agree here.
-26. **§6 Totals, the reengage columns.** The spec names the precomputed columns `deaths_after_2030_reengage_min` /
-    `_max` and lists "high value (fewest deaths)" first and "low value (most deaths)" second, but does not say
-    explicitly which suffix is which. I read `_min` = fewest deaths = art_reengage high, `_max` = most deaths =
-    art_reengage low. The spec also does not say whether the range uses only the `low` and `high` columns or the
-    draw percentiles; "its high value and its low value" reads as the columns, which I used.
-27. **§1 "TB detection % capped at 100 (flagged when above)".** The cap is stated in the column table, so I applied
-    it to the input itself, i.e. to tb_ds coverage and to the TB-spread c_t. The "flag" is not an output here.
-28. **§6 tb_ds dCFR with a = ART %.** The blend uses population ART coverage a as a proxy for "on ART for a year or
-    more" (the parameter label). The spec is explicit, so this is a modelling note rather than a gap.
-
-### What I consulted for this update
-
-Only `docs/SPEC.md`, the data files (`model_data/dah_lines.csv`, `model_data/country_inputs.csv`,
-`model_data/ihme_trend.csv` not needed beyond the earlier header check, `model_params.csv`,
-`unit_cost_reference.csv`) and my own `repro.py`, `notes.md` and previous `independent.csv` (copied to a scratch
-folder to diff old and new outputs). I did not open any model code, `compare.py`, `compare.csv`, any audit script
-or snapshot CSV, `tests/` or `views/`, did not import any model module, and did not use git to look at diffs.
-`compare.py` was not run for this update.
-
-## (f) Result against the dashboard after the "Do now" changes
-
-- **Run:** `.venv/bin/python audit/logic_review/reproduction/compare.py audit/after_do_now.csv`, with the snapshot taken
-  at commit ba496d1 after all eleven changes.
-- **Result:** 1,900 cells compared (the 1,860 before, plus the two return-to-care columns), **1,900 within 0.5%**;
-  largest difference 0.0000%.
-- **SPEC.md clarified afterwards:** ambiguities 24 (a child-death value of 0 gives s = 0) and 26 (`_min` = art_reengage
-  at its high value, `_max` at its low value; the parameter columns, not draw percentiles). The code already did this.
+- §3: unspecified money is split by purpose with the Global Fund module shares (`unspec_<disease>_<purpose>`):
+  treatment to the treatment lines by their mix, prevention to the prevention lines, testing to `hiv_care_ct` (HIV) or
+  kappa x testing to tb_ds / mal_cm, rssh into systems money, pm to nonservice. Systems money S' is no longer converted
+  (sigma = `hss_service_share`, central 0) and goes to nonservice; the old `(U + kappa S) x mix` rule is gone.
+  Median-share fallback added.
+- §5: hiv_art cost = `art_cost_full` (with the uc_art_mult draw rule and the old fallbacks behind it); tb_ds / tb_dr
+  costs = `tb_ds_cost` / `tb_dr_cost` x uc_tb_mult x markup (reference file only as fallback); tb_dr need and coverage
+  from `tb_rr_share` / `tb_rr_cov` (0.04 / 0.45 only as fallbacks).
+- §5: the donor-funded pool cap: pool = covered x d with d = `donor_share_<hiv|tb|imm>` or the per-intervention
+  `donor_share_mal_<itn|irs|cm>` (fallbacks `donor_share_malaria_prev` / `donor_share_malaria`); the old code compared
+  against `covered` alone (d = 1).
+- §6 HIV: 10-value ART hazard (0.013 ... 0.067) with H = 10, country transmission rate `art_transmission_rate` x
+  art_transmission_mult (fallback 0.118), post-2030 hazard by years since stopping up to 10, and second-generation
+  infections (exponential unsuppressed time, mean `hiv_new_inf_unsup_years`). Legacy switch coded.
+- §6 TB spread: secondary cases from tb_dr patients now add to the tb_dr line (were all on tb_ds).
+- §6 Malaria: under-5 share from the WMR 2025 regional parameter named in `malaria_u5_share_param`; the country-series
+  rule kept behind `mal_u5_use_country_series`.
+- §6 Vaccines: VIMC pathway, deaths by years since vaccination `imm_dpc_lag0..9` with the imm_dpc_mult draw factor, no
+  mortality trend; legacy U5MR rule kept behind `imm_legacy_u5mr_scaling` or a missing `imm_dpc`.
+- Output: `B.<bucket>.deaths_5y` added; further-deaths parts reported in the diagnostics print.
