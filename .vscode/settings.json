@@ -1,0 +1,22 @@
+{
+    "files.watcherExclude": {
+        "**/datasets/**": true,
+        "**/.venv/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true,
+        "**/model_data/**": true,
+        "**/audit/**/*.csv": true
+    },
+    "search.exclude": {
+        "**/datasets": true,
+        "**/.venv": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/model_data": true,
+        "**/audit/**/*.csv": true
+    },
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true
+    }
+}
