@@ -397,6 +397,7 @@ hr {{ border-color: {RULE} !important; }}
               vertical-align: middle; line-height: 1.35; font-variant-numeric: tabular-nums; }}
 .ed-nyt td.svc {{ text-align: left; white-space: normal; padding-left: 12px; }}
 .ed-nyt tbody tr:not(.gap):not(.tot):hover td {{ background: {SURFACE_TINT}; }}
+.ed-nyt tr.small td {{ opacity: 0.5; }}
 .ed-cap {{ font-size: 14px; line-height: 1.5; color: {MUTED}; cursor: help; margin: 0.2rem 0 1rem; }}
 .ed-nyt .sub {{ font-size: 12px; color: {MUTED}; font-weight: 400; white-space: normal; }}
 .ed-nyt .sub .ed-help {{ font-size: 13px; margin-left: 3px; }}

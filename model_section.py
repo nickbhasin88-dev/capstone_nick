@@ -1567,7 +1567,9 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
                 else e(short).replace('per infection averted', 'per infection<br>averted'))
         cells = [money(r.base_usd), money(r.net_loss_usd), f"<span class='big'>{e(r.cost_big)}</span><br>{grey(unit)}",
                  people, cov, deaths]
-        body.append("<tr>" + service + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
+        muted = r.cov_ok and small_drop(r.drop)
+        body.append((f"<tr class='small' title='{e(SMALL_TIP, quote=True)}'>" if muted else "<tr>") + service
+                    + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
     if prev is not None:
         body += _gain_rows(prev, gains)
     # Other Aid: money with no modelled service effect, so the money columns add up to the headline figures
@@ -1677,6 +1679,13 @@ def _coverage_path_fig(rows: pd.DataFrame):
 
 
 COV_TICKS = [0, 25, 50, 75, 100]      # the same coverage axis on every service chart
+SMALL_DROP = 0.5                       # coverage change (points, rounded to 0.1) at or below this: row shown muted
+SMALL_TIP = "Coverage changes by 0.5 percentage points or less by 2030."
+
+
+def small_drop(drop: float) -> bool:
+    """A coverage change that rounds to 0.5 points or less (rows are muted, not removed)."""
+    return drop == drop and round(abs(drop), 1) <= SMALL_DROP
 DROP_ALERT, DROP_WATCH = 10.0, 5.0     # coverage drop by the last year, percentage points: needs help / watch
 
 
@@ -1705,8 +1714,9 @@ def _drop_overview_html(rows: pd.DataFrame) -> str:
         return "<p>No service loses coverage in this scenario.</p>"
     y1 = paths[0][1][-1]
     tag = lambda d: "Needs help" if d >= DROP_ALERT else "Watch" if d >= DROP_WATCH else "Holding"  # noqa: E731
+    muted = lambda d: " style='opacity:0.5'" if small_drop(d) else ""  # noqa: E731
     li = "".join(
-        f"<tr><td style='padding:2px 10px 2px 0'><span style='display:inline-block;width:10px;height:10px;"
+        f"<tr{muted(d)}><td style='padding:2px 10px 2px 0'><span style='display:inline-block;width:10px;height:10px;"
         f"border-radius:50%;background:{_drop_color(d)};margin-right:6px'></span><b>{html.escape(r.name)}</b></td>"
         f"<td style='padding:2px 10px;white-space:nowrap'>{cov_pair(r.cov0, cov[-1] / 100)}</td>"
         f"<td style='padding:2px 10px;white-space:nowrap;color:{_drop_color(d)};font-weight:600'>{_pts(d)}</td>"
