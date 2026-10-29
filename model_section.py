@@ -1079,8 +1079,36 @@ def _country_results(iso3, country_name, ctl, sk, imf):
     st.markdown(th.source_html("Model estimates; coverage today: UNAIDS/WHO 2025 (HIV), WHO 2024 (TB), Malaria Atlas "
                                "Project 2025 (malaria), WUENIC (DTP3).", None), unsafe_allow_html=True)
 
-    # ------------------------------ fiscal space ------------------------------ #
+    # ------------------------------ service table (with deaths) ------------------------------ #
     ap = announced_path(iso3) if ctl["preset"] == scn.ANNOUNCED else None
+    notes = []
+    if show["capped"].any():
+        notes.append("Where the aid lost would pay for more people than are covered today, the loss is capped at "
+                     "current coverage. Where donor aid buys more than the donor-funded pool (people covered x the "
+                     "external share of the country's spending on the disease), the loss is that pool x the share of "
+                     "money lost.")
+    notes += [f"{f[0].upper() + f[1:]}." for f in res["flags"]]
+    notes.append("Money and people are yearly averages over 2026-2030 (constant 2023 US$); extra deaths are the total "
+                 "over 2026-2030 (deaths set in motion that fall in 2031-2035 are not included). HIV prevention turns "
+                 "money into infections averted; deaths from those infections are counted in the year they happen "
+                 "(few before 2031). " + systems_note(ptab) + " HIV Testing & Care has no patients of its own: "
+                 + care_ct_note() + " Vaccine deaths: VIMC deaths averted per fully immunized child by country and "
+                 "antigen (DTP, polio and BCG are not in VIMC and are excluded). Deaths ranges: " + RANGE_LABEL + ". "
+                 + RANGE_TIP)
+    st.subheader("What Each Service Loses", help=_esc(" ".join(notes)))
+    st.html(_service_table_html(rows, country_name, T, {b: float(B.loc[b, "gains_usd"]) for b in hm.BUCKETS}))
+    ovc = show[show["line"] == "hiv_ovc"]
+    st.caption(_esc(
+        "Aid Lost here covers only HIV, TB, malaria and vaccine aid, the aid the model turns into services and deaths"
+        + (f"; the fiscal panel below counts all health aid lost under {scn.display_name(scn.ANNOUNCED)}, so its "
+           "figures are larger" if ap is not None and ap["all"] else "")
+        + ". Other Aid is money the model does not link to services or deaths: support for orphans and vulnerable "
+        "children" + (f" ({money(ovc['net_loss_usd'].sum())} a year lost)" if len(ovc) else "")
+        + f" and the {1 - float(ptab.loc['hss_service_share', 'central']):.0%} of lost systems money (labs, staff, "
+        "monitoring, supply chain) that does not cut services. The deaths range is for the total, so it is narrower "
+        "than adding the rows' ranges."))
+
+    # ------------------------------ fiscal space ------------------------------ #
     _fiscal_panel(with_all_aid(res, ap["lost"], fiscal_t) if ap is not None and ap["all"] else res,
                   country_name, imf, fiscal_t)
     return res
@@ -1427,25 +1455,28 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
                         gains: dict | None = None) -> str:
     """'What Each Service Loses': NYT-style HTML table, grouped by disease, with a Total row. With the run's totals T,
     an Other Aid row (orphan support and systems money not modelled as services) makes the money columns add up to
-    the headline figures."""
+    the headline figures, and the Total deaths range is the run's own range across parameter values. Money and people are
+    yearly averages 2026-2030; deaths are the 2026-2030 total."""
     e = html.escape
     grey = lambda t: f"<span class='sub'>{t}</span>"
     nm = f"<span class='nm'>{e('Not Modelled')}</span>"
     head = [("Service", ""), ("Donor Aid Now", "per year"), ("Aid Lost", "per year, after government replacement"),
-            ("Cost per Person", ""), ("People Losing Service, per Year", ""), ("Coverage", "")]
+            ("Cost per Person", ""), ("People Losing Service, per Year", ""), ("Coverage", ""),
+            ("Extra Deaths, 2026-2030 Total", "")]
     th_html = "".join(f"<th>{e(h)}" + (f"<br>{grey(e(s))}" if s else "") + "</th>" for h, s in head)
     body, prev = [], None
     for r in rows.itertuples():
         col = BUCKET_COLORS[r.bucket]
         if prev is not None and r.bucket != prev:
             body += _gain_rows(prev, gains)
-            body.append("<tr class='gap'><td colspan='6'></td></tr>")
+            body.append("<tr class='gap'><td colspan='7'></td></tr>")
         prev = r.bucket
         service = (f"<td class='svc' style='border-left:3px solid {col}'><span class='dot' style='background:{col}'>"
                    f"</span><b>{e(r.name)}</b><br>{grey(e(r.detail))}</td>")
         dash = f"<span class='nm' title='{e(care_ct_tip(), quote=True)}'>–</span>"
         if r.line in hm.LINKED:                        # HIV testing & care: works through ART (I-09)
-            cells = [money(r.base_usd), money(r.net_loss_usd), "<span class='big'>–</span>", dash, dash]
+            cells = [money(r.base_usd), money(r.net_loss_usd), "<span class='big'>–</span>", dash, dash,
+                     f"<span class='nm' title='{e(care_ct_tip(), quote=True)}'>In HIV<br>Treatment</span>"]
             body.append("<tr>" + service + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
             continue
         if r.cov_ok:
@@ -1455,6 +1486,15 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
             cov = "<span class='nm'>No Single<br>Target Group</span>"
         else:
             cov = nm
+        if r.line == "hiv_prev" and not (r.deaths_5y >= 0.5):   # infections averted, few deaths before 2031
+            tip = "Prevention averts new HIV infections; their deaths mostly fall after 2030."
+            deaths = f"<span class='nm' title='{e(tip, quote=True)}'>Mostly<br>after 2030</span>"
+        elif not (r.deaths_5y_hi > 0) and r.net_loss_usd > 0:
+            tip = (f"{country_name} records almost no {DISEASE_WORD[r.bucket]} deaths, so cutting this aid adds "
+                   "almost none.")
+            deaths = f"<b title='{e(tip, quote=True)}'>~0</b>"
+        else:
+            deaths = f"<b>{num(r.deaths_5y)}</b><br>{grey(rng(r.deaths_5y_lo, r.deaths_5y_hi))}"
         people = num(r.units_lost) if r.units_lost > 0 or r.cov_ok else nm
         if r.units_lost > 0:                    # 5-year total under the yearly number (ART: mostly the same people)
             five = getattr(r, "units_lost_5y", np.nan)
@@ -1464,29 +1504,31 @@ def _service_table_html(rows: pd.DataFrame, country_name: str = "", T: dict | No
                                     f"{num(five)} over 5 years" if five == five else "")
         cells = [money(r.base_usd), money(r.net_loss_usd),
                  f"<span class='big'>{e(r.cost_big)}</span><br>"
-                 f"{grey(e(r.cost_unit).replace('per infection averted', 'per infection<br>averted'))}", people, cov]
+                 f"{grey(e(r.cost_unit).replace('per infection averted', 'per infection<br>averted'))}", people, cov, deaths]
         body.append("<tr>" + service + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
     if prev is not None:
         body += _gain_rows(prev, gains)
     # Other Aid: money with no modelled service effect, so the money columns add up to the headline figures
     base_tot, net_tot = rows["base_usd"].sum(), rows["net_loss_usd"].sum()
+    d_lo, d_hi = rows["deaths_5y_lo"].sum(), rows["deaths_5y_hi"].sum()
     if T is not None:
         o_base, o_net = T["base"] - base_tot, T["net"] - net_tot
         if max(o_base, o_net) >= 0.005 * max(T["base"], 1.0):
-            body.append("<tr class='gap'><td colspan='6'></td></tr>")
+            body.append("<tr class='gap'><td colspan='7'></td></tr>")
             body.append("<tr><td class='svc' style='border-left:3px solid #cfcad6'><b>Other Aid</b><br>"
                         f"{grey(_other_aid_sub())}</td>"
-                        + "".join(f"<td>{c}</td>" for c in (money(max(o_base, 0)), money(max(o_net, 0)), "", nm, ""))
+                        + "".join(f"<td>{c}</td>" for c in (money(max(o_base, 0)), money(max(o_net, 0)), "", nm, "",
+                                                            nm))
                         + "</tr>")
-        base_tot, net_tot = T["base"], T["net"]
+        base_tot, net_tot, d_lo, d_hi = T["base"], T["net"], T["deaths_5y_lo"], T["deaths_5y_hi"]
     # total row (people exclude HIV prevention, whose unit is infections averted)
     ppl = rows.loc[rows["line"] != "hiv_prev", "units_lost"].sum()
     total = ["<td class='svc'><b>Total</b></td>", f"<td><b>{money(base_tot)}</b></td>",
              f"<td><b>{money(net_tot)}</b></td>", "<td></td>", f"<td><b>{num(ppl)}</b></td>",
-             "<td></td>"]
+             "<td></td>", f"<td><b>{num(rows['deaths_5y'].sum())}</b><br>{grey(rng(d_lo, d_hi))}</td>"]
     body.append("<tr class='tot'>" + "".join(total) + "</tr>")
     return ("<div class='ed-nyt-wrap'><table class='ed-nyt'><colgroup><col style='width:26%'>"
-            + "<col style='width:14.8%'>" * 5 + "</colgroup><thead><tr>" + th_html + "</tr></thead><tbody>"
+            + "<col style='width:12.3%'>" * 6 + "</colgroup><thead><tr>" + th_html + "</tr></thead><tbody>"
             + "".join(body) + "</tbody></table></div>").replace("$", "&#36;")
 
 
@@ -1501,7 +1543,7 @@ def _gain_rows(bucket, gains) -> list:
     g = (gains or {}).get(bucket, 0.0)
     if g < 0.5:
         return []
-    return [f"<tr><td colspan='6' class='svc' style='border-left:3px solid {BUCKET_COLORS[bucket]}'>"
+    return [f"<tr><td colspan='7' class='svc' style='border-left:3px solid {BUCKET_COLORS[bucket]}'>"
             f"<span class='sub'>{html.escape(gains_note(bucket, g))}</span></td></tr>"]
 
 
