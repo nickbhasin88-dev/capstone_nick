@@ -69,9 +69,9 @@ To deploy on Streamlit Community Cloud: create an app from this repository and b
 
 ```
 python -m pip install -r requirements-dev.txt
-python -m pytest tests                      # unit and regression tests (about 20 seconds)
+python -m pytest tests                      # unit and regression tests (408 tests, 2-4 minutes)
 python audit/checks.py --quick              # 9 countries, fewer draws (about 2 minutes)
-python audit/checks.py --full               # every country, preset, response and funding path (10-25 minutes)
+python audit/checks.py --full               # every country, preset, response and funding path (about 17 minutes)
 python audit/recompute.py && python audit/compare_recompute.py   # independent recalculation vs the dashboard
 python audit/snapshot_numbers.py audit/<name>.csv                # every displayed number, for before/after diffs
 ```
@@ -130,6 +130,11 @@ python add_constant_dollars.py
 ## Untracked raw files and where to get them
 
 `datasets/` is in `.gitignore`. Nothing in it is needed to run the app; it is needed only to rebuild.
+`TEAM_README.md` (section 2) lists every file in `datasets/` that each script reads, including the ones behind
+`country_inputs.csv` that are not in the table below (GHCC, Value TB, WHO GHED, WHO TB, Global Fund, UNAIDS, the
+Stover unit cost database, VIMC, WUENIC, WPP). The two IHME projection files, `co-financing_MOU.xlsx`, the Gavi
+workbook and the announcement workbook (`aid_cut_projections_announcements.xlsx`, for
+`announcement_model/project_cuts.py`) are not in the team's shared `datasets/` folder.
 
 | File in `datasets/` | Source |
 |---|---|

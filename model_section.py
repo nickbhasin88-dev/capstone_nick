@@ -1183,7 +1183,7 @@ def after_2030_help(C) -> str:
 
 
 REENGAGE_TIP = ("Assumption-driven: most of these deaths depend on how fast people who stopped HIV treatment return "
-                "once funding is back in 2031 (art_reengage, an assumption with no published source; central 50% a "
+                "once funding is back in 2031 (art_reengage, an assumption with no published source; central 35% a "
                 "year).")
 
 

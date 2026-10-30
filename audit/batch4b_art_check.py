@@ -17,9 +17,14 @@ Nominal US$ of the spending year are put in 2023 US$ with the US CPI-U annual av
 Item 2 rule (columns final_cost, final_lo, final_hi, final_source): ART cost per patient-year = the lower of (a) the
 GHCC-based full cost and (b) the observed treatment spending per person on ART; where (b) is unavailable, (a) x the
 median (b)/(a) ratio of the model countries in the same WHO region (the overall median if the region has none);
-floor = first-line drugs plus one viral load test a year (TLD "under US$45 per person, per year", Global Fund news
-release 30 August 2023; viral load "global access price from Roche of US$9.40 per test", CHAI, Case Study: Viral Load
-Access, 2015; 9.40 in 2015 US$ x CPI-U to 2023 = 12.08; floor 57.08 in 2023 US$); gate US$50-600 on the final value.
+floor = the higher of (i) the country's ARV drugs plus one viral load test a year (Goals cross-check, 2026-10-30:
+Stover HIV unit cost database, datasets/Goals/"Unit costs 11april2025.xlsx", tab UCdatabase, items "Adult ARVs" and
+"Viral load test", in the US$ of each row's Year put in 2023 US$ with CPI-U; Stover et al. 2026, PLOS Glob Public
+Health 6(10):e0007360; github.com/JGStover/HIV-Unit-Costs; for South Africa the ARV part is the national tender price,
+which is lower, see ZAF_TLD) and (ii) the global first-line price used before (TLD "under US$45 per person, per year",
+Global Fund news release 30 August 2023; viral load "global access price from Roche of US$9.40 per test", CHAI, Case
+Study: Viral Load Access, 2015; 9.40 in 2015 US$ x CPI-U to 2023 = 12.08; 57.08 in 2023 US$), kept so that no
+country's cost falls (it binds only for South Africa); gate US$50-600 on the final value.
 Range: lo = the final value, hi = the higher of (a) and (b) capped at 600 (the draws also run below the central through
 uc_art_mult's lower end, 0.68, from the spread of the cost studies).
 Writes audit/logic_review/batch4b_art_check.csv.
@@ -38,7 +43,18 @@ sys.path.insert(0, str(ROOT))
 logging.disable(logging.WARNING)
 import health_model as hm  # noqa: E402
 
-CPI = {2015: 237.017, 2016: 240.007, 2017: 245.120, **hm.CPI_U}
+CPI = {2015: 237.017, 2016: 240.007, 2017: 245.120, **hm.CPI_U, 2024: 313.689, 2025: 321.943}   # BLS CPI-U (FRED CPIAUCNS)
+UCDB = ROOT / "datasets" / "Goals" / "Unit costs 11april2025.xlsx"
+# South Africa: NDoH contract HP13-2025ARV (1 December 2025 - 30 November 2028), Contract Circular Version 2 (Addendum
+# 5, 4 May 2026, health.gov.za/wp-content/uploads/2026/05/HP13-2025ARV_Add-5-Replacement-Contract-Circular_4-May-2026.pdf),
+# items 13 and 23, dolutegravir 50 mg / lamivudine 300 mg / tenofovir 300 mg tablet (TLD): every award as
+# (tablets per pack, price in rand per pack, packs awarded). "All prices are inclusive of 15 % VAT" and "on a delivered
+# basis" (circular, 1.3-1.4). Rand -> US$ at the 2025 average (17.8782 ZAR per US$, Federal Reserve H.10, FRED AEXSFUS)
+ZAF_TLD = [(84, 156.00, 4_901_521), (90, 160.00, 4_778_740), (84, 160.68, 4_756_123), (84, 168.99, 4_668_884),
+           (84, 170.49, 4_623_649), (90, 175.00, 4_307_005), (84, 175.95, 4_274_695),
+           (28, 56.86, 13_822_564), (28, 55.90, 16_470_472), (28, 56.22, 16_166_813), (30, 56.77, 16_081_788),
+           (28, 62.40, 15_923_885), (30, 63.10, 14_867_152), (28, 63.25, 14_089_784), (30, 64.04, 14_041_199)]
+ZAF_VAT, ZAF_ZAR_PER_USD, ZAF_PRICE_YEAR = 0.15, 17.8782, 2025
 B2 = {"AZE": (2023, 14_770_145), "KHM": (2022, 31_565_694), "CIV": (2022, 180_080_436), "DOM": (2022, 72_921_868),
       "SWZ": (2019, 102_113_481), "KEN": (2022, 764_057_567), "KGZ": (2023, 12_523_725), "MWI": (2022, 259_699_300),
       "MDA": (2023, 10_625_628), "MNG": (2021, 2_474_731), "MOZ": (2019, 557_780_695), "ZAF": (2023, 1_863_907_174),
@@ -48,6 +64,38 @@ OUT = ROOT / "audit" / "logic_review" / "batch4b_art_check.csv"
 
 def inflate(v, y):
     return v * CPI[2023] / CPI[int(y)]
+
+
+def zaf_tld_per_year() -> float:
+    """South Africa's TLD price per patient-year, 2023 US$: volume-weighted price per tablet over every HP13-2025ARV
+    award, x 365, without VAT (the database prices carry no tax), in US$ at the 2025 rate, then CPI-U to 2023."""
+    rand_per_tab = sum(p * q for _, p, q in ZAF_TLD) / sum(n * q for n, _, q in ZAF_TLD)
+    return inflate(rand_per_tab * 365 / (1 + ZAF_VAT) / ZAF_ZAR_PER_USD, ZAF_PRICE_YEAR)
+
+
+def art_minimum(isos) -> pd.DataFrame:
+    """Each country's ARV drugs + one viral load test per patient-year, 2023 US$ (the floor), with its source. ARVs and
+    viral load from the Stover database (one row per country and item), each row in the US$ of its Year; South Africa's
+    ARVs from its national tender where that is lower."""
+    import openpyxl
+    wb = openpyxl.load_workbook(UCDB, data_only=True, read_only=True)
+    rows = list(wb["UCdatabase"].iter_rows(values_only=True))
+    db = pd.DataFrame([r[:8] for r in rows[1:]], columns=[str(h) for h in rows[0][:8]]).dropna(subset=["ISO", "Item"])
+    db = db[db.Item.str.strip().isin(["Adult ARVs", "Viral load test"])].drop_duplicates(["ISO", "Item"])
+    db["usd_2023"] = [inflate(float(c), y) for c, y in zip(db.Cost, db.Year)]
+    v = db.pivot(index="ISO", columns="Item", values="usd_2023")
+    out = []
+    for iso in isos:
+        arv, vl = float(v.loc[iso, "Adult ARVs"]), float(v.loc[iso, "Viral load test"])
+        r = {"iso3": iso, "ucdb_arv_2023": arv, "ucdb_vl_2023": vl, "national_arv_2023": np.nan}
+        src = "Stover database ARVs + viral load"
+        if iso == "ZAF":
+            r["national_arv_2023"] = zaf_tld_per_year()
+            if r["national_arv_2023"] < arv:
+                arv, src = r["national_arv_2023"], "NDoH tender HP13-2025ARV TLD + Stover database viral load"
+        r["min_cost_2023"], r["min_source"] = arv + vl, src
+        out.append(r)
+    return pd.DataFrame(out).set_index("iso3")
 
 
 def main():
@@ -118,6 +166,8 @@ def main():
     t["who_region"] = ci.who_region.reindex(t.index)
     # ---- item 2 rule ----
     FLOOR = 45.0 + inflate(9.40, 2015)
+    mins = art_minimum(t.index)
+    t = t.join(mins)
     ratio_ba = (t.observed_treat_spend_pp_2023 / t.full_cost_now)
     reg_med = ratio_ba.groupby(t.who_region).median()
     all_med = float(ratio_ba.median())
@@ -134,9 +184,13 @@ def main():
             cand, src = a_ * float(rr), f"no observed spending: GHCC-based {a_:.0f} x median observed/GHCC ratio {float(rr):.2f} ({lab})"
         v = min(a_, cand)
         note = ""
-        if v < FLOOR:
-            note = f"; floored at drugs + viral load {FLOOR:.0f}"
-            v = FLOOR
+        cmin = float(t.loc[iso, "min_cost_2023"])
+        if v < max(FLOOR, cmin):
+            if cmin > FLOOR:
+                note = f"; floored at the country's ARVs + viral load {cmin:.0f} ({t.loc[iso, 'min_source']})"
+            else:
+                note = f"; floored at drugs + viral load {FLOOR:.0f}"
+            v = max(FLOOR, cmin)
         v = float(np.clip(v, 50.0, 600.0))
         if v == 600.0 or v == 50.0:
             note += "; gate 50-600 applied"

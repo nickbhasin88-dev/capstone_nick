@@ -591,8 +591,9 @@ def unit_costs(row: pd.Series, P: dict) -> dict:
     one = np.ones_like(P["uc_imm"])
     # Batch 4b (L-50): the ART cost per patient-year the model uses is the lower of the GHCC-based full cost (site cost
     # x markup) and the observed HIV treatment spending per person on ART (Optima Table B2 or WHO GHED x the Global
-    # Fund treatment share / UNAIDS people on ART), floored at first-line drugs plus a viral load test and gated to
-    # US$50-600 (country_inputs.csv art_cost_full; audit/batch4b_art_check.py). Draws: uc_art_mult below 1 scales the
+    # Fund treatment share / UNAIDS people on ART), floored at the country's ARV drugs plus a viral load test (Stover
+    # et al. 2026 unit cost database; at least the global first-line price, US$57) and gated to US$50-600
+    # (country_inputs.csv art_cost_full; audit/batch4b_art_check.py). Draws: uc_art_mult below 1 scales the
     # value down (study spread); above 1 it moves toward art_cost_full_hi (the higher of the two measures, within the
     # gate), reaching it at the parameter's high value
     art_full = _v(row, "art_cost_full")

@@ -7,6 +7,13 @@ data files; nothing is recalled from memory. The precise specification that the 
 record of every change is `audit/logic_review/MODEL_CHANGELOG.md`; the evidence behind each value is in
 `model_params.csv` and the `audit/logic_review/*_evidence.md` files.
 
+> **Branch chipmunk (30 Oct 2026).** This guide was written on tomato. chipmunk runs main's model except for the
+> VIMC vaccine deaths, which it takes from tomato, so tomato's ART cost rule, public-spending donor shares for HIV and
+> immunization, per-intervention malaria caps, WUENIC coverage, UNAIDS HIV inputs, projected births, `mou_deflate`
+> and `budget_growth` do not apply (`audit/merge/PLAN.md` rows R1-R11). The rule statements below have been corrected
+> for chipmunk; the worked-example numbers (Kenya, all-country totals) come from tomato runs and were not re-run.
+> `docs/SPEC.md` is the authoritative description of chipmunk's code.
+
 A note on terms: the first time a technical term appears it is defined in brackets. All terms are also in the Glossary
 (Section 8). Dashboard labels are written exactly as they appear on the dashboard, in Title Case.
 
@@ -185,9 +192,7 @@ find in a year.
   points a year (Points per Year; Steady, Fast start, Slow start or Custom shapes), never past the Abuja target of
   15%; extra money = points / 100 x total government spending, where total government spending = government health
   spending 2023 / health's share of government spending (World Bank WDI, latest year), held at its 2023 level in
-  constant 2023 dollars. A `budget_growth` setting (default 0) can let that budget grow at the country's projected
-  nominal GDP growth (WEO, median 7.5% a year); at the full rate the all-country gradual-increase result falls by
-  22% (Batch 7).
+  constant 2023 dollars.
 
 **Why No Government Replacement is the default.** A two-way fixed-effects regression across 97 countries and 2,134
 country-years (2002 to 2023) relates the yearly change in government health spending per person to falls in aid per
@@ -224,7 +229,7 @@ more people than their money pays for.
 
 | Service | Cost (central, range) | How it is built and why it measures the right thing |
 |---|---|---|
-| HIV Treatment (ART) | by country; median US$216 (191 to 400); Kenya 308, Nigeria 208, Mozambique 227, South Africa 208, Uganda 314, India 216 | The lower of (a) the site-level cost per patient-year from the Global Health Cost Consortium repository pooled with Rosen et al. 2021 (Gates Open Research 5:177), times 1 / (1 - 0.45) for above-site programme costs (management, monitoring, supply chain: 47% of PEPFAR spending, KFF 2025), and (b) observed HIV treatment spending per person on ART (total HIV spending from ten Brink et al. 2025 appendix Table B2 or WHO GHED, times the country's Global Fund treatment module share, divided by UNAIDS people on ART), used only where the Global Fund funds at least 10% of HIV spending (35 countries), otherwise the regional median ratio of (b) to (a). Floor US$190.84 = the lowest measured site delivery cost (Malawi, US$86.50 in 2018 US dollars, Rosen 2021) inflated and marked up; gate US$50 to 600. The model needs what a dollar of lost treatment money pays for per patient, so a cost above what a country spends per person on ART cannot be right (logic review L-50) |
+| HIV Treatment (ART) | by country; median US$274 (57 to 416); Kenya 308, Nigeria 400, Mozambique 227, South Africa 57, Uganda 314, India 216 | The lower of (a) the site-level cost per patient-year from the Global Health Cost Consortium repository pooled with Rosen et al. 2021 (Gates Open Research 5:177), times 1 / (1 - 0.45) for above-site programme costs (management, monitoring, supply chain: 47% of PEPFAR spending, KFF 2025), and (b) observed HIV treatment spending per person on ART (total HIV spending from ten Brink et al. 2025 appendix Table B2 or WHO GHED, times the country's Global Fund treatment module share, divided by UNAIDS people on ART), where (b) exists, otherwise the regional median ratio of (b) to (a). Floor = the country's ARV drugs plus one viral load test a year from the Stover HIV unit cost database (Stover et al. 2026, PLOS Glob Public Health 6(10):e0007360; 2024 US$ x 0.971), never below US$57 (TLD US$45 + one viral load), which binds only for South Africa: its national tender (NDoH HP13-2025ARV) puts drugs plus viral load at US$45.55, so US$57 is already above its real drug cost and stays conservative; gate US$50 to 600. The model needs what a dollar of lost treatment money pays for per patient, so a cost above what a country spends per person on ART cannot be right (logic review L-50) |
 | Prevention Of Mother-To-Child Transmission | US$250 (150 to 450) per woman per year, including her ART | Health Policy and Planning 2016;31(8):1133 review of Option B+ costs (US$114 to 470 across five studies; median about 250 in 2023 dollars). Unverified: the review's figures could not be checked against the paper, so this is labelled a review figure, not evidence |
 | HIV Prevention | US$5,000 (2,500 to 12,000) per infection averted at an incidence of 1 per 1,000, scaled by (1 / incidence)^0.5 | Labelled assumption: prevention costs more per infection averted where infections are rare; affects infections only |
 | Orphans & Vulnerable Children | US$100 (60 to 160) per child-year | Labelled assumption; no deaths modelled |
@@ -258,11 +263,9 @@ losses plus non-service losses equal the total lost.
 **The cap rule (donor-funded pool).** Donor money pays for a number of people: its baseline aid divided by the cost
 per person, but never more than the people whose service donors actually fund. In symbols: donor-funded people =
 min(people covered x donor share, aid / cost). People losing the service = donor-funded people x the share of donor
-money lost, times (1 - continuity). The donor share is the external share of public spending on the disease (WHO
-Global Health Expenditure Database: external / (external + domestic government); household spending on STI care or
-private vaccination is not the donor-funded service) for HIV and immunization; WHO TB financing data for TB; and for
-each malaria intervention, the people its own donor money pays for as a share of people covered (the cap is applied
-per intervention, so the share must be that intervention's). In most lines donor money buys fewer people than the
+money lost, times (1 - continuity). The donor share is the external share of all spending on the disease (WHO
+Global Health Expenditure Database) for HIV, immunization and malaria treatment; the external share of public malaria
+spending for bednets and spraying; and WHO TB financing data for TB. In most lines donor money buys fewer people than the
 pool and the rule is simply lost money / cost.
 
 **Continuity.** 15% (range 0 to 30%) of the people who lose donor funding keep their service anyway (absorbed by
@@ -288,8 +291,8 @@ coverage (UNAIDS AIDSinfo 2026 estimates for 2025, read directly from the UNAIDS
 HIV-positive pregnancies (women needing ARV) and PMTCT coverage (same file); TB: WHO TB incidence and the case
 detection rate (capped at 100%); drug-resistant TB: WHO's rifampicin-resistant share of incidence and enrolment;
 bednets and spraying: population at risk (WHO) and Malaria Atlas Project (MAP) 2025 net use and household spraying
-coverage; malaria treatment: MAP clinical cases and effective treatment per 100 cases; immunization: projected births for each year 2026 to 2030 (UN WPP 2024, since Batch 7) and DTP3
-coverage (WHO/UNICEF WUENIC 2025, since Batch 7). People losing a service can never exceed the people covered.
+coverage; malaria treatment: MAP clinical cases and effective treatment per 100 cases; immunization: births (crude birth rate x population, latest year, held for 2026 to 2030) and DTP3
+coverage (World Bank WDI mirror of the WHO/UNICEF estimates, latest year). People losing a service can never exceed the people covered.
 
 **Formula.** Coverage drop (percentage points) = people losing the service / people in need x 100; Coverage After =
 Coverage Before - the drop.
@@ -577,7 +580,7 @@ methods compared for Kenya.
 | Parameter | Central (range), unit | Evidence or Labelled Assumption | Source or reason |
 |---|---|---|---|
 | `asd_share` above-site programme share | 0.45 (0.30-0.55) | Evidence | KFF 2025 (Gaba, Razavi, Kates & Nandakumar): non-service delivery 47% of PEPFAR spending 2018-23 |
-| `uc_art_mult` ART cost multiplier (country costs in `art_cost_full`) | 1 (0.68-1.38) | Evidence | GHCC repository; Rosen 2021; ten Brink 2025 Table B2; GHED; UNAIDS; floor Rosen Malawi; range from the spread of cost studies |
+| `uc_art_mult` ART cost multiplier (country costs in `art_cost_full`) | 1 (0.68-1.38) | Evidence | GHCC repository; Rosen 2021; ten Brink 2025 Table B2; GHED; UNAIDS; floor: the country's ARVs + viral load (Stover et al. 2026 unit cost database), at least US$57; range from the spread of cost studies |
 | `uc_scale_elast` income elasticity of staff costs | 0.4 (0.25-0.6) | Labelled Assumption | fallback only when no country study exists |
 | `uc_pmtct` | 250 (150-450) US$ per woman-year | Unverified; review figure | Health Policy and Planning 2016;31(8):1133 review, cited but its per-study figures could not be checked against the paper (L-32) |
 | `cpia_ref` cost per HIV infection averted | 5,000 (2,500-12,000) US$ | Labelled Assumption | no single cost per infection averted across prevention mixes; affects infections only |
@@ -630,7 +633,7 @@ Direction: the way the headline would most likely move if the item were resolved
 - HIV deaths are 0.39 and infections 0.36 of Optima's PEPFAR-discontinued excess; the gap is in the money-to-people
   conversion (full-cost equivalents, continuity, the 23% Global Fund cut), not transmission. Direction: Higher
   (L-41 / L-49).
-- The ART cost level (median US$216, 13 countries at the US$191 floor) would be settled by PEPFAR Expenditure
+- The ART cost level (median US$274; 16 countries at the US$400 GHCC-based value, 6 at their ARV + viral load floor) would be settled by PEPFAR Expenditure
   Analysis cost per patient. Direction: Unclear (L-50 / DR-01).
 - The vaccine unit is a full-schedule child at US$87 while donor money buys specific antigens; no cost per antigen.
   Direction: Unclear (L-18 / IMP-15).

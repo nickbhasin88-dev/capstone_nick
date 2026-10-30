@@ -1,0 +1,27 @@
+source,intervention,infections_averted,cost_per_infection_averted,ours_mwi,ours_below_theirs
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Community mobilization,520.0,37937.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Mass media,339.0,23630.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Condoms,2600.0,-111.0,6716.783394353779,False
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Youth out of school,580.0,208.0,6716.783394353779,False
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Economic strengthening,153.0,975391.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Sex workers,1276.0,4251.0,6716.783394353779,False
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",MSM outreach,2.0,807338.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",PWID: needle exchange,24.0,137139.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",PWID drug substitution,69.0,70140.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Male circumcision,3175.0,97993.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Low risk heterosexual,1171.0,1081278.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Medium risk heterosexual,2104.0,146527.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",High risk heterosexual,2196.0,31032.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",People Who Inject Drugs (PWID),51.0,38985.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",Men who have sex with men,17.0,314862.0,6716.783394353779,True
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",ART - Male,2974.0,1642.0,6716.783394353779,False
+"CEA tab (Goals/RNM, 2024 -> 2030 scale-up)",ART - Female,2051.0,1531.0,6716.783394353779,False
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",Adult ART,,2963.6617270232027,6716.783394353779,False
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",Pediatric ART,,22644.38797520606,6716.783394353779,True
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",PMTCT,,79.4520066703686,6716.783394353779,False
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",Condoms,,-172.04361346362856,6716.783394353779,False
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",Key Pops,,3637.2170200210226,6716.783394353779,False
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",PrEP,,31684.291867139684,6716.783394353779,True
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",SBCC,,26572.983093622825,6716.783394353779,True
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",VMMC,,64753.925520362085,6716.783394353779,True
+"Calculations tab (Goals Lite, coverage halved, 2026-2030)",Testing,,1926.7774193940595,6716.783394353779,False
